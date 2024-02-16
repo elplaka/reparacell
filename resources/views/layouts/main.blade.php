@@ -57,6 +57,24 @@
         }
  }
 
+/* Estilo cuando el select está enfocado */
+.selectpicker:focus {
+    border-color: #007bff; /* Cambia el color del borde cuando está enfocado */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Cambia la sombra cuando está enfocado */
+}
+
+/* Estilo cuando el select está activo (haciendo clic) */
+.selectpicker:active {
+    border-color: #007bff; /* Cambia el color del borde cuando está activo */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Cambia la sombra cuando está activo */
+}
+
+/* Opcional: Estilo cuando el mouse está sobre el select */
+.selectpicker:hover {
+    border-color: #007bff; /* Cambia el color del borde cuando está en hover */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Cambia la sombra cuando está en hover */
+}
+
 /* Puedes ajustar el color y otros estilos según tus necesidades */
 /* .btn-light.bs-placeholder[title="--TODOS--"] {
   background-color: green !important; 
@@ -119,19 +137,63 @@
             <!-- Divider -->
             <hr class="sidebar-divider">
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link" href="{{ route('taller.index') }}">
                     <i class="fa-solid fa-screwdriver-wrench"></i>
                     <span> Taller</span></a>
+            </li> --}}
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReparaciones"
+                    aria-expanded="true" aria-controls="collapseReparaciones">
+                    <i class="fa-solid fa-toolbox"></i>
+                    <span> Reparaciones</span>
+                </a>
+                <div id="collapseReparaciones" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('taller.index') }}"> <i class="fa-solid fa-screwdriver-wrench"></i> Taller</a>
+                    </div>
+                </div>
             </li>
 
             <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+                    aria-expanded="true" aria-controls="collapseVentas">
+                    <i class="fa-solid fa-dollar-sign"> </i>
+                    <span> Ventas</span>
+                </a>
+                <div id="collapseVentas" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('caja.index') }}"> <i class="fa-solid fa-cash-register"></i> Caja</a>
+                    </div>
+                </div>
+            </li>
+
+            <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEquipos"
+                    aria-expanded="true" aria-controls="collapseEquipos">
+                    <i class="fa-solid fa-mobile-retro"></i>
+                    <span> Equipos</span>
+                </a>
+                <div id="collapseEquipos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('equipos.marcas') }}">                     <i class="fa-solid fa-splotch"></i> Marcas </a>
+                        <a class="collapse-item" href="{{ route('equipos.modelos') }}">                     <i class="fa-solid fa-bookmark"></i> Modelos </a>
+                       <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a>
+                    </div>
+                </div>
+            </li>
+            <hr class="sidebar-divider">
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('caja.index') }}">
-                    <i class="fa-solid fa-dollar-sign"></i>
-                    <span> &nbsp; Caja</span></a>
+                <a class="nav-link" href="{{ route('productos.index') }}">
+                    <i class="fa-solid fa-kitchen-set"></i>
+                    <span> Productos </span></a>
             </li>
+
+            {{-- <a class="collapse-item" href="{{ route('caja.index') }}"> <i class="fa-solid fa-kitchen-set"></i> Productos </a> --}}
 
             <!-- Divider -->
             <hr class="sidebar-divider">
@@ -244,7 +306,10 @@
         window.addEventListener('contentChanged', function () {
             $('.selectpicker').selectpicker();
         });
+        
     </script>
+
+
 
     <script>
         document.addEventListener('livewire:initialized', function () {

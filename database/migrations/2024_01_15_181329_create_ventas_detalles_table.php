@@ -12,7 +12,6 @@ return new class extends Migration
     public function up()
     {
         Schema::create('ventas_detalles', function (Blueprint $table) {
-            $table->id();
             $table->unsignedBigInteger('id_venta');
             $table->string('codigo_producto');
             $table->integer('cantidad');

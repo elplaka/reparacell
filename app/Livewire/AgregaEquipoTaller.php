@@ -30,7 +30,7 @@ class AgregaEquipoTaller extends Component
     use LivewireAlert;
 
     public $cliente = [
-        'estatus',   //1: NUEVO, 2: SOLO LECTURA, 3: EDITABLE
+        'estatus',   //0: AGREGAR EQUIPO, 1: NUEVO, 2: SOLO LECTURA, 3: EDITABLE
         'id',
         'nombre',              
         'telefono',  
@@ -40,7 +40,7 @@ class AgregaEquipoTaller extends Component
     ];
 
     public $equipo = [
-        'estatus',   //1: NUEVO, 2: SOLO LECTURA, 3: EDITABLE
+        'estatus',   //0: AGREGAR EQUIPO, 1: NUEVO, 2: SOLO LECTURA, 3: EDITABLE
         'id',
         'idTipo',
         'idMarca',
@@ -53,7 +53,8 @@ class AgregaEquipoTaller extends Component
     public $equipoTaller = [
         'numOrden',
         'idEstatus',
-        'observaciones'
+        'observaciones',
+        'estatus'  //0: AGREGAR EQUIPO, 1: EDITAR
     ];
 
     public $fallas = [];
@@ -110,7 +111,7 @@ class AgregaEquipoTaller extends Component
     public function mount()
     {
         $this->cliente = [
-            'estatus'           => 2,
+            'estatus'           => 0,
             'nombre'            => '',
             'telefono'          => '',
             'direccion'         => '',
@@ -119,7 +120,7 @@ class AgregaEquipoTaller extends Component
         ];
 
         $this->equipo = [
-            'estatus'           => 2,
+            'estatus'           => 1,
             'id'                => null,
             'idTipo'           => 1,
             'idMarca'          => null,
@@ -250,7 +251,6 @@ class AgregaEquipoTaller extends Component
             DB::transaction(function () {
                 if ($this->cliente['estatus'] == 3) {
                     $cliente_existente = Cliente::find($this->cliente['id']);
-
                     if ($cliente_existente) {
                         $cliente_existente->telefono = $this->cliente['telefono'];
                         $cliente_existente->nombre = trim(mb_strtoupper($this->cliente['nombre']));
@@ -272,6 +272,19 @@ class AgregaEquipoTaller extends Component
                         $equipo_existente->save();
                     }
                 }
+                else  //Si no existe el equipo se agregar
+                {
+                    $nuevoEquipo = new Equipo;
+
+                    $nuevoEquipo->id_tipo = $this->equipo['idTipo'];
+                    $nuevoEquipo->id_marca = $this->equipo['idMarca'];
+                    $nuevoEquipo->id_modelo = $this->equipo['idModelo'];
+                    $nuevoEquipo->id_cliente = $this->cliente['id'];
+        
+                    $nuevoEquipo->save();
+
+                    $this->equipo['id'] = $nuevoEquipo->id;
+                }
 
                 $numOrden = $this->equipoTaller['numOrden'];
 
@@ -279,6 +292,7 @@ class AgregaEquipoTaller extends Component
                 $equipo_taller = EquipoTaller::find($this->equipoTaller['numOrden']);
                 $equipo_taller->observaciones = trim(mb_strtoupper($this->equipoTaller['observaciones']));
                 $equipo_taller->id_estatus = $this->equipoTaller['idEstatus'];
+                $equipo_taller->id_equipo = $this->equipo['id'];
                 $equipo_taller->save();
 
                 //array_filter se utiliza para filtrar los elementos con valor true, y luego array_keys se utiliza para obtener los índices correspondientes.
@@ -619,8 +633,9 @@ class AgregaEquipoTaller extends Component
 
                     if ($this->cliente['telefonoContacto'] == "0000000000")
                     {
-                        $this->cliente['publicoGeneral'] = true;
                         $this->equipo['estatus'] = 1;
+                        $this->cliente['publicoGeneral'] = true;
+                        $this->cliente['estatus'] = 2;
                     }
                 }
                 else   //Cliente nuevo
@@ -656,8 +671,11 @@ class AgregaEquipoTaller extends Component
                 }
                 else  
                 {
-                    $this->cliente['estatus'] = 2;
-                    $this->cliente['publicoGeneral'] = false;
+                    // $this->cliente['estatus'] = 2;
+                    if (strlen($value) <= 10) 
+                    {
+                        $this->cliente['publicoGeneral'] = false;
+                    }
                 }
             }
         }
@@ -665,14 +683,14 @@ class AgregaEquipoTaller extends Component
     
     public function abreClienteHistorial()
     {
-        $this->historialClienteTaller = Equipo::where('id_cliente', $this->cliente['id'])->get();
-
-        $this->historialClienteTaller = Equipo::where('id_cliente', $this->cliente['id'])
-        ->whereHas('equiposTaller', function ($query) {
-            $query->where('id_equipo', \DB::raw('equipos.id'));
-               $query->orderByDesc('fecha_salida');
-        })
+        $this->historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
+        ->where('equipos.id_cliente', $this->cliente['id'])
+        ->orderBy('equipos_taller.fecha_salida')
+        ->orderBy('equipos_taller.num_orden')
+        ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones')  
         ->get();
+
+        // dd($this->historialClienteTaller);
 
         $this->muestraHistorialClienteModal = true;
     }
@@ -782,6 +800,9 @@ class AgregaEquipoTaller extends Component
             'equipo.idModelo.required' => 'El campo <b>Modelo</b> es obligatorio.',
         ]);
 
+        $this->showMainErrors = true;
+        $this->showModalErrors = false;
+
         $equipo = Equipo::find($this->equipo['id']);
         if ($equipo) {
             $equipo->id_tipo = $this->equipo['idTipo'];
@@ -798,10 +819,27 @@ class AgregaEquipoTaller extends Component
 
             $this->equipo['estatus'] = 2;   //Estatus de equipo solo 
             
-            $this->showMainErrors = true;
-            $this->showModalErrors = false;
-
             session()->flash('success', 'El EQUIPO se ha actualizado correctamente.');
+        }
+        else
+        {
+            $nuevoEquipo = new Equipo;
+
+            $nuevoEquipo->id_tipo = $this->equipo['idTipo'];
+            $nuevoEquipo->id_marca = $this->equipo['idMarca'];
+            $nuevoEquipo->id_modelo = $this->equipo['idModelo'];
+            $nuevoEquipo->id_cliente = $this->cliente['id'];
+
+            $nuevoEquipo->save();
+
+            $this->equipo['id'] = $nuevoEquipo->id;
+            $this->equipo['nombreTipo'] = $nuevoEquipo->tipo_equipo->nombre;
+            $this->equipo['nombreMarca'] = $nuevoEquipo->marca->nombre;
+            $this->equipo['nombreModelo'] = $nuevoEquipo->modelo->nombre;
+
+            $this->equipo['estatus'] = 2;   //Estatus de equipo solo 
+            
+            session()->flash('success', 'El EQUIPO se ha agregado correctamente.');
         }
     }
 
@@ -838,7 +876,7 @@ class AgregaEquipoTaller extends Component
         $this->showMainErrors = false;
     }
 
-    public function cierraModeloModal()
+     public function cierraModeloModal()
     {
         $this->resetValidation();
         $this->modeloMod = [
@@ -860,6 +898,8 @@ class AgregaEquipoTaller extends Component
         'nombre'=> ''
         ];
     }
+
+    
 
     public function guardaModelo()
     {
@@ -1163,14 +1203,19 @@ class AgregaEquipoTaller extends Component
    public function descartaEquipo()
    {
         $this->muestraDivAgregaEquipo = false;
-        $this->mount();
+        $this->showModalErrors = false;
+        $this->showMainErrors = true;
+
+        $this->resetErrorBag();
         $this->dispatch('descartaEquipo');
+        $this->mount();
    }
 
     #[On('muestraDivAgregaEquipo')] 
     public function muestraDivArriba()
     {
         $this->muestraDivAgregaEquipo = true;
+        $this->equipoTaller['estatus'] = 0;
     }
 
     // #[On('ocultaDivAgregaEquipo')] 
@@ -1182,6 +1227,9 @@ class AgregaEquipoTaller extends Component
     #[On('editaEquipoTaller')] 
     public function editaEquipo($numOrden)
     {
+        // if (!$this->muestraDivAgregaEquipo) 
+        $this->muestraDivAgregaEquipo = true;
+        
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
         $this->cliente['id'] = $equipoTaller->equipo->cliente->id;
         $this->cliente['telefono'] = $equipoTaller->equipo->cliente->telefono;
@@ -1189,6 +1237,7 @@ class AgregaEquipoTaller extends Component
         $this->cliente['direccion'] = $equipoTaller->equipo->cliente->direccion;
         $this->cliente['telefonoContacto'] = $equipoTaller->equipo->cliente->telefono_contacto;
         $this->cliente['estatus'] = 3;
+        $this->cliente['publicoGeneral'] = $this->cliente['telefonoContacto'] == "0000000000" ? true : false;
 
         $this->equipo['id'] = $equipoTaller->id_equipo;
         $this->equipo['idTipo'] = $equipoTaller->equipo->id_tipo;
@@ -1202,6 +1251,7 @@ class AgregaEquipoTaller extends Component
         $this->equipoTaller['numOrden'] = $numOrden;
         $this->equipoTaller['idEstatus'] = $equipoTaller->id_estatus;
         $this->equipoTaller['observaciones'] = $equipoTaller->observaciones;
+        $this->equipoTaller['estatus'] = 1;
 
         $fallasEquipoTaller = FallaEquipoTaller::where('num_orden', $numOrden)->get();
 
@@ -1225,7 +1275,11 @@ class AgregaEquipoTaller extends Component
 
         $this->numImagenesEdit = $j;
 
-        if (!$this->muestraDivAgregaEquipo) $this->muestraDivAgregaEquipo = true;
+        
     }
 
 }
+
+
+
+

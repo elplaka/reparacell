@@ -12,7 +12,7 @@ class MarcaEquipoController extends Controller
      */
     public function index()
     {
-        //
+        return view('equipos.marcas');
     }
 
     /**

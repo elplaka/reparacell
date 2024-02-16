@@ -28,6 +28,6 @@ class VentaDetalle extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class, 'codigo_producto');
     }
 }

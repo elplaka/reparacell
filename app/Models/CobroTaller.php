@@ -18,7 +18,8 @@ class CobroTaller extends Model
         'num_orden',
         'fecha',
         'cobro_estimado',
-        'cobro_realizado'
+        'cobro_realizado',
+        'cancelado'
     ];
 
     public function equipoTaller()

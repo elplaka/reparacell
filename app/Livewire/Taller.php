@@ -72,6 +72,15 @@ class Taller extends Component
         'idEstatusEquipo' => null
     ];
 
+    public function abrirWhatsApp($numeroTelefono)
+    {
+        // Genera la URL de WhatsApp para abrir en el navegador
+        $urlWhatsAppWeb = "https://web.whatsapp.com/send?phone={$numeroTelefono}";
+
+        // Redirige al usuario a la URL de WhatsApp para abrir en el navegador
+        return redirect()->away($urlWhatsAppWeb);
+    }
+
     public function updated($propertyName, $value)
     {
         list($property, $index) = explode('.', $propertyName);
@@ -94,8 +103,6 @@ class Taller extends Component
                     $this->busquedaEquipos['idEstatus'] = array_merge($this->busquedaEquipos['idEstatus'], [$i]);
                 }
             }
-            
-
         }
     }
 
@@ -127,6 +134,15 @@ class Taller extends Component
 
         $this->dispatch('lanzaCobroModal');  //Abre la ventana modal con Javascript en el layout.main
       
+    }
+
+    public function invierteCobroEquipoTaller($numOrden)
+    {
+        $cobro = CobroTaller::where('num_orden', $numOrden)
+        ->first();
+
+        $cobro->cancelado = !$cobro->cancelado;
+        $cobro->save();
     }
 
     public function cobrar($numOrden)
@@ -183,9 +199,7 @@ class Taller extends Component
         if (isset($this->busquedaEquipos['idEstatus']) && $this->busquedaEquipos['idEstatus'] != [])
         {
             $equipos_taller->whereIn('id_estatus', $this->busquedaEquipos['idEstatus']);
-            // dump($this->busquedaEquipos['entregados']);
-            // dd($this->busquedaEquipos['idEstatus']);
-        }
+         }
 
         if (isset($this->busquedaEquipos['idTipo']) && $this->busquedaEquipos['idTipo'] != [])
         {
@@ -195,6 +209,7 @@ class Taller extends Component
         }
 
         $equipos_taller = $equipos_taller->paginate(10);
+
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::all();
 
@@ -209,6 +224,7 @@ class Taller extends Component
     {
         $this->muestraDivAgregaEquipo = false;
         $this->numberOfPaginatorsRendered = [];
+        $this->paginaActual = 1;
 
         $this->busquedaEquipos = [
             'fechaEntradaInicio' => now()->subDays(30)->toDateString(),
@@ -243,6 +259,7 @@ class Taller extends Component
             'fallasEquipo' => [],
             'idEstatusEquipo' => null
         ];
+
     }
 
     #[On('agregaEquipoAlTaller')] 
@@ -350,8 +367,8 @@ public function obtenerIconoSegunEstatus($id_estatus)
     #[On('descartaEquipo')] 
     public function ocultaDivArriba()
     {
-        $this->muestraDivAgregaEquipo = false;
         $this->dispatch('mostrarBoton');
+        $this->muestraDivAgregaEquipo = false;
     }
 
 }

@@ -125,18 +125,32 @@
                         </td>                                         
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             @if (!$taller->cobroTaller)  {{-- Si no hay cobro que muestre el botón para editar y cobrar --}}
-                            {{-- <button wire:click="editaEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="editaEquipoTaller" class="label-button"><i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i></button>  --}}
-                            <a wire:ignore.self data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseAgregaEquipoTaller" wire:click="editaEquipoTaller({{ $taller->num_orden }})" title="Editar equipo en taller" wire:loading.attr="disabled" wire:target="editaEquipoTaller" style="color: dimgrey;">
+                            @if(!$muestraDivAgregaEquipo)
+                            <a id="botonEditaEquipo" class="botonEditaEquipo" data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseEditaEquipoTaller" wire:click="editaEquipoTaller({{ $taller->num_orden }})" title="Editar equipo en taller" wire:loading.attr="disabled" wire:target="editaEquipoTaller" style="color: dimgrey;" onclick="ocultarBoton()">
                                 <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                             </a>
                             <span wire:loading wire:target="editaEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            @endif
                             {{-- Este botón abre la ventana modal mediante Javascript y no por bootstrap --}}
                             <button wire:click="cobroFinalEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroFinalEquipoTaller" class="label-button"
                             {{-- data-toggle="modal" data-target="#cobroTallerModal" --}}
                             ><i class="fa-solid fa-hand-holding-dollar" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i></button> <span wire:loading wire:target="cobroFinalEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             @endif
                             <button wire:click="cobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroEquipoTaller" class="label-button"><i class="fa-solid fa-print" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i></button> <span wire:loading wire:target="cobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-
+                            @if ($taller->id_estatus >= 5)
+                            <button wire:click="invierteCobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="invierteCobroEquipoTaller" class="label-button">
+                            @if ($taller->cobroTaller->cancelado)
+                                <i class="fa-solid fa-sack-dollar" style="color:dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar cobro"></i>
+                            @else
+                                <i class="fa-solid fa-sack-xmark" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar cobro"></i>
+                            @endif
+                            </button> <span wire:loading wire:target="invierteCobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            @endif
+                            <span> &nbsp;</span>
+                            <a onclick="openWhatsApp({{ $taller->equipo->cliente->telefono_contacto }})" style="cursor: pointer; text-decoration: none;" target="_blank" href="javascript:void(0);" title="{{ $taller->equipo->cliente->telefono_contacto }}">
+                                <i class="fab fa-whatsapp" style="color: dimgrey;" onmouseover="this.style.color='rgb(50, 212, 64)'" onmouseout="this.style.color='dimgrey'"></i>
+                            </a>
+                            <span wire:loading wire:target="abrirWhatsApp" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             {{-- <button id="nuevoTipoEquipoButton" data-toggle="modal" data-target="#nuevoTipoEquipoModal" title="Nuevo tipo de equipo" wire:click="nuevoTipoEquipoModal"> --}}
                         </td>
                     </tr>
@@ -172,12 +186,14 @@ document.addEventListener('livewire:initialized', function () {
     function descartarEquipo() {
         $('#collapseAgregaEquipoTaller').collapse('hide');
         document.getElementById('botonAgregar').style.display = 'block';
+        console.log('Descartar Equipo');
     }
 
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('ocultaDivAgregaEquipo', function () {
             $('#collapseAgregaEquipoTaller').collapse('hide'); // Cierra el Collapse
             document.getElementById('botonAgregar').style.display = 'block';
+            console.log('OcultaDivAgregaEquipo');
         });
     });
 
@@ -187,7 +203,14 @@ document.addEventListener('livewire:initialized', function () {
 
     function ocultarBoton() {
         document.getElementById('botonAgregar').style.display = 'none';
-    } 
+    }
+
+    function openWhatsApp(phoneNumber) {
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var url = isMobile ? "https://api.whatsapp.com/send?phone=" : "https://web.whatsapp.com/send?phone=";
+
+        window.open(url + phoneNumber, "_blank");
+    }
 </script>
 
 

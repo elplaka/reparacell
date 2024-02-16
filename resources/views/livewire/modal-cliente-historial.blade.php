@@ -76,13 +76,13 @@
                                         @php
                                             $fecha_entrada = Carbon::parse($equipoCliente->equiposTaller[0]->fecha_entrada);
 
-                                            $fecha_salida = is_null($equipoCliente->equiposTaller[0]->fecha_salida) ? "AÚN EN TALLER" : Carbon::parse($equipoCliente->equiposTaller[0]->fecha_salida);
+                                            $fecha_salida = is_null($equipoCliente->fecha_salida) ? "AÚN EN TALLER" : Carbon::parse($equipoCliente->fecha_salida)->format('d/m/Y');
 
-                                            $fallas_equipo = App\Models\FallaEquipoTaller::where('num_orden', $equipoCliente->equiposTaller[0]->num_orden)->get();
+                                            $fallas_equipo = App\Models\FallaEquipoTaller::where('num_orden', $equipoCliente->num_orden)->get();
 
-                                            $imagenes_equipo = App\Models\ImagenEquipo::where('num_orden', $equipoCliente->equiposTaller[0]->num_orden)->get();
+                                            $imagenes_equipo = App\Models\ImagenEquipo::where('num_orden', $equipoCliente->num_orden)->get();
 
-                                            $palabras_observaciones = str_word_count($equipoCliente->equiposTaller[0]->observaciones, 1);
+                                            $palabras_observaciones = str_word_count($equipoCliente->observaciones, 1);
 
                                             if (count($palabras_observaciones) > 3)
                                             {

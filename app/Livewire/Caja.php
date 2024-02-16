@@ -8,18 +8,39 @@ use App\Models\Cliente;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
 use App\Models\EstatusEquipo;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
+use Barryvdh\Snappy\Facades\SnappyPdf;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+
 
 class Caja extends Component
 {
+    use WithPagination;
+
+    public $numberOfPaginatorsRendered = [];
     public $codigoProductoCapturado;
     public $cantidadProductoCapturado, $cantidadProductosCarrito;
-    public $carrito, $totalCarrito;
+    public $carrito, $totalCarrito, $totalCarritoDescuento;
     public $showMainErrors, $showModalErrors;
-    public $clientesModal, $nombreClienteModal;
+    public $clientesModal, $nombreClienteModal, $usuariosModal;
+    public $descripcionProductoModal;
 
+    public $corteCaja = [
+        'fechaInicial',
+        'fechaFinal',
+        'cajero',
+        'idUsuario'
+    ];
 
-    protected $listeners = ['f2-pressed' => 'cobrar'];
+    protected $listeners = [
+        'f4-pressed' => 'cobrar',
+        'f9-pressed' => 'abrirCaja', 
+        'f10-pressed' => 'abrirCorteCaja', 
+    ];    
 
     public $cliente = [
         'id',
@@ -29,6 +50,165 @@ class Caja extends Component
         'telefonoContacto',
         'publicoGeneral'    
     ];
+
+    public $producto = [
+        'codigo',
+        'descripcion',
+        'precioCosto',
+        'departamento'
+    ];
+
+    public function abrirCorteCaja()
+    {
+
+    }
+
+    public function irCorteCaja()
+    {
+        Session::put('corteCaja', $this->corteCaja);
+
+        $this->dispatch('abrirPestanaCorteCaja');
+    }
+
+    function formatearFecha($fecha) {
+        $meses = [
+            1 => 'ENERO', 2 => 'FEBRERO', 3 => 'MARZO',
+            4 => 'ABRIL', 5 => 'MAYO', 6 => 'JUNIO',
+            7 => 'JULIO', 8 => 'AGOSTO', 9 => 'SEPTIEMBRE',
+            10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE'
+        ];
+    
+        $fechaFormateada = \DateTime::createFromFormat('Y-m-d', $fecha)->format('d - ');
+    
+        $numeroMes = \DateTime::createFromFormat('Y-m-d', $fecha)->format('n');
+        $nombreMes = $meses[$numeroMes];
+    
+        $fechaFormateada .= strtoupper($nombreMes) . ' - ' . \DateTime::createFromFormat('Y-m-d', $fecha)->format('Y');
+    
+        return $fechaFormateada;
+    }
+    
+    public function generaCorteCajaPDF()
+    {
+        $this->corteCaja = Session::get('corteCaja');
+        $cajeroSeleccionado = false;
+
+        if ($this->corteCaja['idUsuario'] != 0)
+        {
+            $this->corteCaja['cajero'] = User::findOrFail($this->corteCaja['idUsuario']);
+            $cajeroSeleccionado = true;
+        }
+
+        if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
+        {
+            $tituloCorteCaja = 'CORTE DE CAJA DEL DÍA :: ' .  $this->formatearFecha($this->corteCaja['fechaInicial']);
+        }
+        else
+        {
+            $tituloCorteCaja = 'CORTE DE CAJA DEL ' .  $this->formatearFecha($this->corteCaja['fechaInicial']) . ' AL ' . $this->formatearFecha($this->corteCaja['fechaFinal']);
+        }
+
+        if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
+        {
+            if ($cajeroSeleccionado)
+            {
+                $ventasCorteCaja = Venta::whereDate('created_at', '=', $this->corteCaja['fechaInicial'])->where('id_usuario', $this->corteCaja['idUsuario'])
+                ->get();
+            }
+            else
+            {
+                $ventasCorteCaja = Venta::whereDate('created_at', '=', $this->corteCaja['fechaInicial'])
+                ->get();
+            }
+        }
+        else
+        {
+            if ($cajeroSeleccionado)
+            {
+                $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
+                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])
+                ->get();
+            }
+            else
+            {
+                $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
+                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])->where('id_usuario', $this->corteCaja['idUsuario'])
+                ->get();
+            }
+        }
+
+ 
+
+
+
+        $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'ventas' => $ventasCorteCaja])
+        ->setOption('page-size', 'Letter')
+        ->setOption('margin-top', 30)
+        ->setOption('header-html', view('livewire.pdf.encabezado', compact('tituloCorteCaja'))->render())
+        ->setOption('header-spacing', 5)
+        ->setOption('footer-center', 'Página [page] de [topage]')
+        // ->setOption('footer-right', $this->corteCaja['cajero'])
+        ->setOption('footer-font-size', '8')
+        ->setOption('footer-font-name', 'Montserrat');
+
+
+        return $pdf->stream('test.pdf');
+    }
+    
+
+    // return redirect('/test-pdf');
+
+
+    public function cierraCorteCajaModal()
+    {
+
+    }
+
+    public function abrirCaja()
+    {
+        dd('abre caja');
+
+        $printer_name = "Ticket";
+        $connector = new WindowsPrintConnector($printer_name);
+        $printer = new Printer($connector);
+
+        $printer->pulse();
+        $printer->close();
+    }
+
+    public function cierraBuscarProductoModal()
+    {
+
+    }
+
+    public function hazDescuento($descuento)
+    {
+        $this->totalCarritoDescuento = $this->totalCarrito * (1 - ($descuento/100));
+    }
+
+    public function gotoPageAndCapture($codigo, $page)
+    {
+        $this->gotoPage($page);
+        $this->capturarFilaBuscarProducto($codigo);
+    }
+    
+    public function capturarFilaBuscarProducto($codigoProducto)   //Selecciona un cliente de la tabla de buscar clientes
+    {
+        $producto = Producto::where('codigo', 'LIKE', $codigoProducto)
+        ->whereRaw('LOWER(codigo) = LOWER(?)', [$codigoProducto])
+        ->first();
+
+        $this->producto['codigo'] = $codigoProducto;
+        $this->producto['descripcion'] = $producto->descripcion; 
+        $this->producto['precioCosto'] = $producto->precio_costo;
+        $this->producto['departamento'] = $producto->departamento->nombre;
+
+        $this->dispatch('cerrarModalBuscarProducto');
+
+        $this->codigoProductoCapturado = $this->producto['codigo'];
+        $this->descripcionProductoModal = '';
+        $this->agregaProducto();
+    }
 
     public function regresaCliente($telefono)
     {
@@ -85,6 +265,8 @@ class Caja extends Component
     {
         $this->carrito = collect(); // Inicializa $carrito como una colección vacía
 
+        $this->usuariosModal = User::all();
+
         $this->cliente = [
             'id'                => "0000000000",
             'estatus'           => 2,
@@ -93,6 +275,13 @@ class Caja extends Component
             'direccion'         => '',
             'telefonoContacto' => '',
             'publicoGeneral'    => true,
+        ];
+
+        $this->corteCaja = [
+            'fechaInicial' => now()->toDateString(),
+            'fechaFinal' => now()->toDateString(),
+            'cajero' => Auth::user()->name,
+            'idUsuario' => 0
         ];
 
         $this->showModalErrors = false;
@@ -105,7 +294,18 @@ class Caja extends Component
 
     public function render()
     {
-        return view('livewire.caja');
+        $productosModal = null;
+
+  
+        if (strlen($this->descripcionProductoModal) > 0)
+        {
+            $productosModal = Producto::where('descripcion', 'like', '%' . $this->descripcionProductoModal . '%')
+            ->where('disponible', '=', 1)
+            ->orderBy('descripcion')
+            ->paginate(10);
+        }
+
+        return view('livewire.caja', compact('productosModal'));
     }
 
     public function agregaProducto()
@@ -119,12 +319,13 @@ class Caja extends Component
             $inventarioActual = $producto->inventario;
             $inventarioDisponible = $inventarioActual - $cantidadSolicitada; 
 
-            if ($inventarioDisponible > 0)
+            if ($inventarioDisponible >= 0)
             {
                 $this->agregaAlCarrito($producto);
             }
             else
             {
+                $this->codigoProductoCapturado = '';
                 $this->dispatch('mostrarToastErrorRouteInventario', 'El producto ' . $producto->descripcion . ' no tiene inventario.', '<i class="fa-solid fa-boxes-stacked"></i> Ir a inventario');
             }
         }
@@ -223,12 +424,11 @@ class Caja extends Component
                     'cantidadVieja' => $this->cantidadProductoCapturado
                 ];
 
-                $this->carrito->push($item);
-
-                $this->reset('codigoProductoCapturado');
+                $this->carrito->push($item);                
             }
         }
         $this->cuentaCantidadProductosCarrito();
+        $this->reset('codigoProductoCapturado');
     }
 
     public function cuentaCantidadProductosCarrito()
@@ -243,7 +443,8 @@ class Caja extends Component
             $total_carrito += $subTotalFloat;
         }
         $this->cantidadProductosCarrito = $cant_productos;
-        $this->totalCarrito = $total_carrito;    
+        $this->totalCarrito = $total_carrito;
+        $this->totalCarritoDescuento = $total_carrito; 
     }
 
     public function restaInventario($codigoProducto, $cantidad)
@@ -264,10 +465,9 @@ class Caja extends Component
             {
                 DB::transaction(function ()
                 {
-
+                    $this->totalCarrito = $this->totalCarritoDescuento;
                     $venta = Venta::create([
                         'id_cliente' => $this->cliente['id'],
-                        'fecha' => now(),
                         'total' => $this->totalCarrito 
                     ]);
 
@@ -287,6 +487,9 @@ class Caja extends Component
                             ],
                         ]);
                     }
+
+                    $this->carrito = [];
+                    $this->cantidadProductosCarrito = 0;
 
                     $this->dispatch('mostrarToast', 'Venta realizada con éxito!!!');
                 });

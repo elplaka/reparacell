@@ -5,6 +5,13 @@ use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EquipoTallerController;
 use App\Http\Controllers\CajaController;
+use App\Http\Controllers\MarcaEquipoController;
+use App\Http\Controllers\FallaEquipoController;
+use App\Http\Controllers\ModeloEquipoController;
+use App\Http\Controllers\ProductoController;
+use App\Livewire\Caja;
+use Barryvdh\Snappy\Facades\SnappyPdf;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +25,11 @@ use App\Http\Controllers\CajaController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        return view('home'); // Cambia 'home' por el nombre de tu vista home
+    }
+
+    return view('auth.login');
 });
 
 Route::middleware([
@@ -31,14 +42,31 @@ Route::middleware([
     })->name('home');
 });
 
+Route::get('/test-pdf', function () {
+    $data = [
+        'title' => 'Prueba de PDF',
+        'content' => '¡Hola! Este es un PDF de prueba generado con SnappyPDF en Laravel.',
+    ];
+
+    $pdf = SnappyPdf::loadView('livewire.corte-caja', $data);
+
+    return $pdf->stream('test.pdf');
+});
+
+
 Route::middleware(['auth'])
 ->group(function () {
     Route::get('/taller/index', [EquipoTallerController::class, 'index'])->name('taller.index');
     Route::get('/taller/print/{num_orden}', [EquipoTallerController::class, 'print'])->name('taller.print');
     Route::get('/taller/print-final/{num_orden}', [EquipoTallerController::class, 'print_final'])->name('taller.print-final');
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
-    
-    
+    Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
+
+    Route::get('/equipos/fallas', [FallaEquipoController::class, 'index'])->name('equipos.fallas');
+    Route::get('/equipos/marcas', [MarcaEquipoController::class, 'index'])->name('equipos.marcas');
+    Route::get('/equipos/modelos', [ModeloEquipoController::class, 'index'])->name('equipos.modelos');
+
+    Route::get('/productos/index', [ProductoController::class, 'index'])->name('productos.index');
 });
 
 Route::middleware(['auth'])
@@ -58,6 +86,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/usuarios/index', [UsuarioController::class, 'index'])->name('usuarios.index');
     Route::post('/usuarios/create', [UsuarioController::class, 'create'])->name('usuarios.create');
     Route::get('/usuarios/edit/{id_usuario}', [UsuarioController::class, 'edit'])->name('usuarios.edit');
-    Route::post('/usuarios/update/{id_usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+    Route::post('/usuarios/update/{id_usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');    
 });
+
+
 

@@ -1,8 +1,8 @@
-<div wire:ignore.self class="modal fade" id="nuevaFallaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+<div wire:ignore.self class="modal fade" id="editarFallaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-md" role="dialog" >
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Agregar falla</b></h1>
+               <h1 class="text-xl font-bold"><b> Editar falla</b></h1>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraFallaModal">
                    <span aria-hidden="true">&times;</span>
                </button>
@@ -35,14 +35,20 @@
            @endif
            <div class="modal-body" wire:loading.remove>
                <div class="container mt-3">
-                <div class="row mb-3">
+                <div class="row mb-3" wire:ignore>
                     <label for="fallaMod.idTipoEquipo" class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo Equipo') }}</label>
-                    <div class="col-md-8 d-flex" wire:ignore>
-                        <select wire:model.live="fallaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="fallaMod.idTipoEquipo" style="font-size: 11pt;">
+                    <div class="col-md-8 d-flex">
+                        <select id="idTipoEquipoFallaModal" wire:model.live="fallaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="idTipoEquipo" style="font-size: 11pt;">
                             @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                             @endforeach
                         </select>
+
+                        {{-- <select wire:model.live="fallaMod.idTipoEquipo" type="text" class="select-height form-control" id="fallaMod.idTipoEquipo" style="font-size: 11pt;">
+                            @foreach ($tipos_equipos as $tipo_equipo)
+                                <option value="{{ $tipo_equipo->id }}">{{ $tipo_equipo->nombre }}</option>
+                            @endforeach
+                        </select> --}}
                     </div>
                 </div>
                    <div class="row mb-3">
@@ -66,7 +72,7 @@
                </div>
                <div class="modal-footer d-flex justify-content-center">
                    @if (!$guardoFallaOK)
-                   <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="guardaFalla">Guardar</button>
+                   <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="actualizaFalla">Actualizar</button>
                    @endif
                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" wire:click="cierraFallaModal">Cerrar</button>
                </div>

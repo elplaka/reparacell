@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DepartamentoProducto;
 
 class Producto extends Model
 {
@@ -26,4 +27,10 @@ class Producto extends Model
         'inventario_minimo',
         'id_departamento'
     ];
+
+    public function departamento()
+    {
+        return $this->belongsTo(DepartamentoProducto::class, 'id_departamento');
+    }
+
 }

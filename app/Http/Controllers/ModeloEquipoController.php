@@ -12,7 +12,7 @@ class ModeloEquipoController extends Controller
      */
     public function index()
     {
-        //
+        return view('equipos.modelos');
     }
 
     /**

@@ -12,7 +12,7 @@ class FallaEquipoController extends Controller
      */
     public function index()
     {
-        //
+        return view('equipos.fallas');   
     }
 
     /**

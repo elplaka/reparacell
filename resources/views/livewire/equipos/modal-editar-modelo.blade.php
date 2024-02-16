@@ -1,8 +1,8 @@
-<div wire:ignore.self class="modal fade" id="nuevoModeloModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div wire:ignore.self class="modal fade" id="editarModeloModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-md" role="document" >
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="text-xl font-bold"><b> Agregar modelo</b></h1>
+                <h1 class="text-xl font-bold"><b> Editar modelo</b></h1>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraModeloModal">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -40,12 +40,7 @@
                     <div class="row mb-3">
                         <label for="marcaMod.idTipoEquipo" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo Equipo') }}</label>
                         <div class="col-md-9" wire:ignore>
-                            {{-- <select wire:model.live="marcaMod.idTipoEquipo" type="text" class="select-height form-control" id="marcaMod.idTipoEquipo" style="font-size:11pt;" autofocus>
-                                @foreach ($tipos_equipos as $tipo_equipo)
-                                    <option value="{{ $tipo_equipo->id }}">{{ $tipo_equipo->nombre }}</option>
-                                @endforeach
-                            </select> --}}
-                            <select wire:model.live="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size:11pt;" autofocus>
+                            <select id="idTipoEquipoModeloModal" wire:model.defer="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size:11pt;" autofocus> 
                                 @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                                 @endforeach
@@ -55,7 +50,7 @@
                     <div class="row mb-3">
                         <label for="modeloMod.idMarca" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Marca') }}</label>
                         <div class="col-md-9">
-                            <select wire:model="modeloMod.idMarca" type="text" class="select-height form-control" id="modeloMod.idMarca" style="font-size:11pt;" autofocus>
+                            <select id="idMarcaModeloModal" wire:model.live="modeloMod.idMarca" type="text" class="select-height form-control" id="modeloMod.idMarca" style="font-size:11pt;" autofocus data-live-search="true">
                                 <option value="">-SELECCIONA-</option>
                                 @foreach ($marcas_equipos as $marca_equipo)
                                     <option value="{{ $marca_equipo->id }}">{{ $marca_equipo->nombre }}</option>
@@ -72,7 +67,7 @@
                 </div>
                 <div class="modal-footer d-flex justify-content-center">
                     @if (!$guardoModeloOK) 
-                    <button id="botonGuardarModelo" class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="guardaModelo">Guardar</button>
+                    <button id="botonActualizarModelo" class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="actualizaModelo">Actualizar</button>
                     @endif
                     <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" wire:click="cierraModeloModal">Cerrar</button>
                 </div>
