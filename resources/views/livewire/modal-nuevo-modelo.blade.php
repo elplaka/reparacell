@@ -11,7 +11,6 @@
                 <i class="fa fa-spinner fa-spin"></i> Cargando...
                 <br><br>
             </div>
-            
         
             @if($showModalErrors)
                 @if ($errors->any())

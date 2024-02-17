@@ -26,7 +26,7 @@
         <div class="col-md-4 mb-3" wire:ignore>
             <label class="col-md-4 text-xs leading-4 font-bo_ld text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> TIPO EQUIPO </strong> </label>
             <div class="col-md-8">
-                <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker" title='--TODOS--' multiple>
+                <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
                     @foreach ($tipos_equipos as $tipo_equipo)
                         <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                     @endforeach
@@ -49,7 +49,7 @@
         <div class="col-md-4 mb-3" wire:ignore>
             <label class="col-md-4 text-xs leading-4 font-bo_ld text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> ESTATUS </strong> </label>
             <div class="col-md-8">
-                <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker" multiple>
+                <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker w-100" multiple>
                     <optgroup label="Entrega">
                         <option value="entregados">ENTREGADOS</option>
                         <option value="no_entregados">NO ENTREGADOS</option>

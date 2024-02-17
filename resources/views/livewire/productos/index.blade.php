@@ -1,14 +1,40 @@
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.productos.modal-nuevo')
-    {{-- @include('livewire.modal-buscar-cliente')
-    @include('livewire.modal-corte-caja') --}}
+    @include('livewire.productos.modal-editar')
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-kitchen-set"></i> Productos</b></h4>
+        <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
         <a wire:ignore.self id="botonAgregar" class="btn btn-primary" wire:click="abreAgregaProducto" title="Agregar producto" wire:loading.attr="disabled" wire:target="abreAgregaProducto" data-toggle="modal" data-target="#nuevoProductoModal">
             <i class="fas fa-plus"></i>
         </a>
     </div>
+    @if ($showMainErrors)
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" wire:ignore>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{!! $error !!}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            {{ session('success') }}
+        </div>
+        @endif
+    @endif
     <div class="row" wire:ignore>  {{-- El wire:ignore en el div exterior evita que desaparezcan los selectpickers de dentro --}}
+        <div class="col-md-2 mb-3">
+            <label for="filtrosProductos.codigo" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Código </label>
+            <input type="text" class="form-control input-height" wire:model.live="filtrosProductos.codigo" style="font-size:11pt;">
+        </div>
         <div class="col-md-3 mb-3">
             <label for="filtrosProductos.descripcion" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Descripción </label>
             <input type="text" class="form-control input-height" wire:model.live="filtrosProductos.descripcion" style="font-size:11pt;">
@@ -28,11 +54,7 @@
                 <option value="0" data-content="<i class='fa-solid fa-rectangle-xmark'></i> &nbsp; NO DISPONIBLE"></option>
                 <option value="1" data-content="<i class='fa-solid fa-square-check'></i> &nbsp; DISPONIBLE"></option>
             </select>
-        </div>
-
- 
-
-        <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
+        </div>       
     </div>
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
@@ -72,18 +94,19 @@
                             NO DISPONIBLE
                         @endif
                       </td>
-                      {{-- <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        <a wire:click.prevent="editaMarca({{ $marca->id }})" title="Editar marca" wire:loading.attr="disabled" wire:target="editaMarca" style="color: dimgrey; cursor:pointer;">
+                      <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                        <a wire:click.prevent="editaProducto('{{ $producto->codigo }}')" title="Editar producto" wire:loading.attr="disabled" wire:target="editaProducto" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarProductoModal"
+                        >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a>                    
-                        <a wire:click="invertirEstatusMarca({{ $marca->id }})" wire:loading.attr="disabled" wire:target="invertirEstatusMarca" style="color: dimgrey;cursor:pointer">
-                            @if ($marca->disponible)
+                        <a wire:click="invertirEstatusProducto('{{ $producto->codigo }}')" wire:loading.attr="disabled" wire:target="invertirEstatusProducto" style="color: dimgrey;cursor:pointer">
+                            @if ($producto->disponible)
                             <i class='fa-solid fa-rectangle-xmark' style="color: dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Poner NO DISPONIBLE"></i>
                             @else
                             <i class='fa-solid fa-square-check' style="color: dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Poner DISPONIBLE"></i>
                             @endif
                         </a>
-                      </td> --}}
+                      </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -96,3 +119,18 @@
         </label>
     </div> 
 </div>
+
+<script>
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalNuevoProducto', () => {
+        document.getElementById('btnCerrarNuevoProductoModal').click();
+            })
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalEditarProducto', () => {
+        document.getElementById('btnCerrarEditarProductoModal').click();
+            })
+    });
+
+</script>
