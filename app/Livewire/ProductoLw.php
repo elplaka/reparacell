@@ -111,9 +111,10 @@ class ProductoLw extends Component
             if ($this->filtrosProductos['disponible'] != -1) {
                 $productosQuery->where('disponible', $this->filtrosProductos['disponible']);
             }
+            
+            $this->goToPage(1);
 
             $productos = $productosQuery->orderBy('descripcion')->paginate(10);
-            $this->goToPage(1);
         }
 
         return view('livewire.productos.index', compact('productos'));
@@ -131,8 +132,7 @@ class ProductoLw extends Component
 
     public function yaExisteCodigoProducto($codigoProducto)
     {
-        $producto = Producto::findOrFail($codigoProducto);
-
+        $producto = Producto::find($codigoProducto);
         return $producto ? true : false;
     }
 
@@ -141,34 +141,40 @@ class ProductoLw extends Component
         $this->showModalErrors = true;
         $this->showMainErrors = false;
 
-        $this->validate();
+        try {
+            $this->validate();
 
-        if ($this->yaExisteCodigoProducto($this->productoMod['codigo']))
-        {
-            $this->addError('productoMod.codigo', 'El Código del producto ya existe. Intenta con otro.');
-            return;
+            if ($this->yaExisteCodigoProducto($this->productoMod['codigo']))
+            {
+                $this->addError('productoMod.codigo', 'El Código del producto ya existe. Intenta con otro.');
+                return;
+            }
+
+            $producto = new Producto();
+            $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
+            $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
+            $producto->precio_costo = $this->productoMod['precioCosto'];
+            $producto->precio_venta = $this->productoMod['precioVenta'];
+            $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
+            $producto->inventario = $this->productoMod['inventario'];
+            $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
+            $producto->id_departamento = $this->productoMod['idDepartamento'];
+            $producto->disponible = 1;
+            $producto->save();
+
+            $this->showModalErrors = false;
+            $this->showMainErrors = true;
+
+            session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
+
+            $this->resetModal();
+
+            $this->dispatch('cerrarModalNuevoProducto');
         }
-
-        $producto = new Producto();
-        $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
-        $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
-        $producto->precio_costo = $this->productoMod['precioCosto'];
-        $producto->precio_venta = $this->productoMod['precioVenta'];
-        $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
-        $producto->inventario = $this->productoMod['inventario'];
-        $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
-        $producto->id_departamento = $this->productoMod['idDepartamento'];
-        $producto->disponible = 1;
-        $producto->save();
-
-        $this->showModalErrors = false;
-        $this->showMainErrors = true;
-
-        session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
-
-        $this->resetModal();
-
-        $this->dispatch('cerrarModalNuevoProducto');
+        catch (\Exception $e)
+        {
+            dd($e->getMessage()); // Muestra el mensaje de error en caso de una excepción
+        }
     }
 
     public function resetModal()
@@ -216,26 +222,33 @@ class ProductoLw extends Component
         $this->showModalErrors = true;
         $this->showMainErrors = false;
 
-        $this->validate();
+        try {
+            $this->validate();
 
-        $producto = Producto::findOrFail($this->productoMod['codigo']);
-        $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
-        $producto->precio_costo = $this->productoMod['precioCosto'];
-        $producto->precio_venta = $this->productoMod['precioVenta'];
-        $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
-        $producto->inventario = $this->productoMod['inventario'];
-        $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
-        $producto->id_departamento = $this->productoMod['idDepartamento'];
-        $producto->save();
+            $producto = Producto::findOrFail($this->productoMod['codigo']);
+            $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
+            $producto->precio_costo = $this->productoMod['precioCosto'];
+            $producto->precio_venta = $this->productoMod['precioVenta'];
+            $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
+            $producto->inventario = $this->productoMod['inventario'];
+            $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
+            $producto->id_departamento = $this->productoMod['idDepartamento'];
+            $producto->save();
+    
+            $this->showModalErrors = false;
+            $this->showMainErrors = true;
+    
+            session()->flash('success', 'El PRODUCTO se ha actualizado correctamente.');
+    
+            $this->resetModal();
+    
+            $this->dispatch('cerrarModalEditarProducto');
+        } catch (\Exception $e)
+        {
+            dd($e->getMessage()); // Muestra el mensaje de error en caso de una excepción
+        }
 
-        $this->showModalErrors = false;
-        $this->showMainErrors = true;
-
-        session()->flash('success', 'El PRODUCTO se ha actualizado correctamente.');
-
-        $this->resetModal();
-
-        $this->dispatch('cerrarModalEditarProducto');
+    
     }
 
     public function invertirEstatusProducto($codigoProducto)
