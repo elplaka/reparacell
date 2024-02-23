@@ -1215,7 +1215,7 @@ class AgregaEquipoTaller extends Component
     public function muestraDivArriba()
     {
         $this->muestraDivAgregaEquipo = true;
-        $this->equipoTaller['estatus'] = 0;
+        $this->equipo['estatus'] = 0;
     }
 
     // #[On('ocultaDivAgregaEquipo')] 

@@ -81,6 +81,7 @@
                                 @if ($cliente['estatus'] == 3) readonly @endif 
                                 autofocus>
                                 </div>
+                                {{ $equipo['estatus'] }}
                                 @if (!$equipo['estatus'] == 1)
                                 <div class="col-md-5">                              
                                 <button class="btn btn-secondary" 
