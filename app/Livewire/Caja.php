@@ -137,10 +137,6 @@ class Caja extends Component
             }
         }
 
- 
-
-
-
         $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'ventas' => $ventasCorteCaja])
         ->setOption('page-size', 'Letter')
         ->setOption('margin-top', 30)
@@ -295,7 +291,6 @@ class Caja extends Component
     public function render()
     {
         $productosModal = null;
-
   
         if (strlen($this->descripcionProductoModal) > 0)
         {
@@ -303,6 +298,8 @@ class Caja extends Component
             ->where('disponible', '=', 1)
             ->orderBy('descripcion')
             ->paginate(10);
+
+            $this->setPage(1);
         }
 
         return view('livewire.caja', compact('productosModal'));
@@ -488,8 +485,9 @@ class Caja extends Component
                         ]);
                     }
 
-                    $this->carrito = [];
+                    $this->carrito = collect(); // Inicializa $carrito como una colección vacía
                     $this->cantidadProductosCarrito = 0;
+                    $cliente = $this->regresacliente('0000000000');
 
                     $this->dispatch('mostrarToast', 'Venta realizada con éxito!!!');
                 });

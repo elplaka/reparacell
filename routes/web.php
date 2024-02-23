@@ -9,6 +9,7 @@ use App\Http\Controllers\MarcaEquipoController;
 use App\Http\Controllers\FallaEquipoController;
 use App\Http\Controllers\ModeloEquipoController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\VentaController;
 use App\Livewire\Caja;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
@@ -67,6 +68,8 @@ Route::middleware(['auth'])
     Route::get('/equipos/modelos', [ModeloEquipoController::class, 'index'])->name('equipos.modelos');
 
     Route::get('/productos/index', [ProductoController::class, 'index'])->name('productos.index');
+
+    Route::get('/ventas/index', [VentaController::class, 'index'])->name('ventas.index');
 });
 
 Route::middleware(['auth'])

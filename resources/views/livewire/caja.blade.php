@@ -95,7 +95,8 @@
                     <b> Total a cobrar: </b>
                 </div>
                 <div class="col-md-3 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                    $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3;border: none; height: 25px; width: 50%" value="{{ number_format($totalCarritoDescuento, 2, '.', ',') }}">
+                    {{-- $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3;border: none; height: 25px; width: 50%" value="{{ number_format($totalCarritoDescuento, 2, '.', ',') }}"> --}}
+                    $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($totalCarritoDescuento), 2, '.', ',') }}">
                 </div>
             @else
                 <div class="col-md-6 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">

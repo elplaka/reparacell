@@ -77,7 +77,7 @@
                                                 {{ $productoModal->descripcion }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
-                                                {{ $productoModal->precio_costo }}
+                                                {{ $productoModal->precio_venta }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {{ $productoModal->departamento->nombre }}
