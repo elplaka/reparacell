@@ -637,6 +637,8 @@ class AgregaEquipoTaller extends Component
                         $this->cliente['publicoGeneral'] = true;
                         $this->cliente['estatus'] = 2;
                     }
+
+                    $this->equipoTaller['estatus'] = 1;
                 }
                 else   //Cliente nuevo
                 {
@@ -648,6 +650,8 @@ class AgregaEquipoTaller extends Component
                     $this->equipo['id_tipo'] = 1;   //Valor por default (Celular)
 
                     $this->equipo['estatus'] = 1;
+
+                    $this->equipoTaller['estatus'] = 0;
                 }
 
                 $this->cliente['publicoGeneral'] = $this->cliente['telefono'] == '0000000000' ? true : false;
@@ -775,7 +779,8 @@ class AgregaEquipoTaller extends Component
             'cliente.telefonoContacto.digits' => 'El campo <b>Teléfono</b> debe ser de 10 dígitos y contener solo números.',
         ]);
 
-        $cliente = Cliente::findOrFail($this->cliente['id']);
+
+        $cliente = Cliente::find($this->cliente['id']);
         if ($cliente) {
             $cliente->telefono = $this->cliente['telefono'];
             $cliente->nombre = trim(mb_strtoupper($this->cliente['nombre']));
@@ -897,9 +902,7 @@ class AgregaEquipoTaller extends Component
         'idMarca' => $this->equipo['idMarca'],
         'nombre'=> ''
         ];
-    }
-
-    
+    }    
 
     public function guardaModelo()
     {
@@ -1216,6 +1219,7 @@ class AgregaEquipoTaller extends Component
     {
         $this->muestraDivAgregaEquipo = true;
         $this->equipo['estatus'] = 0;
+        $this->cliente['estatus'] = 0;
     }
 
     // #[On('ocultaDivAgregaEquipo')] 

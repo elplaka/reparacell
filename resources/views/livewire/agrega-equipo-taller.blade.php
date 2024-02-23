@@ -81,7 +81,6 @@
                                 @if ($cliente['estatus'] == 3) readonly @endif 
                                 autofocus>
                                 </div>
-                                {{ $equipo['estatus'] }}
                                 @if (!$equipo['estatus'] == 1)
                                 <div class="col-md-5">                              
                                 <button class="btn btn-secondary" 
@@ -98,15 +97,13 @@
                         @if (!$cliente['publicoGeneral'])
                             @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] == 3)
                                 <div class="col col-md-8 d-flex justify-content-end">
-                                    @if ($cliente['estatus'] == 2 && !$equipo['estatus'] == 1)   {{-- Cliente ya existente --}}
+                                    @if ($cliente['estatus'] == 3)   {{-- Cliente ya existente --}}
                                     <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarCliente" title="Editar cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-edit"></i>
                                     </button>
-                                    @elseif ($cliente['estatus'] == 1)   {{-- Cliente para editar --}}
                                     <button class="btn btn-secondary" style="font-size: 10pt" wire:click="guardarCliente" title="Guardar cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-save"></i>
                                     </button>
-                                    @endif
                                     &nbsp;
                                     <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equiposClienteModal" title="Ver equipos del cliente" wire:click="abrirEquiposClienteModal">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-mobile-screen"></i>
@@ -114,6 +111,7 @@
                                     <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#clienteHistorialModal" wire:click="abreClienteHistorial" title="Ver historial del cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
                                     </button>
+                                    @endif
                                 </div>
                             @endif
                         @endif
@@ -197,11 +195,10 @@
                             </div>
                             @if (strlen($cliente['telefono']) == 10 || $equipo['estatus'] == 3)
                             <div class="col col-md-3 d-flex justify-content-end">
-                                @if ($equipo['estatus'] == 0)   {{-- Equipo ya existente --}}
+                                @if ($equipo['estatus'] == 3)   {{-- Equipo ya existente --}}
                                 <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarEquipo" title="Editar equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-edit"></i>
                                 </button>
-                                @elseif ($equipo['estatus'] == 1)   {{-- Equipo para editar --}}
                                 <button class="btn btn-secondary" style="font-size: 10pt" wire:click="guardarEquipo" title="Guardar equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-save"></i>
                                 </button>

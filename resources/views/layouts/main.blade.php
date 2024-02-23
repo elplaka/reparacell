@@ -191,7 +191,23 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('productos.index') }}">
                     <i class="fa-solid fa-kitchen-set"></i>
-                    <span> Productos </span></a>
+                    <span> Clientes </span></a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEquipos"
+                    aria-expanded="true" aria-controls="collapseEquipos">
+                    <i class="fa-solid fa-mobile-retro"></i>
+                    <span> Equipos</span>
+                </a>
+                <div id="collapseEquipos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('equipos.marcas') }}">                     <i class="fa-solid fa-splotch"></i> Marcas </a>
+                        <a class="collapse-item" href="{{ route('equipos.modelos') }}">                     <i class="fa-solid fa-bookmark"></i> Modelos </a>
+                       <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a>
+                    </div>
+                </div>
             </li>
 
             <!-- Divider -->
