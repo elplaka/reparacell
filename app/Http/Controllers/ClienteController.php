@@ -12,15 +12,15 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        //
+        return view('clientes.index');
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function historial()
     {
-        //
+        return view('clientes.historial');
     }
 
     /**

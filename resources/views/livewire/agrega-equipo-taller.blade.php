@@ -98,13 +98,13 @@
                             @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] == 3)
                                 <div class="col col-md-8 d-flex justify-content-end">
                                     @if ($cliente['estatus'] == 3)   {{-- Cliente ya existente --}}
-                                    <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarCliente" title="Editar cliente">
+                                    {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarCliente" title="Editar cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-edit"></i>
-                                    </button>
+                                    </button> 
                                     <button class="btn btn-secondary" style="font-size: 10pt" wire:click="guardarCliente" title="Guardar cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-save"></i>
                                     </button>
-                                    &nbsp;
+                                    &nbsp; --}}
                                     <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equiposClienteModal" title="Ver equipos del cliente" wire:click="abrirEquiposClienteModal">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-mobile-screen"></i>
                                     </button>  &nbsp;
@@ -122,15 +122,15 @@
                         @if (strlen($cliente['telefono']) == 10  ||  $cliente['estatus'] == 3)
                         <label for="cliente.nombre" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Nombre') }}</label>
                         <div class="col-md-3">
-                            <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size:11pt;" @if($cliente['estatus'] == 2) readonly @endif autofocus>
+                            <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
                         </div>
                         <label for="cliente.direccion" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Dirección') }}</label>
                         <div class="col-md-3">
-                            <input wire:model="cliente.direccion" type="text" class="input-height form-control" id="cliente.direccion" style="font-size:11pt;" @if($cliente['estatus'] == 2) readonly @endif autofocus>
+                            <input wire:model="cliente.direccion" type="text" class="input-height form-control" id="cliente.direccion" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
                         </div>
                         <label for="cliente.telefonoContacto" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Contacto') }}</label>
                         <div class="col-md-2 mb-2">
-                            <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control" id="cliente.telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumeros" @if($cliente['estatus'] == 2) readonly @endif autofocus>
+                            <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control" id="cliente.telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumeros" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
                         </div>
                         @endif
                     </div>
@@ -148,7 +148,7 @@
                         <div class="row">
                             <label for="equipo.idTipo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo') }}</label>
                             <div class="col-md-2 d-flex align-items-center">
-                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1)
+                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1 || $equipo['estatus'] == 3)
                                     <select wire:model.live="equipo.idTipo" type="text" class="select-height form-control" id="equipo.idTipo" style="font-size:11pt;"  autofocus>
                                         @foreach ($tipos_equipos as $tipo_equipo)
                                             <option value="{{ $tipo_equipo->id }}">{{ $tipo_equipo->nombre }}</option>
@@ -163,7 +163,7 @@
                             </div>
                             <label for="equipo.idMarca" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Marca') }} </label>
                             <div class="col-md-2 d-flex align-items-center">
-                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1)
+                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1 || $equipo['estatus'] == 3)
                                     <select wire:model.live="equipo.idMarca" type="text" class="select-height form-control" id="equipo.idMarca" style="font-size:11pt;" autofocus>
                                         <option value="">-SELECCIONA-</option>
                                         @foreach ($marcas_equipos as $marca_equipo)
@@ -179,7 +179,7 @@
                             </div>                                
                             <label for="equipo.idModelo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Modelo') }} </label>
                             <div class="col-md-2 d-flex align-items-center">
-                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1)
+                                @if ($equipo['estatus'] == 0 || $equipo['estatus'] == 1 || $equipo['estatus'] == 3)
                                     <select wire:model="equipo.idModelo" type="text" class="select-height form-control" id="equipo.idModelo" style="font-size:11pt;" autofocus>
                                         <option value="">-SELECCIONA-</option>
                                         @foreach ($modelos_equipos as $modelo_equipo)
@@ -195,15 +195,16 @@
                             </div>
                             @if (strlen($cliente['telefono']) == 10 || $equipo['estatus'] == 3)
                             <div class="col col-md-3 d-flex justify-content-end">
-                                @if ($equipo['estatus'] == 3)   {{-- Equipo ya existente --}}
-                                <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarEquipo" title="Editar equipo">
+                                {{-- @if ($equipo['estatus'] == 3)   Equipo ya existente --}}
+                                {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarEquipo" title="Editar equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-edit"></i>
                                 </button>
-                                <button class="btn btn-secondary" style="font-size: 10pt" wire:click="guardarEquipo" title="Guardar equipo">
+                                &nbsp; 
+                                <button class="btn btn-secondary ml-2" style="font-size: 10pt" wire:click="guardarEquipo" title="Guardar equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-save"></i>
                                 </button>
                                 @endif
-                                &nbsp;
+                                &nbsp; --}}
                                 @if ($equipo['estatus'] == 3)
                                 <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equipoClienteHistorialModal" wire:click="abreEquipoClienteHistorial" title="Ver historial del equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
