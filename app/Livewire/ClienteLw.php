@@ -24,11 +24,7 @@ class ClienteLw extends Component
     [
         'clienteModal.id' => 'required|numeric',
         // 'clienteModal.telefonoId' => 'required|unique:clientes,telefono|digits:10',
-         'clienteModal.telefonoId' => [
-                'required',
-                'digits:10',
-                Rule::unique('clientes', 'telefono')->ignore($telefonoId, 'id'),
-            ],
+        'clienteModal.telefonoId' => 'required|numeric|digits:10',
         'clienteModal.telefonoContacto' => 'required|numeric|digits:10',
         'clienteModal.nombre' => 'required|string|max:50',
         'clienteModal.direccion' => 'required|string|max:50',
