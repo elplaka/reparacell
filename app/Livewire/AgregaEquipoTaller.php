@@ -1017,6 +1017,7 @@ class AgregaEquipoTaller extends Component
 
         $this->cliente['publicoGeneral'] = false;
         $this->equipoSeleccionadoModal = false;
+        $this->equipoTaller['estatus'] = 0;
     }
 
     public function capturarFilaEquiposCliente($idEquipo)
