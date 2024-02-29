@@ -95,9 +95,9 @@
                             </div>
                         </div>
                         @if (!$cliente['publicoGeneral'])
-                            @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] == 3)
+                            @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] >= 2)
                                 <div class="col col-md-8 d-flex justify-content-end">
-                                    @if ($cliente['estatus'] == 3)   {{-- Cliente ya existente --}}
+                                    @if ($cliente['estatus'] >= 2)   {{-- Cliente ya existente --}}
                                     {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarCliente" title="Editar cliente">
                                         <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-edit"></i>
                                     </button> 
@@ -193,7 +193,7 @@
                                     <input wire:model.live="equipo.nombreModelo" type="text" class="input-height form-control" id="equipo.nombreModelo" style="font-size:11pt;" readonly autofocus>
                                 @endif
                             </div>
-                            @if (strlen($cliente['telefono']) == 10 || $equipo['estatus'] == 3)
+                            @if (strlen($cliente['telefono']) == 10 || $equipo['estatus'] >= 2)
                             <div class="col col-md-3 d-flex justify-content-end">
                                 {{-- @if ($equipo['estatus'] == 3)   Equipo ya existente --}}
                                 {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarEquipo" title="Editar equipo">
@@ -205,7 +205,7 @@
                                 </button>
                                 @endif
                                 &nbsp; --}}
-                                @if ($equipo['estatus'] == 3)
+                                @if ($equipo['estatus'] >= 2)
                                 <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equipoClienteHistorialModal" wire:click="abreEquipoClienteHistorial" title="Ver historial del equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
                                 </button>

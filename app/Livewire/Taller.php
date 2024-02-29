@@ -208,7 +208,7 @@ class Taller extends Component
             });
         }
 
-        $equipos_taller = $equipos_taller->paginate(10);
+        $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'desc')->paginate(10);
 
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::all();

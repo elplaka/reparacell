@@ -202,7 +202,7 @@ class AgregaEquipoTaller extends Component
     public function equipoEnTaller($idEquipo)
     {
         $equipoTaller = EquipoTaller::where('id_equipo', $idEquipo)
-        ->whereNotIn('id_estatus', [4, 6])
+        ->whereNotIn('id_estatus', [5, 6])
         ->first();
 
         return $equipoTaller ? true : false;
@@ -612,6 +612,7 @@ class AgregaEquipoTaller extends Component
             if(strlen($value) == 10)
             {
                 $cliente = $this->regresaCliente($this->cliente['telefono']);
+
                 if (isset($cliente))   //Cliente ya existente
                 {
                     $this->cliente['id'] = $cliente->id;
@@ -625,6 +626,7 @@ class AgregaEquipoTaller extends Component
 
                     $this->cliente['estatus'] = 2;
                     $this->cliente['publicoGeneral'] = false;
+                    $this->equipoTaller['estatus'] = 0;
 
                     if ($this->tieneEquiposCliente && $this->cliente['telefonoContacto'] != "0000000000")
                     {
@@ -636,9 +638,8 @@ class AgregaEquipoTaller extends Component
                         $this->equipo['estatus'] = 1;
                         $this->cliente['publicoGeneral'] = true;
                         $this->cliente['estatus'] = 2;
+                        // $this->equipoTaller['estatus'] = 0;
                     }
-
-                    $this->equipoTaller['estatus'] = 1;
                 }
                 else   //Cliente nuevo
                 {
@@ -672,6 +673,7 @@ class AgregaEquipoTaller extends Component
                     }
                     $this->cliente['publicoGeneral'] = true;
                     $this->equipo['estatus'] = 1;
+                    $this->equipoTaller['estatus'] = 0;
                 }
                 else  
                 {
