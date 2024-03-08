@@ -13,7 +13,7 @@ class MovimientoInventario extends Model
 
     protected $fillable = [
         'id_tipo_movimiento',
-        'id_producto',
+        'codigo_producto',
         'existencia_anterior',
         'existencia_movimiento',
         'existencia_minima_anterior',

@@ -83,19 +83,19 @@ class ProductoLw extends Component
         'productoMod.inventarioMinimo.numeric' => 'El campo Inventario Mínimo debe ser un número.',
         'productoMod.inventarioMinimo.min' => 'El campo Inventario Mínimo debe ser mayor o igual a :min.',
 
-        'inventariooMod.codigo.required' => 'El campo Código es obligatorio.',
-        'inventariooMod.descripcion.required' => 'El campo Descripción es obligatorio.',
-        'inventariooMod.precioCosto.required' => 'El campo Precio Costo es obligatorio.',
-        'inventariooMod.precioCosto.numeric' => 'El campo Precio Costo debe ser un número.',
-        'inventariooMod.precioCosto.min' => 'El campo Precio Costo debe ser mayor o igual a :min.',
-        'inventariooMod.precioVenta.numeric' => 'El campo Precio Venta debe ser un número.',
-        'inventariooMod.precioVenta.min' => 'El campo Precio Venta debe ser mayor o igual a :min.',
-        'inventariooMod.precioMayoreo.numeric' => 'El campo Precio Mayoreo debe ser un número.',
-        'inventariooMod.precioMayoreo.min' => 'El campo Precio Mayoreo debe ser mayor o igual a :min.',
-        'inventariooMod.existencia.numeric' => 'El campo Inventario debe ser un número.',
-        'inventariooMod.existencia.min' => 'El campo Inventario debe ser mayor o igual a :min.',
-        'inventariooMod.existenciaMinima.numeric' => 'El campo Inventario Mínimo debe ser un número.',
-        'inventariooMod.existenciaMinima.min' => 'El campo Inventario Mínimo debe ser mayor o igual a :min.',
+        'inventarioMod.codigo.required' => 'El campo Código es obligatorio.',
+        'inventarioMod.descripcion.required' => 'El campo Descripción es obligatorio.',
+        'inventarioMod.precioCosto.required' => 'El campo Precio Costo es obligatorio.',
+        'inventarioMod.precioCosto.numeric' => 'El campo Precio Costo debe ser un número.',
+        'inventarioMod.precioCosto.min' => 'El campo Precio Costo debe ser mayor o igual a :min.',
+        'inventarioMod.precioVenta.numeric' => 'El campo Precio Venta debe ser un número.',
+        'inventarioMod.precioVenta.min' => 'El campo Precio Venta debe ser mayor o igual a :min.',
+        'inventarioMod.precioMayoreo.numeric' => 'El campo Precio Mayoreo debe ser un número.',
+        'inventarioMod.precioMayoreo.min' => 'El campo Precio Mayoreo debe ser mayor o igual a :min.',
+        'inventarioMod.existencia.numeric' => 'El campo Inventario debe ser un número.',
+        'inventarioMod.existencia.min' => 'El campo Inventario debe ser mayor o igual a :min.',
+        'inventarioMod.existenciaMinima.numeric' => 'El campo Inventario Mínimo debe ser un número.',
+        'inventarioMod.existenciaMinima.min' => 'El campo Inventario Mínimo debe ser mayor o igual a :min.',
     ];
 
 
@@ -172,6 +172,16 @@ class ProductoLw extends Component
         $this->showModalErrors = true;
         $this->showMainErrors = false;
 
+        $this->inventarioMod = [
+            'codigo' => '0',
+            'descripcion' => '_INVENTARIO_',
+            'precioCosto' => 0,
+            'precioVenta' => 0,
+            'precioMayoreo' => 0,
+            'existencia' => 0,
+            'existenciaMinima' => 0
+        ];
+
         $this->validate();
 
         if ($this->yaExisteCodigoProducto($this->productoMod['codigo']))
@@ -180,27 +190,52 @@ class ProductoLw extends Component
             return;
         }
 
-        $producto = new Producto();
-        $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
-        $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
-        $producto->precio_costo = $this->productoMod['precioCosto'];
-        $producto->precio_venta = $this->productoMod['precioVenta'];
-        $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
-        $producto->inventario = $this->productoMod['inventario'];
-        $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
-        $producto->id_departamento = $this->productoMod['idDepartamento'];
-        $producto->disponible = 1;
-        $producto->save();
+        DB::beginTransaction();
 
-        $this->showModalErrors = false;
-        $this->showMainErrors = true;
+        try {
+            $producto = new Producto();
+            $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
+            $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
+            $producto->precio_costo = $this->productoMod['precioCosto'];
+            $producto->precio_venta = $this->productoMod['precioVenta'];
+            $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
+            $producto->inventario = $this->productoMod['inventario'];
+            $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
+            $producto->id_departamento = $this->productoMod['idDepartamento'];
+            $producto->disponible = 1;
+            $producto->save();
 
-        session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
+            $movimiento = new MovimientoInventario();
+            $movimiento->id_tipo_movimiento = 1;
+            $movimiento->codigo_producto = $this->productoMod['codigo'];
+            $movimiento->existencia_anterior = 0;
+            $movimiento->existencia_movimiento = $this->productoMod['inventario'];
+            $movimiento->existencia_minima_anterior = 0;
+            $movimiento->existencia_minima_movimiento = $this->productoMod['inventarioMinimo'];
+            $movimiento->precio_costo_anterior = 0;
+            $movimiento->precio_costo_movimiento = $this->productoMod['precioCosto'];
+            $movimiento->precio_venta_anterior = 0;
+            $movimiento->precio_venta_movimiento = $this->productoMod['precioVenta'];
+            $movimiento->precio_mayoreo_anterior = 0;
+            $movimiento->precio_mayoreo_movimiento = $this->productoMod['precioMayoreo'];
+            $movimiento->save();
 
-        $this->resetModal();
+            DB::commit();
 
-        $this->dispatch('cerrarModalNuevoProducto');
-        
+            $this->showModalErrors = false;
+            $this->showMainErrors = true;
+    
+            session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
+    
+            $this->resetModal();
+    
+            $this->dispatch('cerrarModalNuevoProducto');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            dd($e->getMessage());
+            // Manejar la excepción según sea necesario
+        }
     }
 
     public function resetModal()
