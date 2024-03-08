@@ -13,6 +13,7 @@ use App\Models\FallaEquipo;
 use App\Models\FallaEquipoTaller;
 use App\Models\CobroTaller;
 use App\Models\CobroEstimadoTaller;
+use App\Models\AnotacionEquipoTaller;
 use Carbon\Carbon;
 use Livewire\Attributes\On; 
 use Illuminate\Support\Facades\DB;
@@ -70,6 +71,17 @@ class Taller extends Component
         'cobroRealizado' => null,
         'fallasEquipo' => [],
         'idEstatusEquipo' => null
+    ];
+
+
+    public $anotacionesMod =
+    [
+        'numOrden' => null,
+        'marcaEquipo' => null,
+        'modeloEquipo' => null,
+        'clienteEquipo' => null,
+        'contenido' => null,
+        'estatusEquipo' => null,
     ];
 
     public function abrirWhatsApp($numeroTelefono)
@@ -208,7 +220,7 @@ class Taller extends Component
             });
         }
 
-        $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'desc')->paginate(10);
+        $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
 
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::all();
@@ -258,6 +270,14 @@ class Taller extends Component
             'cobroRealizado' => null,
             'fallasEquipo' => [],
             'idEstatusEquipo' => null
+        ];
+
+        $this->anotacionesMod = [
+            'numOrden' => null,
+            'marcaEquipo' => null,
+            'modeloEquipo' => null,
+            'clienteEquipo' => null,
+            'estatusEquipo' => null
         ];
 
     }
@@ -356,6 +376,66 @@ public function obtenerIconoSegunEstatus($id_estatus)
     {
         $this->muestraDivAgregaEquipo = false;
         $this->dispatch('ocultaDivAgregaEquipo');
+    }
+
+    public function anotacionesModal($numOrden)
+    {
+        $equipoTaller = EquipoTaller::find($numOrden);
+
+        $this->anotacionesMod['numOrden'] = $equipoTaller->num_orden;
+        $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+        $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+        $this->anotacionesMod['clienteEquipo'] = $equipoTaller->equipo->cliente->nombre;
+        $this->anotacionesMod['estatusEquipo'] = $equipoTaller->id_estatus;
+
+        $this->anotacionesMod['contenido'] = "";
+
+        $anotaciones = AnotacionEquipoTaller::find($numOrden);
+        if ($anotaciones)
+        {
+            $this->anotacionesMod['contenido'] = $anotaciones->contenido;
+        }
+    }
+
+    public function guardaAnotaciones()
+    {
+        if (strlen(trim($this->anotacionesMod['contenido'])) == 0)
+        {
+            $anotaciones = $this->regresaAnotaciones($this->anotacionesMod['numOrden']);
+
+            if ($anotaciones)
+            {
+                $anotaciones->delete();
+                session()->flash('success', 'Las ANOTACIONES se han *actualizado* correctamente.');
+            }
+        }
+        else
+        {
+            $anotaciones = $this->regresaAnotaciones($this->anotacionesMod['numOrden']);
+            if ($anotaciones)
+            {
+                $anotaciones->contenido = trim(mb_strtoupper($this->anotacionesMod['contenido']));
+                $anotaciones->save();
+
+                session()->flash('success', 'Las ANOTACIONES se han actualizado correctamente.');
+            }
+            else
+            {
+                $anotaciones = new AnotacionEquipoTaller();
+                $anotaciones->num_orden = trim(mb_strtoupper($this->anotacionesMod['numOrden']));
+                $anotaciones->contenido = trim(mb_strtoupper($this->anotacionesMod['contenido']));
+                $anotaciones->save();
+
+                session()->flash('success', 'Las ANOTACIONES se han agregado correctamente.');
+            }
+        }
+    }
+
+    public function regresaAnotaciones($numOrden)
+    {
+        $anotaciones = AnotacionEquipoTaller::find($numOrden);
+
+        return $anotaciones;
     }
 
     #[On('ocultaDivAgregaEquipo')] 

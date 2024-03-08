@@ -35,11 +35,11 @@
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3">
                             <label for="clienteModal.telefonoId" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Teléfono Id </label>
-                            <input wire:model="clienteModal.telefonoId" type="text" class="input-height form-control w-100" id="clienteModal.telefonoId" style="font-size:11pt;" autofocus>
+                            <input wire:model.live="clienteModal.telefonoId" type="text" class="input-height form-control w-100" id="clienteModal.telefonoId" style="font-size:11pt;" autofocus>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="clienteModal.telefonoContacto" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Teléfono Contacto </label>
-                            <input wire:model="clienteModal.telefonoContacto" type="text" class="input-height form-control w-100" id="clienteModal.telefonoContacto" style="font-size:11pt;" autofocus>
+                            <input wire:model.live="clienteModal.telefonoContacto" type="text" class="input-height form-control w-100" id="clienteModal.telefonoContacto" style="font-size:11pt;" autofocus>
                         </div>
                     </div>
                     <div class="row mb-3">

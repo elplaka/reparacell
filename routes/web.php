@@ -69,6 +69,7 @@ Route::middleware(['auth'])
     Route::get('/equipos/modelos', [ModeloEquipoController::class, 'index'])->name('equipos.modelos');
 
     Route::get('/productos/index', [ProductoController::class, 'index'])->name('productos.index');
+    Route::get('/productos/inventario', [ProductoController::class, 'inventario'])->name('productos.inventario');
 
     Route::get('/ventas/index', [VentaController::class, 'index'])->name('ventas.index');
 

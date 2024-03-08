@@ -1,8 +1,9 @@
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.productos.modal-nuevo')
     @include('livewire.productos.modal-editar')
+    @include('livewire.productos.modal-modificar-inventario')
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-kitchen-set"></i> Productos</b></h4>
+        <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-kitchen-set"></i> Inventario de Productos</b></h4>
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
         <a wire:ignore.self id="botonAgregar" class="btn btn-primary" wire:click="abreAgregaProducto" title="Agregar producto" wire:loading.attr="disabled" wire:target="abreAgregaProducto" data-toggle="modal" data-target="#nuevoProductoModal">
             <i class="fas fa-plus"></i>
@@ -98,7 +99,11 @@
                         <a wire:click.prevent="editaProducto('{{ $producto->codigo }}')" title="Editar producto" wire:loading.attr="disabled" wire:target="editaProducto" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarProductoModal"
                         >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
-                        </a>                    
+                        </a> &nbsp;
+                        <a wire:click.prevent="modificaInventario('{{ $producto->codigo }}')" title="Modificar inventario" wire:loading.attr="disabled" wire:target="modificaInventario" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#modificarInventarioModal"
+                            >
+                            <i class="fa-solid fa-boxes-stacked" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
+                        </a>  &nbsp;
                         <a wire:click="invertirEstatusProducto('{{ $producto->codigo }}')" wire:loading.attr="disabled" wire:target="invertirEstatusProducto" style="color: dimgrey;cursor:pointer">
                             @if ($producto->disponible)
                             <i class='fa-solid fa-rectangle-xmark' style="color: dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Poner NO DISPONIBLE"></i>
@@ -130,6 +135,12 @@
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('cerrarModalEditarProducto', () => {
         document.getElementById('btnCerrarEditarProductoModal').click();
+            })
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalModificarInventario', () => {
+        document.getElementById('btnCerrarModificarInventarioModal').click();
             })
     });
 

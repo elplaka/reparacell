@@ -73,7 +73,7 @@
                             </table>
                         </div>
                         <div class="col-md-1 mb-3" wire:loading.remove>
-                            <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" wire:click="nuevoEquipoCliente">
+                            <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" wire:click="nuevoEquipoCliente" title="Nuevo Equipo">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>

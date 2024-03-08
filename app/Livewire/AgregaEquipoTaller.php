@@ -21,11 +21,14 @@ use Livewire\Attributes\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule as ValidationRule;
-use Livewire\Attributes\On; 
-
+use Livewire\Attributes\On;
+use Livewire\WithPagination;
 
 class AgregaEquipoTaller extends Component
 {
+    use WithPagination;
+
+    public $numberOfPaginatorsRendered = [];
     use WithFileUploads;
     use LivewireAlert;
 
@@ -69,7 +72,6 @@ class AgregaEquipoTaller extends Component
     public $equiposClienteModal;
     public $equipoSeleccionadoModal;
     public $historialEquipoTaller;
-    public $historialClienteTaller;
 
     public $muestraHistorialClienteModal;
     public $muestraHistorialEquipoClienteModal;
@@ -187,7 +189,21 @@ class AgregaEquipoTaller extends Component
         $fallas_equipos = FallaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])->get();
         $estatus_equipos = EstatusEquipo::all();
 
-        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos'));
+        if ($this->muestraHistorialClienteModal) 
+        {
+            $historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
+            ->where('equipos.id_cliente', $this->cliente['id'])
+            ->orderBy('equipos_taller.fecha_salida')
+            ->orderBy('equipos_taller.num_orden')
+            ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones') 
+            ->paginate(5);
+        }
+        else
+        {
+            $historialClienteTaller = null;
+        }
+
+        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 'historialClienteTaller'));
     }
 
 
@@ -689,12 +705,13 @@ class AgregaEquipoTaller extends Component
     
     public function abreClienteHistorial()
     {
-        $this->historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
+        $historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
         ->where('equipos.id_cliente', $this->cliente['id'])
         ->orderBy('equipos_taller.fecha_salida')
         ->orderBy('equipos_taller.num_orden')
-        ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones')  
-        ->get();
+        ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones')
+        ->paginate(5);
+        // ->get();
 
         // dd($this->historialClienteTaller);
 

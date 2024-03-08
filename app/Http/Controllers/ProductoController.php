@@ -11,4 +11,9 @@ class ProductoController extends Controller
     {
         return view('productos.index');
     }
+
+    public function inventario()
+    {
+        return view('productos.inventario');
+    }
 }

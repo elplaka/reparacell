@@ -7,7 +7,7 @@
     <div class="modal-dialog modal-xl" role="dialog">
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Historial del cliente :: [{{ $cliente['nombre'] }}] </b></h1>
+               <h1 class="text-xl font-bold" wire:loading.remove><b> Historial del cliente en Taller :: [{{ $cliente['nombre'] }}] </b></h1>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraModalClienteHistorial">
                    <span aria-hidden="true">&times;</span>
                </button> 
@@ -41,7 +41,8 @@
            <div class="modal-body" wire:loading.remove style="{{ $muestraHistorialClienteModal ? 'display: block' : 'display: none'}}">
                <div class="container mt-3 font-sans text-gray-900 antialiased">
                     <div class="row mb-3">
-                        @if (!is_null($historialClienteTaller) && $historialClienteTaller->count() > 0)
+                        @if ($historialClienteTaller && !$historialClienteTaller->isEmpty())
+                        {{-- @if (!is_null($historialClienteTaller) && $historialClienteTaller->count() > 0) --}}
                         <div class="table-responsive">
                             <table class="table table-sm table-hover table-bordered">
                                 <thead>
@@ -119,8 +120,11 @@
                                                 {{ $observaciones }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
-                                                @foreach ($fallas_equipo as $falla_equipo)
-                                                    {{ $falla_equipo->falla->descripcion }}
+                                                @foreach ($fallas_equipo as $index => $falla_equipo)
+                                                {{ $falla_equipo->falla->descripcion }}
+                                                @if ($index < count($fallas_equipo) - 1)
+                                                    |
+                                                @endif
                                                 @endforeach
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
@@ -140,6 +144,13 @@
                             <div class="px-2 py-2 bg-gray-200 text-center text-lg leading-4 font-medium text-gray-700 uppercase tracking-wider">
                                 EL CLIENTE NO TIENE HISTORIAL
                             </div>
+                        @endif
+                        @if ($historialClienteTaller)
+                        <div class="col-mx">
+                            <label class="col-form-label float-left">
+                                {{ $historialClienteTaller->links('livewire.paginame') }}
+                            </label>
+                        </div>
                         @endif
                     </div>
                 </div>

@@ -141,6 +141,31 @@
         color: {{ $rosaPastel }};
     }
 
+    
+    .custom-badge-color-1 {
+        background-color: {{ $azulPastel }};
+    }
+
+    .custom-badge-color-2 {
+        background-color: {{ $naranjaPastel }};
+    }
+
+    .custom-badge-color-3 {
+        background-color: {{ $amarilloPastel }};
+    }
+
+    .custom-badge-color-4 {
+        background-color: {{ $moradoPastel }};
+    }
+
+    .custom-badge-color-5 {
+        background-color: {{ $verdePastel }};
+    }
+
+    .custom-badge-color-6 {
+        background-color: {{ $rosaPastel }};
+    }
+
 .label-button {
     background: none;
     border: none;

@@ -189,9 +189,26 @@
             <hr class="sidebar-divider">
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('productos.index') }}">
+                {{-- <a class="nav-link" href="{{ route('productos.index') }}">
                     <i class="fa-solid fa-kitchen-set"></i>
-                    <span> Productos </span></a>
+                    <span> Productos </span></a> --}}
+                
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProductos"
+                    aria-expanded="true" aria-controls="collapseProductos">
+                    <i class="fa-solid fa-kitchen-set"></i>
+                    <span> Productos</span>
+                </a>
+                <div id="collapseProductos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('productos.index') }}">                     
+                            {{-- <i class="fa-solid fa-rectangle-list"></i> Catálogo  --}}
+                        <i class="fa-solid fa-boxes-stacked"></i> Inventario </a>
+
+                        </a> 
+                        {{-- <a class="collapse-item" href="{{ route('productos.inventario') }}">                     <i class="fa-solid fa-boxes-stacked"></i> Inventario </a> --}}
+                       {{-- <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a> --}}
+                    </div>
+                </div>
             </li>
 
             <hr class="sidebar-divider">
@@ -204,7 +221,7 @@
                 <div id="collapseClientes" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('clientes.index') }}">                     <i class="fa-solid fa-elevator"></i> Índice </a>
-                        {{-- <a class="collapse-item" href="{{ route('clientes.historial') }}">                     <i class="fa-solid fa-clock-rotate-left"></i> Historial </a> --}}
+                        <a class="collapse-item" href="{{ route('clientes.historial') }}">                     <i class="fa-solid fa-clock-rotate-left"></i> Historial </a>
                     </div>
                 </div>
             </li>

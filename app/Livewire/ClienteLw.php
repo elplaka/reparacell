@@ -13,39 +13,9 @@ class ClienteLw extends Component
 
     public $numberOfPaginatorsRendered = [];
     public $showMainErrors, $showModalErrors;
-
-    protected $rules;
     
-    public function __construct()
-    {
-        $telefonoId = isset($this->clienteModal['telefonoId']) ? $this->clienteModal['telefonoId'] : null;
-
-        $this->rules =
-    [
-        'clienteModal.id' => 'required|numeric',
-        // 'clienteModal.telefonoId' => 'required|unique:clientes,telefono|digits:10',
-        'clienteModal.telefonoId' => 'required|numeric|digits:10',
-        'clienteModal.telefonoContacto' => 'required|numeric|digits:10',
-        'clienteModal.nombre' => 'required|string|max:50',
-        'clienteModal.direccion' => 'required|string|max:50',
-    ];
-    }
-
-    protected $messages = [
-        'clienteModal.id.required' => 'El campo Id es obligatorio.',
-        'clienteModal.id.numeric' => 'El campo Id debe ser un número.',
-        'clienteModal.telefonoId.required' => 'El campo Teléfono Id es obligatorio.',
-        'clienteModal.telefonoId.numeric' => 'El campo Teléfono Id debe ser un número.',
-        'clienteModal.telefonoId.digits' => 'El campo Teléfono Id debe tener exactamente 10 dígitos.',
-        'clienteModal.telefonoId.unique' => 'El número de Teléfono Id ya está registrado.',
-        'clienteModal.telefonoContacto.required' => 'El campo Teléfono Contacto es obligatorio.',
-        'clienteModal.telefonoContacto.numeric' => 'El campo Teléfono Contacto debe ser un número.',
-        'clienteModal.telefonoContacto.digits' => 'El campo Teléfono Contacto debe tener exactamente 10 dígitos.',
-        'clienteModal.nombre.required' => 'El campo Nombre es obligatorio.',
-        'clienteModal.direccion.max' => 'El Nombre no puede exceder los 50 caracteres.',
-        'clienteModal.direccion.max' => 'La Dirección no puede exceder los 50 caracteres.',
-    ];
-
+    public $rules, $messages;
+    
     public $filtrosClientes = [
         'telefonoId',
         'nombre',
@@ -55,6 +25,15 @@ class ClienteLw extends Component
     ];
 
     public $clienteModal = [
+        'id',
+        'telefonoId',
+        'nombre',
+        'direccion',
+        'telefonoContacto',
+        'disponible'
+    ];
+
+    public $clienteModalEdit = [
         'id',
         'telefonoId',
         'nombre',
@@ -120,19 +99,50 @@ class ClienteLw extends Component
             'telefonoContacto' => '',
             'disponible' => -1
         ];
+
+        $this->clienteModalEdit = [
+            'id' => 0,
+            'telefonoId' => '',
+            'nombre' => '',
+            'direccion' => '',
+            'telefonoContacto' => '',
+            'disponible' => -1
+        ];
     }
 
     public function editaCliente($idCliente)
     {
         $cliente = Cliente::find($idCliente);
 
-        $this->clienteModal = [
+        $this->clienteModalEdit = [
             'id' => $cliente->id,
             'telefonoId' => $cliente->telefono,
             'nombre' => $cliente->nombre,
             'direccion' => $cliente->direccion,
             'telefonoContacto' => $cliente->telefono_contacto,
             'disponible' => $cliente->disponible
+        ];
+
+        $this->rules =
+        [
+            'clienteModalEdit.telefonoId' => 'required|numeric|digits:10|unique:clientes,telefono,' . $this->clienteModalEdit['id'] . ',id',
+            'clienteModalEdit.telefonoContacto' => 'required|numeric|digits:10',
+            'clienteModalEdit.nombre' => 'required|string|max:50',
+            'clienteModalEdit.direccion' => 'required|string|max:50',
+        ];
+
+        $this->messages =
+        [
+            'clienteModalEdit.telefonoId.required' => 'El campo Teléfono Id es obligatorio.',
+            'clienteModalEdit.telefonoId.numeric' => 'El campo Teléfono Id debe ser un número.',
+            'clienteModalEdit.telefonoId.digits' => 'El campo Teléfono Id debe tener exactamente 10 dígitos.',
+            'clienteModalEdit.telefonoId.unique' => 'El número de Teléfono Id ya está registrado.',
+            'clienteModalEdit.telefonoContacto.required' => 'El campo Teléfono Contacto es obligatorio.',
+            'clienteModalEdit.telefonoContacto.numeric' => 'El campo Teléfono Contacto debe ser un número.',
+            'clienteModalEdit.telefonoContacto.digits' => 'El campo Teléfono Contacto debe tener exactamente 10 dígitos.',
+            'clienteModalEdit.nombre.required' => 'El campo Nombre es obligatorio.',
+            'clienteModalEdit.direccion.max' => 'El Nombre no puede exceder los 50 caracteres.',
+            'clienteModalEdit.direccion.max' => 'La Dirección no puede exceder los 50 caracteres.',
         ];
 
     }
@@ -149,18 +159,18 @@ class ClienteLw extends Component
         $this->showModalErrors = true;
         $this->showMainErrors = false;
 
-        if ($this->clienteModal['direccion'] === null || strlen(trim($this->clienteModal['direccion'])) === 0)
+        if ($this->clienteModalEdit['direccion'] === null || strlen(trim($this->clienteModalEdit['direccion'])) === 0)
         {
-            $this->clienteModal['direccion'] = "-";
+            $this->clienteModalEdit['direccion'] = "-";
         }
 
         $this->validate();
 
-        $cliente = Cliente::findOrFail($this->clienteModal['id']);
-        $cliente->telefono = $this->clienteModal['telefonoId'];
-        $cliente->nombre = trim(mb_strtoupper($this->clienteModal['nombre']));
-        $cliente->direccion = trim(mb_strtoupper($this->clienteModal['direccion']));
-        $cliente->telefono_contacto = $this->clienteModal['telefonoContacto'];
+        $cliente = Cliente::findOrFail($this->clienteModalEdit['id']);
+        $cliente->telefono = $this->clienteModalEdit['telefonoId'];
+        $cliente->nombre = trim(mb_strtoupper($this->clienteModalEdit['nombre']));
+        $cliente->direccion = trim(mb_strtoupper($this->clienteModalEdit['direccion']));
+        $cliente->telefono_contacto = $this->clienteModalEdit['telefonoContacto'];
         $cliente->save();
 
         $this->showModalErrors = false;
@@ -187,7 +197,30 @@ class ClienteLw extends Component
 
     public function abreAgregaCliente()
     {
+        $this->rules =
+        [
+            'clienteModal.id' => 'required|numeric',
+            "clienteModal.telefonoId" => "required|digits:10|unique:clientes,telefono,{$this->clienteModal['id']},id",
+            
+            'clienteModal.telefonoContacto' => 'required|numeric|digits:10',
+            'clienteModal.nombre' => 'required|string|max:50',
+            'clienteModal.direccion' => 'required|string|max:50',
+        ];
 
+        $this->messages =
+        [
+            'clienteModal.id.required' => 'El campo Id es obligatorio.',
+            'clienteModal.id.numeric' => 'El campo Id debe ser un número.',
+            'clienteModal.telefonoId.required' => 'El campo Teléfono Id es obligatorio.',
+            'clienteModal.telefonoId.numeric' => 'El campo Teléfono Id debe ser un número.',
+            'clienteModal.telefonoId.digits' => 'El campo Teléfono Id debe tener exactamente 10 dígitos.',
+            'clienteModal.telefonoId.unique' => 'El número de Teléfono Id ya está registrado.',
+            'clienteModal.telefonoContacto.required' => 'El campo Teléfono Contacto es obligatorio.',
+            'clienteModal.telefonoContacto.numeric' => 'El campo Teléfono Contacto debe ser un número.',
+            'clienteModal.telefonoContacto.digits' => 'El campo Teléfono Contacto debe tener exactamente 10 dígitos.',
+            'clienteModal.nombre.required' => 'El campo Nombre es obligatorio.',
+            'clienteModal.direccion.max' => 'El Nombre no puede exceder los 50 caracteres.',
+        ];
     }
 
     public function guardaCliente()
@@ -201,6 +234,8 @@ class ClienteLw extends Component
         }
 
         $this->validate();
+
+        dd('pasé');
 
         $cliente = new Cliente;
         $cliente->telefono = $this->clienteModal['telefonoId'];
