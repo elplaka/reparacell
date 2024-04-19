@@ -14,6 +14,8 @@ use App\Models\EstatusEquipo;
 use App\Models\FallaEquipoTaller;
 use App\Models\CobroEstimadoTaller;
 use App\Models\ImagenEquipo;
+use App\Models\CobroTallerCredito;
+use App\Models\CobroTallerCreditoDetalle;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithFileUploads;
@@ -57,11 +59,13 @@ class AgregaEquipoTaller extends Component
         'numOrden',
         'idEstatus',
         'observaciones',
+        'anticipo',
+        'totalEstimado',
         'estatus'  //0: AGREGAR EQUIPO, 1: EDITAR
     ];
 
     public $fallas = [];
-    public $fallasE = [];
+    public $fallasCostos = [];
     public $numImagenes;
     public $numImagenesEdit;  
     public $showMainErrors, $showModalErrors;
@@ -112,6 +116,7 @@ class AgregaEquipoTaller extends Component
 
     public function mount()
     {
+
         $this->cliente = [
             'estatus'           => 0,
             'nombre'            => '',
@@ -135,7 +140,9 @@ class AgregaEquipoTaller extends Component
         $this->equipoTaller = [
             'numOrden'      => null,
             'estatus'       => 1,
-            'observaciones' => null
+            'observaciones' => null,
+            'anticipo'      => 0,
+            'totalEstimado' => 0
         ];
 
         $this->marcaMod = [
@@ -162,7 +169,7 @@ class AgregaEquipoTaller extends Component
         ];
 
         $this->fallas = [];
-        $this->fallasE = [];
+        // $this->fallasE = [];
         $this->imagenes = [];
         $this->numImagenes = 1;
         $this->showModalErrors = false;
@@ -231,6 +238,32 @@ class AgregaEquipoTaller extends Component
         return $cobroEstimado ? true : false;
     }
 
+    public function equipoEnTallerActualiza($idEquipo)
+    {
+        // dd($this->equipoTaller['numOrden']);
+
+        $equipoTaller = EquipoTaller::where('id_equipo', $idEquipo)
+        ->where('num_orden', '!=', $this->equipoTaller['numOrden'])
+        ->whereNotIn('id_estatus', [5, 6])
+        ->first();
+
+        return $equipoTaller ? true : false;
+    }
+
+    public function actualizaEquipo()
+    {
+        $idEquipo = $this->regresaEquipoCliente($this->cliente['id'], $this->equipo['idTipo'], $this->equipo['idMarca'], $this->equipo['idModelo']);
+
+        if ($this->equipoEnTallerActualiza($idEquipo))
+        {
+            $this->dispatch('lanzaAdvertenciaEquipoTaller');
+        }
+        else
+        {
+            $this->actualizaEquipoTaller();
+        }
+    }
+
     public function actualizaEquipoTaller()
     {
         $this->validate([
@@ -243,7 +276,12 @@ class AgregaEquipoTaller extends Component
             'cliente.telefonoContacto' => 'required|digits:10|numeric',
             'equipo.idMarca' => 'required',
             'equipo.idModelo' => 'required',
-            'equipoTaller.observaciones' => ['nullable', 'max:50']
+            'equipoTaller.observaciones' => ['nullable', 'max:50'],
+            // 'equipoTaller.anticipo' => ['required', 'numeric', function ($attribute, $value, $fail) {
+            //     if ($value > $this->equipoTaller['totalEstimado']) {
+            //         $fail('El ANTICIPO no puede ser mayor que el TOTAL.');
+            //     }
+            // }],
         ], [
             'cliente.telefono.required' => 'El campo <b>Teléfono</b> es obligatorio.',
             'cliente.telefono.digits' => 'El campo <b>Teléfono</b> debe ser de 10 dígitos y contener solo números.',
@@ -275,31 +313,26 @@ class AgregaEquipoTaller extends Component
                         $cliente_existente->disponible = 1;
                         $cliente_existente->save();
                     }
-                }
+                }      
 
-                $equipo_existente = $this->regresaEquipo($this->equipo['id']);
-                if ($equipo_existente) 
+                $idEquipo = $this->regresaEquipoCliente($this->cliente['id'], $this->equipo['idTipo'], $this->equipo['idMarca'], $this->equipo['idModelo']);
+
+                if (is_null($idEquipo))
                 {
-                    if ($this->equipo['estatus'] == 3)
-                    {
-                        $equipo_existente->id_tipo = $this->equipo['idTipo'];
-                        $equipo_existente->id_marca = $this->equipo['idMarca'];
-                        $equipo_existente->id_modelo = $this->equipo['idModelo'];
-                        $equipo_existente->save();
-                    }
+                $nuevoEquipo = new Equipo;
+
+                $nuevoEquipo->id_tipo = $this->equipo['idTipo'];
+                $nuevoEquipo->id_marca = $this->equipo['idMarca'];
+                $nuevoEquipo->id_modelo = $this->equipo['idModelo'];
+                $nuevoEquipo->id_cliente = $this->cliente['id'];
+    
+                $nuevoEquipo->save();
+
+                $this->equipo['id'] = $nuevoEquipo->id;
                 }
-                else  //Si no existe el equipo se agregar
+                else
                 {
-                    $nuevoEquipo = new Equipo;
-
-                    $nuevoEquipo->id_tipo = $this->equipo['idTipo'];
-                    $nuevoEquipo->id_marca = $this->equipo['idMarca'];
-                    $nuevoEquipo->id_modelo = $this->equipo['idModelo'];
-                    $nuevoEquipo->id_cliente = $this->cliente['id'];
-        
-                    $nuevoEquipo->save();
-
-                    $this->equipo['id'] = $nuevoEquipo->id;
+                    $this->equipo['id'] = $idEquipo;
                 }
 
                 $numOrden = $this->equipoTaller['numOrden'];
@@ -331,28 +364,36 @@ class AgregaEquipoTaller extends Component
                     $k++;
                 }
 
-                if (!$this->cobroRepetido($numOrden, $cobroEstimado))
-                {
-                    $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
+                /// ATENCIÓN:: Quitar que se agreguen mas COBROS ESTIMADOS en un NUM_ORDEN
+                // if (!$this->cobroRepetido($numOrden, $cobroEstimado))
+                // {
+                //     $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
 
-                    if ($ultimoRegistro) {
-                        // Si se encontró un registro previo, incrementa el valor 'id' en 1.
-                        $maxId = $ultimoRegistro->id + 1;
-                    } else {
-                        // Si no se encontraron registros previos, establece el valor de 'id' en 1.
-                        $maxId = 1;
-                    }
+                //     if ($ultimoRegistro) {
+                //         // Si se encontró un registro previo, incrementa el valor 'id' en 1.
+                //         $maxId = $ultimoRegistro->id + 1;
+                //     } else {
+                //         // Si no se encontraron registros previos, establece el valor de 'id' en 1.
+                //         $maxId = 1;
+                //     }
 
-                    $cobroEstimadoTaller = new CobroEstimadoTaller();
-                    $cobroEstimadoTaller->id = $maxId;
-                    $cobroEstimadoTaller->num_orden = $numOrden;
-                    $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
-                    $cobroEstimadoTaller->save();
+                //     $cobroEstimadoTaller = new CobroEstimadoTaller();
+                //     $cobroEstimadoTaller->id = $maxId;
+                //     $cobroEstimadoTaller->num_orden = $numOrden;
+                //     $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
+                //     $cobroEstimadoTaller->save();
 
-                    $actualizaEquipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
-                    $actualizaEquipoTaller->id_cobro_estimado = $maxId;
-                    $actualizaEquipoTaller->save();
-                }
+                //     $actualizaEquipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
+                //     $actualizaEquipoTaller->id_cobro_estimado = $maxId;
+                //     $actualizaEquipoTaller->save();
+                // }
+
+               
+                // $cobroEstimadoTaller = CobroEstimadoTaller::where('num_orden', $numOrden)->first();
+                // $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
+                // $cobroEstimadoTaller->save();
+
+                CobroEstimadoTaller::where('num_orden', $numOrden)->update(['cobro_estimado' => $cobroEstimado]);
 
                 $imagenesEquipo = ImagenEquipo::where('num_orden', $this->equipoTaller['numOrden'])->delete();
 
@@ -407,7 +448,12 @@ class AgregaEquipoTaller extends Component
             'cliente.telefonoContacto' => 'required|digits:10|numeric',
             'equipo.idMarca' => 'required',
             'equipo.idModelo' => 'required',
-            'equipoTaller.observaciones' => ['nullable', 'max:50']
+            'equipoTaller.observaciones' => ['nullable', 'max:50'],
+            // 'equipoTaller.anticipo' => ['required', 'numeric', function ($attribute, $value, $fail) {
+            //     if ($value > $this->equipoTaller['totalEstimado']) {
+            //         $fail('El ANTICIPO no puede ser mayor que el TOTAL.');
+            //     }
+            // }],
         ], [
             'cliente.telefono.required' => 'El campo <b>Teléfono</b> es obligatorio.',
             'cliente.telefono.digits' => 'El campo <b>Teléfono</b> debe ser de 10 dígitos y contener solo números.',
@@ -500,9 +546,10 @@ class AgregaEquipoTaller extends Component
                 $equipo_taller->id_usuario_recibio = Auth::id();
                 $equipo_taller->id_estatus = 1;
                 $equipo_taller->observaciones = "NINGUNA";
-                $equipo_taller->save();
+                $equipo_taller->save(); 
 
                 $numOrden = $equipo_taller->num_orden;
+                $idCliente = $equipo_taller->equipo->cliente->id;
 
                 //array_filter se utiliza para filtrar los elementos con valor true, y luego array_keys se utiliza para obtener los índices correspondientes.
                 $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
@@ -521,27 +568,35 @@ class AgregaEquipoTaller extends Component
                     $k++;
                 }
 
-                if (!$this->cobroRepetido($numOrden, $cobroEstimado))
-                {
-                    $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
+                // if (!$this->cobroRepetido($numOrden, $cobroEstimado))
+                // {
+                //     $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
 
-                    if ($ultimoRegistro) {
-                        // Si se encontró un registro previo, incrementa el valor 'id' en 1.
-                        $maxId = $ultimoRegistro->id + 1;
-                    } else {
-                        // Si no se encontraron registros previos, establece el valor de 'id' en 1.
-                        $maxId = 1;
-                    }
+                //     if ($ultimoRegistro) {
+                //         // Si se encontró un registro previo, incrementa el valor 'id' en 1.
+                //         $maxId = $ultimoRegistro->id + 1;
+                //     } else {
+                //         // Si no se encontraron registros previos, establece el valor de 'id' en 1.
+                //         $maxId = 1;
+                //     }
 
-                    $cobroEstimadoTaller = new CobroEstimadoTaller();
-                    $cobroEstimadoTaller->id = $maxId;
-                    $cobroEstimadoTaller->num_orden = $numOrden;
-                    $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
-                    $cobroEstimadoTaller->save();
-                }
+                //     $cobroEstimadoTaller = new CobroEstimadoTaller();
+                //     $cobroEstimadoTaller->id = $maxId;
+                //     $cobroEstimadoTaller->num_orden = $numOrden;
+                //     $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
+                //     $cobroEstimadoTaller->save();
+
+                // }
+
+                $cobroEstimadoTaller = new CobroEstimadoTaller();
+                $cobroEstimadoTaller->id = 1;
+                $cobroEstimadoTaller->num_orden = $numOrden;
+                $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
+                $cobroEstimadoTaller->save();
 
                 $actualizaEquipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
-                $actualizaEquipoTaller->id_cobro_estimado = $maxId;
+                // $actualizaEquipoTaller->id_cobro_estimado = $maxId;
+                $actualizaEquipoTaller->id_cobro_estimado = 1;
                 $actualizaEquipoTaller->save();
 
                 foreach ($this->imagenes as $key => $imagen) {
@@ -560,6 +615,27 @@ class AgregaEquipoTaller extends Component
                     }
                 }
 
+                // if ($this->equipoTaller['anticipo'] > $this->equipoTaller['totalEstimado'])
+                // {
+                //     dd('El anticipo no puede ser mayor que el total estimado');
+                // }
+                // else
+                // {
+                    if ($this->equipoTaller['anticipo'] > 0)
+                    {
+                        $cobroTallerCredito = new CobroTallerCredito();
+                        $cobroTallerCredito->num_orden = $numOrden;
+                        $cobroTallerCredito->id_cliente = $idCliente;
+                        $cobroTallerCredito->id_estatus = 1;
+                        $cobroTallerCredito->save();
+
+                        $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
+                        $cobroTallerCreditoDetalle->num_orden = $numOrden;
+                        $cobroTallerCreditoDetalle->abono = $this->equipoTaller['anticipo'];
+                        $cobroTallerCreditoDetalle->save();
+                    }
+                // }
+  
                 $this->muestraDivAgregaEquipo = false;
                 $this->dispatch('ocultaDivAgregaEquipo');
                 $this->dispatch('mostrarToast', 'Equipo agregado con éxito!!!');
@@ -575,7 +651,7 @@ class AgregaEquipoTaller extends Component
         }
     }
 
-    public function aceptaEquipo()
+    public function aceptaEquipo() 
     {  
         $this->showMainErrors = true;
         $this->showModalErrors = false;
@@ -621,6 +697,26 @@ class AgregaEquipoTaller extends Component
         $this->equiposClienteModal = $this->regresaEquiposCliente($this->cliente['id']);
     }
 
+    public function hazParo()   //No hace nada pero hace que funcione updatedFallas
+    {
+    }
+
+    public function updatedFallas($value, $key)
+    {
+        $costo = FallaEquipo::find($key)->costo;
+
+        if ($value)
+        {
+            $this->fallasCostos[$key] = $costo;
+        }
+        else
+        {
+            if(isset($this->fallasCostos[$key])) unset($this->fallasCostos[$key]);
+        }
+
+        $this->equipoTaller['totalEstimado'] = array_sum($this->fallasCostos);
+    }
+
     public function updatedClienteTelefono($value)
     {
         if ($this->cliente['estatus'] != 3)   //Si el cliente no es editable entonces que busque clientes
@@ -646,6 +742,7 @@ class AgregaEquipoTaller extends Component
 
                     if ($this->tieneEquiposCliente && $this->cliente['telefonoContacto'] != "0000000000")
                     {
+                        $this->equipo['estatus'] = 0;
                         $this->dispatch('abreModalEquiposCliente');    //El listener está en layouts.main
                     }
 
@@ -667,6 +764,11 @@ class AgregaEquipoTaller extends Component
                     $this->equipo['id_tipo'] = 1;   //Valor por default (Celular)
 
                     $this->equipo['estatus'] = 1;
+                    $this->equipo['idMarca'] = null;
+                    $this->equipo['idModelo']  = null;
+                    // 'nombreTipo'        => null,
+                    // 'nombreMarca'       => null,
+                    // 'nombreModelo'      => null
 
                     $this->equipoTaller['estatus'] = 0;
                 }
@@ -697,6 +799,9 @@ class AgregaEquipoTaller extends Component
                     if (strlen($value) <= 10) 
                     {
                         $this->cliente['publicoGeneral'] = false;
+                        $this->cliente['estatus'] = 0;
+                        $this->equipoTaller['estatus'] = 0;
+                        // $this->equipo['estatus'] = 2;
                     }
                 }
             }
@@ -892,11 +997,14 @@ class AgregaEquipoTaller extends Component
     {
         $this->showMainErrors = false;
         $this->equipo['idMarca'] = '';
+        $this->equipoTaller['totalEstimado'] = 0;
         $this->fallas = [];
+        $this->fallasCostos = [];
     }
 
     public function updatedEquipoIdMarca()
     {
+        $this->equipo['idModelo'] = '';
         $this->showMainErrors = false;
     }
 
@@ -1038,7 +1146,9 @@ class AgregaEquipoTaller extends Component
     }
 
     public function capturarFilaEquiposCliente($idEquipo)
-    {        
+    {   
+        $idTipoAnterior = $this->equipo['idTipo'];
+        
         $this->equipo['id'] = $idEquipo;
 
         $equipo = Equipo::findOrFail($idEquipo);
@@ -1052,9 +1162,20 @@ class AgregaEquipoTaller extends Component
         
         $this->equipoSeleccionadoModal = true;
         
+        if ($this->equipo['estatus'] < 3)
+        {
+            if ($idTipoAnterior != $this->equipo['idTipo']) $this->fallas = [];
+            $this->imagenes = [];
+        }
+
+        if ($idTipoAnterior != $this->equipo['idTipo'])
+        {
+            $this->equipoTaller['totalEstimado'] = 0;
+            $this->fallas = [];
+            $this->fallasCostos = [];
+        }
+
         $this->equipo['estatus'] = 2;
-        $this->fallas = [];
-        $this->imagenes = [];
 
         $this->dispatch('cerrarModalEquiposCliente');
     }
@@ -1240,6 +1361,7 @@ class AgregaEquipoTaller extends Component
         $this->muestraDivAgregaEquipo = true;
         $this->equipo['estatus'] = 0;
         $this->cliente['estatus'] = 0;
+        $this->equipoTaller['estatus'] = 0;
     }
 
     // #[On('ocultaDivAgregaEquipo')] 
@@ -1277,6 +1399,26 @@ class AgregaEquipoTaller extends Component
         $this->equipoTaller['observaciones'] = $equipoTaller->observaciones;
         $this->equipoTaller['estatus'] = 1;
 
+        $cobroEstimado = CobroEstimadoTaller::where('num_orden', $numOrden)->first();
+
+        if ($cobroEstimado->credito) {
+            $this->equipoTaller['anticipo'] = $cobroEstimado->credito->detalles()->where('id_abono', 1)->first()->abono;
+        } else 
+        {
+            $this->equipoTaller['anticipo'] = 0;
+        }
+
+        $this->fallasCostos = [];
+
+        $fallas = FallaEquipoTaller::where('num_orden', $numOrden)->get();
+
+        foreach($fallas as $falla)
+        {
+            $this->fallasCostos[$falla->id_falla] = $falla->falla->costo;
+        }
+
+        $this->equipoTaller['totalEstimado'] = array_sum($this->fallasCostos);
+
         $fallasEquipoTaller = FallaEquipoTaller::where('num_orden', $numOrden)->get();
 
         $this->fallas = [];
@@ -1298,8 +1440,6 @@ class AgregaEquipoTaller extends Component
         }
 
         $this->numImagenesEdit = $j;
-
-        
     }
 
 }

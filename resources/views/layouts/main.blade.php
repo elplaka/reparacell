@@ -18,9 +18,12 @@
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"> --}}
+    
 
     <!-- Custom styles for this template-->
     <link href="{{ asset('css/sb-admin.min.css')}}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -152,7 +155,10 @@
                 <div id="collapseReparaciones" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('taller.index') }}"> <i class="fa-solid fa-screwdriver-wrench"></i> Taller</a>
-                    </div>
+                    {{-- </div> --}}
+                    {{-- <div class="bg-white py-2 collapse-inner rounded"> --}}
+                        <a class="collapse-item" href="{{ route('reparaciones.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
+                    </div>                    
                 </div>
             </li>
 
@@ -329,10 +335,12 @@
     <!-- Custom scripts for all pages-->
     <script src="{{ asset('js/sb-admin.min.js') }}"></script>
 
+ 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
-
+    {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
+    
 <script>
         window.addEventListener('contentChanged', function () {
             $('.selectpicker').selectpicker();
@@ -383,6 +391,11 @@
             Livewire.on('cierraCobroModal', () => {
                 $('#cobroTallerModal').modal('hide');
             })
+
+            Livewire.on('abreCobroCreditoTallerModal', () => {
+                $('#cobroCreditoTallerModal').modal('show');
+            })
+    
     });
 </script>
     <script>
@@ -424,6 +437,24 @@
                     })
             });
         });
+
+        document.addEventListener('livewire:initialized', function () {
+            Livewire.on('mostrarToastAceptarCancelar', (attr) => {
+                Swal.fire({
+                    title: attr[0],
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Aceptar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch(attr[1]);
+                    }
+                });
+            });
+        });
     </script>
 
 <script>
@@ -449,6 +480,9 @@
             });
         });
     });
+
+
 </script>
+
 </body>
 </html>

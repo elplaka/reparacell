@@ -125,14 +125,14 @@ class Caja extends Component
         {
             if ($cajeroSeleccionado)
             {
-                $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
-                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])
+                 $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
+                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])->where('id_usuario', $this->corteCaja['idUsuario'])
                 ->get();
             }
             else
             {
                 $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
-                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])->where('id_usuario', $this->corteCaja['idUsuario'])
+                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])
                 ->get();
             }
         }

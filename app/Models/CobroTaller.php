@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\EquipoTaller;
+use App\Models\CobroTallerCredito;
 
 class CobroTaller extends Model
 {
@@ -25,5 +26,10 @@ class CobroTaller extends Model
     public function equipoTaller()
     {
         return $this->belongsTo(EquipoTaller::class, 'num_orden');
+    }
+
+    public function credito()
+    {
+        return $this->hasOne(CobroTallerCredito::class, 'num_orden');
     }
 }

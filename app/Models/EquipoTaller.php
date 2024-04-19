@@ -8,6 +8,7 @@ use App\Models\Equipo;
 use App\Models\FallaEquipoTaller;
 use App\Models\EstatusEquipo;
 use App\Models\CobroTaller;
+use App\Models\CobroTallerCredito;
 use App\Models\User;
 use App\Models\AnotacionEquipoTaller;
 
@@ -57,6 +58,11 @@ class EquipoTaller extends Model
     public function cobroTaller()
     {
         return $this->hasOne(CobroTaller::class, 'num_orden');
+    }
+
+    public function cobroTallerCredito()
+    {
+        return $this->hasOne(CobroTallerCredito::class, 'num_orden');
     }
 
     public function anotacionEquipoTaller()

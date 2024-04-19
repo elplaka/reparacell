@@ -25,6 +25,11 @@ class EquipoTallerController extends Controller
         return view('taller.index');
     }
 
+    public function reportesReparaciones()
+    {
+        return view('taller.reportes');
+    }
+
     public function cobroEquipoTaller($numOrden)
     {
         return redirect()->route('taller.print', $numOrden);

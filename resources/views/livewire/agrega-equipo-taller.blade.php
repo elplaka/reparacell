@@ -81,7 +81,7 @@
                                 @if ($cliente['estatus'] == 3) readonly @endif 
                                 autofocus>
                                 </div>
-                                @if (!$equipo['estatus'] == 1)
+                                @if ($cliente['estatus'] == 0)
                                 <div class="col-md-5">                              
                                 <button class="btn btn-secondary" 
                                         data-toggle="modal" 
@@ -216,7 +216,7 @@
                     </div>
                     <div class="container mt-3">
                         <div class="row mb-3">
-                            <label for="equipo.fallas" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Fallas') }}</label>
+                            <label for="fallas" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Fallas') }}</label>
                             <div class="col-md-11">
                                 @php
                                 $contador = 0;
@@ -233,6 +233,7 @@
                                                     id="falla{{ $falla->id }}"
                                                     value="{{ $falla->id }}"
                                                     wire:model="fallas.{{ $falla->id }}"
+                                                    wire:click="hazParo()"
                                                 >
                                                 <label class="form-check-label" for="falla{{ $falla->id }}" style="color: dimgray; font-size: 11pt">
                                                     {{ $falla->descripcion }}
@@ -308,22 +309,23 @@
                     </div>
                 </div>
                 <br>
-                <div class="rounded px-5 pt-3 pb-3 border"> 
-                    <div class="row">
-                        <label for="equipoTaller.observaciones" class="font-medium text-sm-right text-gray-700" style="font-size: 11pt;">&nbsp; {{ __('Observaciones') }} </label> 
-                        <div class="col-md-6">
-                            <input wire:model="equipoTaller.observaciones" type="text" class="input-height form-control" id="cliente.direccion" style="font-size:11pt;" autofocus>
+                <div class="rounded pb-3 border"> 
+                    <div class="container mt-3">
+                        <div class="row">
+                            <label for="equipoTaller.observaciones" class="block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;">{{ __('Observaciones') }}</label>
+                            <div class="col-md-5">
+                                <input wire:model="equipoTaller.observaciones" type="text" class="input-height form-control" style="font-size:11pt;" autofocus>
+                            </div>
+                            <label for="equipoTaller.totalEstimado" class="col-md-2 block font-medium text-sm-center text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: center; text-align: center;"> {{ __('Total Estimado $ ') }} {{ number_format($equipoTaller['totalEstimado'], 2, '.', ',') }} </label>
+                            @if ($equipoTaller['estatus'] == 0)
+                            <label for="equipoTaller.anticipo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $') }} </label>
+                            <div class="col-md-2 ml-0 pl-1">
+                                <input wire:model="equipoTaller.anticipo" type="number" step="0.5" class="input-height form-control" style="font-size:11pt;" autofocus>
+                            </div>
+                            @else
+                            <label for="equipoTaller.anticipo" class="col-md-3 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $ ') }} {{ $equipoTaller['anticipo'] }} </label>
+                            @endif                     
                         </div>
-                        {{-- @if ($cliente['estatus'] == 3)
-                        <label for="equipoTaller.idEstatus" class="font-medium text-sm-right text-gray-700" style="font-size: 11pt;">&nbsp; {{ __('Estatus') }} </label>
-                        <div class="col-md-3">
-                            <select wire:model="equipoTaller.idEstatus" type="text" class="select-height form-control" id="equipo.idEstatus" style="font-size:11pt;" autofocus>
-                            @foreach ($estatus_equipos as $estatus)
-                                <option value="{{ $estatus->id }}">{{ $estatus->descripcion }}</option>
-                            @endforeach
-                            </select>
-                        </div>
-                        @endif --}}
                     </div>
                 </div>
                 @endif
@@ -332,7 +334,7 @@
             <div class="modal-footer d-flex justify-content-end">
                 @if (strlen($cliente['telefono']) == 10)
                     @if ($equipoTaller['estatus'] == 1)  {{-- Editando el equipo en taller --}}
-                    <button class="btn btn-success uppercase tracking-widest font-semibold text-xs" wire:click="actualizaEquipoTaller" wire:loading.attr='disabled'>Actualizar</button>
+                    <button class="btn btn-success uppercase tracking-widest font-semibold text-xs" wire:click="actualizaEquipo" wire:loading.attr='disabled'>Actualizar</button>
                     @else
                     <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="aceptaEquipo" wire:loading.attr='disabled'>Aceptar</button>
                     @endif

@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ClienteController;
 use App\Livewire\Caja;
+use App\Livewire\Taller;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
 
@@ -61,6 +62,9 @@ Route::middleware(['auth'])
     Route::get('/taller/index', [EquipoTallerController::class, 'index'])->name('taller.index');
     Route::get('/taller/print/{num_orden}', [EquipoTallerController::class, 'print'])->name('taller.print');
     Route::get('/taller/print-final/{num_orden}', [EquipoTallerController::class, 'print_final'])->name('taller.print-final');
+    Route::get('/taller/corte', [Taller::class, 'generaCorteCajaPDF'])->name('corte-caja');
+    Route::get('/reparaciones/reportes', [EquipoTallerController::class, 'reportesReparaciones'])->name('reparaciones.reportes');
+
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
     Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
 

@@ -5,21 +5,26 @@
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.modal-cobro-taller')
     @include('livewire.modal-anotaciones')
-    @if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        {{ session('error') }}
-    </div>
-    @endif
-    @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        {{ session('success') }}
-    </div>
+    @include('livewire.creditos.modal-taller')
+    @include('livewire.taller.modal-corte-caja')
+
+    @if ($showMainErrors)
+        @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            {{ session('error') }}
+        </div>
+        @endif
+        @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            {{ session('success') }}
+        </div>
+        @endif
     @endif
     @livewire('agrega-equipo-taller')
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
@@ -31,9 +36,56 @@
             <i class="fas fa-plus"></i>
         </a>
     </div>
+    <div class="row mb-2">
+        <div class="col-md-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <b> Tipo Equipo </b>
+        </div>
+        <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <b> Cliente </b>
+        </div>
+        <div class="col-md-4 ml-0 px-0 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <b> Fecha de Entrada </b>
+        </div>
+        <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+           <b> Estatus </b>
+        </div>
+    </div>
     <div class="row">
-        <div class="col-md-4 mb-3" wire:ignore>
-            <label class="col-md-4 text-xs leading-4 font-bo_ld text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> TIPO EQUIPO </strong> </label>
+        <div class="col-md-2 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
+                @foreach ($tipos_equipos as $tipo_equipo)
+                    <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <input type="text" wire:model.live="busquedaEquipos.nombreCliente" class="col-md-10 input-height form-control" style="font-size:11pt">
+        </div>
+        <div class="col-md-4 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <div class="row align-items-center">
+                Del &nbsp; &nbsp;
+                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
+                &nbsp; al &nbsp;
+                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
+            </div>
+        </div>
+        <div class="col-md-3 mb-3 text-xs leading-4 font-bo_ld text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+            <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker w-100" multiple>
+                <optgroup label="Entrega">
+                    <option value="entregados">ENTREGADOS</option>
+                    <option value="no_entregados">NO ENTREGADOS</option>
+                </optgroup>
+                @foreach ($estatus_equipos as $estatus)
+                    <option value="{{ $estatus->id }}" data-content="{{  $this->obtenerIconoEstatus($estatus->id) }} &nbsp; {{ $estatus->descripcion }}"></option>
+                @endforeach                    
+            </select>
+        </div>
+    </div>
+    
+        {{-- 
+        <div class="row">
+        <div class="col-md-3 mb-3" wire:ignore>
+            <label class="col-md-8 text-xs leading-4 font-bo_ld text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> TIPO EQUIPO </strong> </label>
             <div class="col-md-8">
                 <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
                     @foreach ($tipos_equipos as $tipo_equipo)
@@ -42,7 +94,7 @@
                 </select>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="d-flex justify-content-center">
                 <label class="text-center text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
                     <strong>FECHA DE ENTRADA&nbsp;&nbsp;&nbsp;&nbsp;</strong> 
@@ -55,7 +107,7 @@
                 <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
             </div>
         </div>
-        <div class="col-md-4 mb-3" wire:ignore>
+        <div class="col-md-3 mb-3" wire:ignore>
             <label class="col-md-4 text-xs leading-4 font-bo_ld text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> ESTATUS </strong> </label>
             <div class="col-md-8">
                 <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker w-100" multiple>
@@ -69,7 +121,8 @@
                 </select>
             </div>
         </div>
-    </div>
+        </div> --}}
+    
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
             <thead>
@@ -143,15 +196,17 @@
                             {{-- Este botón abre la ventana modal mediante Javascript y no por bootstrap --}}
                             <button wire:click="cobroFinalEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroFinalEquipoTaller" class="label-button"
                             {{-- data-toggle="modal" data-target="#cobroTallerModal" --}}
-                            ><i class="fa-solid fa-hand-holding-dollar" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i></button> <span wire:loading wire:target="cobroFinalEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            ><i class="fa-solid fa-hand-holding-dollar" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" title="Cobrar"></i></button> <span wire:loading wire:target="cobroFinalEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             @endif
-                            <button wire:click="cobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroEquipoTaller" class="label-button"><i class="fa-solid fa-print" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i></button> <span wire:loading wire:target="cobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <button wire:click="cobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroEquipoTaller" class="label-button"><i class="fa-solid fa-print" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" title="Imprimir recibo"></i></button> <span wire:loading wire:target="cobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             @if ($taller->id_estatus >= 5)
                             <button wire:click="invierteCobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="invierteCobroEquipoTaller" class="label-button">
-                            @if (isset($taller->cobroTaller->cancelado))
+                            @if (isset($taller->cobroTaller))
+                                @if($taller->cobroTaller->cancelado)
                                 <i class="fa-solid fa-sack-dollar" style="color:dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar cobro"></i>
-                            @else
+                                @else
                                 <i class="fa-solid fa-sack-xmark" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar cobro"></i>
+                                @endif
                             @endif
                             </button> <span wire:loading wire:target="invierteCobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             @endif
@@ -168,11 +223,21 @@
                                     <i class="fa-solid fa-comment-medical" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Agregar anotaciones"></i>
                                 @endif
                             </button>
+                            @if (isset($taller->cobroTallerCredito) && $taller->id_estatus >= 5)
+                            <button wire:click="abreCobroCredito({{ $taller->num_orden }})" wire:loading.remove wire:target="abreCobroCredito" class="label-button">
+                            <i class="fa-solid fa-credit-card" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Créditos"></i>
+                            </button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
+        <div class="w-100 d-flex justify-content-end align-items-center mb-4">
+        <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
+            <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
+        </x-button>
+        </div>
     </div>
     <div class="col-mx">
         <label class="col-form-label float-left">
@@ -184,7 +249,6 @@
 <script>
     $(document).ready(function () {
         $('#cobroTallerModal').on('shown.bs.modal', function () {
-            // Refrescar el selectpicker
             $('.selectpicker').selectpicker('refresh');            
         });
     });
@@ -209,16 +273,35 @@ document.addEventListener('livewire:initialized', function () {
         Livewire.on('ocultaDivAgregaEquipo', function () {
             $('#collapseAgregaEquipoTaller').collapse('hide'); // Cierra el Collapse
             document.getElementById('botonAgregar').style.display = 'block';
-            console.log('OcultaDivAgregaEquipo');
         });
+
+    });
+
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'F10') {
+            Livewire.dispatch('f10-pressed');
+            var botonCorteCaja = document.getElementById('botonCorteCaja');
+            botonCorteCaja.click();
+        }
     });
 
     $(document).ready(function () {
         $('#selectEntregados').selectpicker('refresh');
     });
 
+    document.addEventListener('livewire:initialized', function () {
+    Livewire.on('abrirPestanaCorteCajaTaller', () => {
+                    window.open('{{ url('/taller/corte') }}', '_blank');
+                });
+            });
+
+
     function ocultarBoton() {
         document.getElementById('botonAgregar').style.display = 'none';
+    }
+
+    function ocultarBotonAgregarPago() {
+        document.getElementById('botonAgregarPago').style.display = 'none';
     }
 
     function openWhatsApp(phoneNumber) {
@@ -226,6 +309,23 @@ document.addEventListener('livewire:initialized', function () {
         var url = isMobile ? "https://api.whatsapp.com/send?phone=" : "https://web.whatsapp.com/send?phone=";
 
         window.open(url + phoneNumber, "_blank");
+    }
+
+    // document.addEventListener('livewire:initialized', function() {
+    //     var btnAgregar = document.getElementById("btn-agregar");
+
+    //     btnAgregar.addEventListener("click", function() {
+    //         document.getElementById("label-abono").style.display = "none";
+    //         document.getElementById("div-abono").style.display = "none";
+    //         btnAgregar.style.display = "none";
+    //     });
+    // });
+
+    function hideDivAbono(){
+        document.getElementById("btn-agregar").style.display = "none";
+        document.getElementById("btn-liquidar").style.display = "none";
+        document.getElementById("label-abono").style.display = "none";
+        document.getElementById("div-abono").style.display = "none";
     }
 </script>
 
