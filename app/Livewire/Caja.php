@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 
-
 class Caja extends Component
 {
     use WithPagination;
@@ -465,7 +464,8 @@ class Caja extends Component
                     $this->totalCarrito = $this->totalCarritoDescuento;
                     $venta = Venta::create([
                         'id_cliente' => $this->cliente['id'],
-                        'total' => $this->totalCarrito 
+                        'total' => $this->totalCarrito,
+                        'id_usuario' => Auth::id()
                     ]);
 
                     foreach ($this->carrito as $item)
