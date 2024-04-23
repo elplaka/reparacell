@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Cliente;
 use App\Models\EquipoTaller;
 use App\Models\TipoEquipo;
 use App\Models\EstatusEquipo;
@@ -17,14 +18,16 @@ class TallerReportes extends Component
 
     public $numberOfPaginatorsRendered = [];
     public $showMainErrors, $showModalErrors;
-    public $marcas, $modelos, $fallas;
+    public $marcas, $modelos, $fallas, $clientes;
     public $marcasSeleccionadas = [];
     public $marcasDiv;
     public $modelosSeleccionados = [];
     public $modelosDiv;
     public $fallasSeleccionadas = [];
     public $fallasDiv;
-
+    public $clientesSeleccionados = [];
+    public $clientesDiv, $nombreCliente;
+    public $chkFechaSalida;
 
     public $busquedaEquipos =
     [
@@ -35,8 +38,11 @@ class TallerReportes extends Component
         'idMarcas' => [],
         'idModelos' => [],
         'idFallas' => [],
+        'idClientes' => [],
         'entregados' => null,
-        'nombreCliente' => null
+        'nombreCliente' => null,
+        'fechaSalidaInicio' => null,
+        'fechaSalidaFin' => null,
     ];
 
     public function eliminarFalla($fallaId)
@@ -85,6 +91,20 @@ class TallerReportes extends Component
         $this->busquedaEquipos['idModelos'] = $this->modelosSeleccionados;
     }
 
+    public function eliminarCliente($clienteId)
+    {
+        $this->clientesSeleccionados = array_values(array_diff($this->clientesSeleccionados, [$clienteId]));
+
+        $this->clientesDiv = Cliente::whereIn('id', $this->clientesSeleccionados)->orderBy('nombre', 'asc')->get();
+
+        if ($this->clientesDiv->isEmpty())
+        {
+            $this->clientesDiv = null;
+        }
+
+        $this->busquedaEquipos['idClientes'] = $this->clientesSeleccionados;
+    }
+
     public function updated($property)
     {
         if ($property == "busquedaEquipos.idTipos.0")
@@ -131,6 +151,20 @@ class TallerReportes extends Component
 
             $this->busquedaEquipos['idFallas'] = $this->fallasSeleccionadas;
         }
+    }
+
+    public function capturarFila($clienteId)   //Selecciona un cliente de la tabla de buscar clientes
+    {
+        array_push($this->clientesSeleccionados, $clienteId);
+
+        session()->flash('success', 'El CLIENTE se agregó como parámetro exitosamente.');
+
+        $this->clientesDiv = Cliente::whereIn('id', $this->clientesSeleccionados)->get();
+
+        $this->nombreCliente = '';
+        $this->clientes = null;  
+
+        $this->busquedaEquipos['idClientes'] = $this->clientesSeleccionados;
     }
 
     public function updatedMarcasSeleccionadas()
@@ -205,7 +239,7 @@ class TallerReportes extends Component
             if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
             {
                 $equipos_taller->whereHas('fallas.falla', function ($query) {
-                    $query->whereIn('id', $this->busquedaEquipos['idFallas'])->whereIn('id_tipo', $this->busquedaEquipos['idTipos']);
+                    $query->whereIn('id', $this->busquedaEquipos['idFallas'])->whereIn('id_tipo_equipo', $this->busquedaEquipos['idTipos']);
                 });
             }
             else
@@ -213,6 +247,32 @@ class TallerReportes extends Component
                 $equipos_taller->whereHas('fallas.falla', function ($query) {
                 $query->whereIn('id', $this->busquedaEquipos['idFallas']);
             });
+            }
+        }
+
+        if (isset($this->busquedaEquipos['idClientes']) && $this->busquedaEquipos['idClientes'] != [])
+        {
+            $equipos_taller->whereHas('equipo.cliente', function ($query) {
+                $query->whereIn('id', $this->busquedaEquipos['idClientes']);
+            });
+        }
+
+        if ($this->chkFechaSalida)
+        {
+            if (isset($this->busquedaEquipos['fechaSalidaInicio']) && isset($this->busquedaEquipos['fechaSalidaFin']))
+            {
+                $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaInicio']));
+                $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaFin']));
+
+                if ($fechaInicio == $fechaFin)
+                {
+                    $equipos_taller->whereDate('fecha_salida', '=', $fechaInicio);
+                }
+                else
+                {
+                    $equipos_taller->whereDate('fecha_salida', '>=', $fechaInicio)
+                                ->whereDate('fecha_salida', '<=', $fechaFin);
+                }
             }
         }
 
@@ -247,6 +307,13 @@ class TallerReportes extends Component
         {
             $this->fallas = FallaEquipo::where('disponible', 1)->orderBy('descripcion', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
         }
+
+        if ($this->nombreCliente != '')
+        {
+            $this->clientes = Cliente::where('nombre', 'like', '%' . $this->nombreCliente .'%')->get();
+        }
+
+
 
         return view('livewire.taller.reportes', compact('equipos_taller', 'estatus_equipos', 'tipos_equipos'));
     }
@@ -285,6 +352,18 @@ class TallerReportes extends Component
     public function cierraParamFallasModal()
     {
 
+    }
+
+    public function cierraParamClientesModal()
+    {
+        $this->showModalErrors = false;
+        $this->showMainErrors = ! $this->showModalErrors;
+    }
+
+    public function abreParamClientesModal()
+    {
+        $this->showModalErrors = true;
+        $this->showMainErrors = ! $this->showModalErrors;
     }
 
     public function abreParamMarcasModal()
@@ -340,7 +419,9 @@ class TallerReportes extends Component
             'idModelos' => [],
             'idFallas' => [],
             'entregados' => 'no_entregados',
-            'nombreCliente' => null
+            'nombreCliente' => null,
+            'fechaSalidaInicio' => now()->subDays(30)->toDateString(),
+            'fechaSalidaFin' => now()->toDateString(),
         ];
 
         $this->marcasSeleccionadas = [];
@@ -351,6 +432,13 @@ class TallerReportes extends Component
 
         $this->fallasSeleccionadas = [];
         $this->fallasDiv = null;
+
+        $this->clientesSeleccionados = [];
+        $this->clientesDiv = [];
+
+        $this->nombreCliente = '';
+
+        $this->chkFechaSalida = false;
     }
 
     public function obtenerIconoSegunEstatus($id_estatus)

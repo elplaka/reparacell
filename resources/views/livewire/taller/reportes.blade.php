@@ -6,7 +6,7 @@
     @include('livewire.taller.modal-param-marcas')
     @include('livewire.taller.modal-param-modelos')
     @include('livewire.taller.modal-param-fallas')
-
+    @include('livewire.taller.modal-param-clientes')
 
     @if ($showMainErrors)
         @if (session('error'))
@@ -69,7 +69,7 @@
             <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
             @foreach($marcasDiv as $marca)
             <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $marca->tipoEquipo->icono !!} &nbsp; {{ $marca->nombre }} 
-            <a href="#" wire:click.prevent="eliminarMarca({{ $marca->id }})" onclick="event.stopPropagation();">×</a></span>
+            <a href="#" wire:click.prevent="eliminarMarca({{ $marca->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
             @endforeach
             </div>
         </div>       
@@ -86,7 +86,7 @@
             <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
             @foreach($modelosDiv as $modelo)
             <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->nombre }}  &nbsp; [ {{ $modelo->marca->nombre }} ]
-            <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();">×</a></span>
+            <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
             @endforeach
             </div>
         </div>       
@@ -103,15 +103,14 @@
         <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
             <b> Falla(s) </b>
         </div>
-        {{-- <div class="col-md-2 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
             <b> Cliente(s) </b>
         </div>
-       <div class="col-md-3 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <b> Recibió</b>
+        @if($chkFechaSalida == true)
+        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+            <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
         </div>
-       <div class="col-md-3 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-           <b> Estatus </b>
-        </div> --}}
+        @endif
     </div>
     <div class="row">
         @if($fallasDiv)
@@ -119,7 +118,7 @@
             <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
             @foreach($fallasDiv as $falla)
             <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $falla->tipoEquipo->icono !!} &nbsp; {{ $falla->descripcion }} 
-            <a href="#" wire:click.prevent="eliminarFalla({{ $falla->id }})" onclick="event.stopPropagation();">×</a></span>
+            <a href="#" wire:click.prevent="eliminarFalla({{ $falla->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
             @endforeach
             </div>
         </div>       
@@ -130,8 +129,39 @@
             </div>
         </div>
         @endif
+        @if($clientesDiv)
+        <div class="col-md-4 mb-4" data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
+            <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+            @foreach($clientesDiv as $cliente)
+            <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt"> {{ $cliente->nombre }} 
+            <a href="#" wire:click.prevent="eliminarCliente({{ $cliente->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+            @endforeach
+            </div>
+        </div>       
+        @else
+        <div class="col-md-4 mb-3">
+            <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
+            --TODOS--
+            </div>
+        </div>
+        @endif
+        @if($chkFechaSalida == 1)
+        <div class="col-md-4 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+            <div class="row align-items-center">
+                &nbsp; &nbsp;  Del &nbsp;
+                <input type="date" wire:model.live="busquedaEquipos.fechaSalidaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
+                &nbsp; al &nbsp;
+                <input type="date" wire:model.live="busquedaEquipos.fechaSalidaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
+            </div>
+        </div>
+        @else
+        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+            <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
+        </div>
+        @endif
     </div>
-
+    <div>
+    </div>
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
             <thead>
@@ -145,7 +175,9 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CLIENTE</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">RECIBIÓ</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ESTATUS</th>
-                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
+                    @if ($chkFechaSalida == true)
+                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">FEC. SALIDA</i></th>
+                    @endif
                 </tr>
             </thead>
             {{-- <tbody wire:poll> --}}
@@ -156,6 +188,7 @@
                 @foreach ($equipos_taller as $taller)
                     @php
                         $taller->fecha_entrada = Carbon::parse($taller->fecha_entrada);
+                        $taller->fecha_salida = Carbon::parse($taller->fecha_salida);
                         $equipos++;
                     @endphp
                     <tr style="font-size: 10pt;" class="custom-status-color-{{ $taller->estatus->id }}" data-toggle="tooltip" data-title="">
@@ -179,43 +212,12 @@
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
-                        </td>                                         
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            {{-- @if (!$taller->cobroTaller)  
-                            <button wire:click="cobroFinalEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroFinalEquipoTaller" class="label-button"
-                            ><i class="fa-solid fa-hand-holding-dollar" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" title="Cobrar"></i></button> <span wire:loading wire:target="cobroFinalEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            @endif
-                            <button wire:click="cobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroEquipoTaller" class="label-button"><i class="fa-solid fa-print" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" title="Imprimir recibo"></i></button> <span wire:loading wire:target="cobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            @if ($taller->id_estatus >= 5)
-                            <button wire:click="invierteCobroEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="invierteCobroEquipoTaller" class="label-button">
-                            @if (isset($taller->cobroTaller))
-                                @if($taller->cobroTaller->cancelado)
-                                <i class="fa-solid fa-sack-dollar" style="color:dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar cobro"></i>
-                                @else
-                                <i class="fa-solid fa-sack-xmark" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar cobro"></i>
-                                @endif
-                            @endif
-                            </button> <span wire:loading wire:target="invierteCobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            @endif
-                            <span> &nbsp;</span>
-                            <a onclick="openWhatsApp({{ $taller->equipo->cliente->telefono_contacto }})" style="cursor: pointer; text-decoration: none;" target="_blank" href="javascript:void(0);" title="{{ $taller->equipo->cliente->telefono_contacto }}" >
-                                <i class="fab fa-whatsapp" style="color: dimgrey;" onmouseover="this.style.color='rgb(50, 212, 64)'" onmouseout="this.style.color='dimgrey'"></i>
-                            </a>
-                            <span wire:loading wire:target="abrirWhatsApp" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span> &nbsp;</span>
-                            <button data-toggle="modal" data-target="#anotacionesModal" wire:click="anotacionesModal({{ $taller->num_orden }})" class="label-button">
-                                @if($taller->anotacionEquipoTaller)
-                                    <i class="fa-solid fa-comment-dots" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Ver anotaciones"></i>
-                                @else
-                                    <i class="fa-solid fa-comment-medical" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Agregar anotaciones"></i>
-                                @endif
-                            </button>
-                            @if (isset($taller->cobroTallerCredito) && $taller->id_estatus >= 5)
-                            <button wire:click="abreCobroCredito({{ $taller->num_orden }})" wire:loading.remove wire:target="abreCobroCredito" class="label-button">
-                            <i class="fa-solid fa-credit-card" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Créditos"></i>
-                            </button>
-                            @endif --}}
                         </td>
+                        @if ($chkFechaSalida == true)
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            {{ $taller->fecha_salida->format('d/m/Y') }}
+                        </td>
+                        @endif
                     </tr>
                 @endforeach
             </tbody>

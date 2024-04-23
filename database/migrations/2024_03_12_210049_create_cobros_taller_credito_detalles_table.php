@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('cobros_taller_credito_detalles', function (Blueprint $table) {
             $table->unsignedBigInteger('num_orden');
-            $table->unsignedBigInteger('id_abono')->default(1);
+            $table->unsignedBigInteger('id_abono')->default(0);
             $table->decimal('abono', 10, 2);
             $table->timestamps();
 

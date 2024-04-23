@@ -213,9 +213,14 @@ class Taller extends Component
             ];
         })->toArray();
 
-        if ($cobro->credito)
-        {
-            $this->cobroFinal['anticipo'] = $cobro->credito->detalles->where('num_orden', $numOrden)->where('id_abono', 0)->first()->abono;
+        // if ($cobro->credito)
+        // {
+        //     $this->cobroFinal['anticipo'] = $cobro->credito->detalles->where('num_orden', $numOrden)->where('id_abono', 0)->first()->abono;
+        //     $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
+        // }
+
+        if ($cobro->credito && $detalle = $cobro->credito->detalles->where('num_orden', $numOrden)->where('id_abono', 0)->first()) {
+            $this->cobroFinal['anticipo'] = $detalle->abono;
             $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
         }
 
@@ -278,6 +283,8 @@ class Taller extends Component
                             $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
                             $cobroTallerCreditoDetalle->num_orden = $numOrden;
                             $cobroTallerCreditoDetalle->abono = 0;
+                            $cobroTallerCreditoDetalle->id_usuario_cobro = Auth::id();
+
                             $cobroTallerCreditoDetalle->save();
                         }
 
@@ -381,6 +388,7 @@ class Taller extends Component
                         $cobroTallerCreditoDetalles->num_orden = $numOrden;
                         $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $cobroTallerCreditoDetalles->abono = $this->cobroACredito['abono'];
+                        $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
                         $cobroTallerCreditoDetalles->save();
 
                         $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
@@ -544,6 +552,7 @@ class Taller extends Component
                $cobroTallerCreditoDetalles->num_orden = $numOrden;
                $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                $cobroTallerCreditoDetalles->abono = $this->montoLiquidar;
+               $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
                $cobroTallerCreditoDetalles->save();
 
                 CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
