@@ -8,6 +8,8 @@ use App\Models\Cliente;
 use App\Models\Venta;
 use App\Models\VentaDetalle;
 use App\Models\EstatusEquipo;
+use App\Models\VentaCredito;
+use App\Models\VentaCreditoDetalle;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
@@ -27,6 +29,7 @@ class Caja extends Component
     public $showMainErrors, $showModalErrors;
     public $clientesModal, $nombreClienteModal, $usuariosModal;
     public $descripcionProductoModal;
+    public $muestraDivAbono, $detallesCredito, $datosCargados;
 
     public $corteCaja = [
         'fechaInicial',
@@ -55,6 +58,18 @@ class Caja extends Component
         'descripcion',
         'precioCosto',
         'departamento'
+    ];
+
+
+    public $ventaCredito = 
+    [
+        'nombreCliente' => null,
+        'id' => null,
+        'idEstatus' => null,
+        'estatus' => null,
+        'monto' => null,
+        'abono' => null,
+        'idAbonoSeleccionado' => null
     ];
 
     public function abrirCorteCaja()
@@ -260,8 +275,6 @@ class Caja extends Component
     {
         $this->carrito = collect(); // Inicializa $carrito como una colección vacía
 
-        $this->usuariosModal = User::all();
-
         $this->cliente = [
             'id'                => "0000000000",
             'estatus'           => 2,
@@ -272,6 +285,19 @@ class Caja extends Component
             'publicoGeneral'    => true,
         ];
 
+        $this->nombreClienteModal = '';
+
+        $cliente = $this->regresacliente('0000000000');
+
+        //******************************************** */
+
+        $cliente = $this->regresacliente('6941088943');
+        $this->cliente['publicoGeneral'] = false;
+
+        //****************************************** */
+
+        $this->usuariosModal = User::all();
+
         $this->corteCaja = [
             'fechaInicial' => now()->toDateString(),
             'fechaFinal' => now()->toDateString(),
@@ -281,10 +307,110 @@ class Caja extends Component
 
         $this->showModalErrors = false;
         $this->showMainErrors = !$this->showModalErrors;
+    }
 
-        $this->nombreClienteModal = '';
+    public function cierraVentaCreditoModal()
+    {
 
-        $cliente = $this->regresacliente('0000000000');
+    }
+
+    public function muestraDivAgregaAbono()
+    {
+        $this->muestraDivAbono = true;
+    }
+
+    public function cobroCredito()
+    {
+        try 
+        {
+            DB::transaction(function ()
+            {
+                if ($this->cantidadProductosCarrito)
+                {
+                    {
+                        $this->totalCarrito = $this->totalCarritoDescuento;
+                        $venta = Venta::create([
+                            'id_cliente' => $this->cliente['id'],
+                            'total' => $this->totalCarrito,
+                            'id_usuario' => Auth::id()
+                        ]);
+
+                        $idVenta = $venta->id;
+
+                        foreach ($this->carrito as $item)
+                        {
+                            $codigoProducto = $item['producto']->codigo;
+                            $cantidad = $item['cantidad'];
+                            $this->restaInventario($codigoProducto, $cantidad);
+
+                            $subTotal = $item['producto']->precio_venta * $cantidad;
+
+                            $venta->detalles()->createMany([
+                                [
+                                'codigo_producto' => $item['producto']->codigo,
+                                'cantidad' => $cantidad,
+                                'importe' => $subTotal
+                                ],
+                            ]);
+                        }
+
+                        $this->carrito = collect(); // Inicializa $carrito como una colección vacía
+                        $this->cantidadProductosCarrito = 0;
+                        $cliente = $this->regresacliente('0000000000');
+
+                        $this->dispatch('mostrarToast', 'Venta a crédito realizada con éxito!!!');
+                    }
+                }
+
+                $idCliente = $this->cliente['id'];
+
+                $ventaCredito = new VentaCredito();
+                $ventaCredito->id = $idVenta;
+                $ventaCredito->id_estatus = 1;
+                $ventaCredito->save();
+
+                //Inserta un abono de $0 en el id_abono 0 para indicar que es CRÉDITO
+                $ventaCreditoDetalle = new VentaCreditoDetalle();
+                $ventaCreditoDetalle->id = $idVenta;
+                $ventaCreditoDetalle->abono = 0;
+                $ventaCreditoDetalle->id_usuario_venta = Auth::id();
+
+                $ventaCreditoDetalle->save();
+
+                $this->ventaCredito['nombreCliente'] = $venta->cliente->nombre;
+                $this->ventaCredito['id'] = $idVenta;
+                $this->ventaCredito['idEstatus'] = 1;
+                $this->ventaCredito['estatus'] = "SIN LIQUIDAR";
+
+                $this->muestraDivAbono = false;
+
+
+                $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->get();
+
+                // $this->sumaAbonos = $this->detallesCredito->sum('abono');
+                // $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
+        
+                // $this->modalCobroCreditoTallerAbierta = true;
+        
+                // $this->muestraDivAbono = false;
+        
+                // $this->cobroACredito['abono'] = null;
+        
+                // $this->showModalErrors = true;
+                // $this->showMainErrors = false;
+
+                // $this->dispatch('cierraCobroModal');
+                $this->dispatch('abreVentaCreditoModal');
+
+                $this->datosCargados = true;
+            });
+        } catch (\Exception $e)
+        {
+                // Manejo de errores si ocurre una excepción
+                // Puedes agregar logs o notificaciones aquí
+                dd($e);
+        }
+            
     }
 
     public function render()

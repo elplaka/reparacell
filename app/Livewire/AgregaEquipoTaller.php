@@ -632,6 +632,7 @@ class AgregaEquipoTaller extends Component
                         $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
                         $cobroTallerCreditoDetalle->num_orden = $numOrden;
                         $cobroTallerCreditoDetalle->abono = $this->equipoTaller['anticipo'];
+                        $cobroTallerCreditoDetalle->id_usuario_cobro = Auth::id();
                         $cobroTallerCreditoDetalle->save();
                     }
                 // }

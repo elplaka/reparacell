@@ -11,4 +11,9 @@ class VentaController extends Controller
     {
         return view('ventas.index');
     }
+
+    public function creditos()
+    {
+        return view('ventas.creditos');
+    }
 }

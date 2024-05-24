@@ -25,6 +25,11 @@ class EquipoTallerController extends Controller
         return view('taller.index');
     }
 
+    public function creditos()
+    {
+        return view('taller.creditos');
+    }
+
     public function reportesReparaciones()
     {
         return view('taller.reportes');

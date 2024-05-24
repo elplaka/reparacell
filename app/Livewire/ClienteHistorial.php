@@ -105,6 +105,8 @@ class ClienteHistorial extends Component
 
         // $this->goToPage(1);
 
+        // dd($historialClienteTaller);
+
         $clientes = $clientesQuery->where('disponible', 1)->paginate(10);
 
         return view('livewire.clientes.historial', compact('clientes', 'historialClienteTaller', 'historialClienteVentas'));

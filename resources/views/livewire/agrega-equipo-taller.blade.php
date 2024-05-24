@@ -317,6 +317,7 @@
                                 <input wire:model="equipoTaller.observaciones" type="text" class="input-height form-control" style="font-size:11pt;" autofocus>
                             </div>
                             <label for="equipoTaller.totalEstimado" class="col-md-2 block font-medium text-sm-center text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: center; text-align: center;"> {{ __('Total Estimado $ ') }} {{ number_format($equipoTaller['totalEstimado'], 2, '.', ',') }} </label>
+                            @if (!$cliente['publicoGeneral'])
                             @if ($equipoTaller['estatus'] == 0)
                             <label for="equipoTaller.anticipo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $') }} </label>
                             <div class="col-md-2 ml-0 pl-1">
@@ -324,7 +325,8 @@
                             </div>
                             @else
                             <label for="equipoTaller.anticipo" class="col-md-3 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $ ') }} {{ $equipoTaller['anticipo'] }} </label>
-                            @endif                     
+                            @endif
+                            @endif                  
                         </div>
                     </div>
                 </div>

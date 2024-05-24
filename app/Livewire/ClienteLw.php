@@ -235,8 +235,6 @@ class ClienteLw extends Component
 
         $this->validate();
 
-        dd('pasé');
-
         $cliente = new Cliente;
         $cliente->telefono = $this->clienteModal['telefonoId'];
         $cliente->nombre = trim(mb_strtoupper($this->clienteModal['nombre']));

@@ -48,7 +48,7 @@
             <label for="filtrosVentas.cliente" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Cliente </label>
             <input type="text" class="form-control input-height" wire:model.live="filtrosVentas.cliente" style="font-size:11pt;">
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-2 mb-3">
             <label for="filtrosVentas.idUsuario" class="form-label  text-gray-700" style="font-weight:500;font-size:11pt">Vendió</label>
             <select wire:model.live="filtrosVentas.idUsuario" class="selectpicker select-picker w-100" style="font-size:11pt;">
                 <option value="0"> -- TODOS -- </option>
@@ -56,7 +56,15 @@
                     <option value="{{ $usuario->id }}"> {{ $usuario->name }}</option>
                 @endforeach
             </select>
-        </div>       
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="filtrosVentas.cancelada" class="form-label  text-gray-700" style="font-weight:500;font-size:11pt">Estatus</label>
+            <select wire:model.live="filtrosVentas.cancelada" class="selectpicker select-picker w-100" style="font-size:11pt;">
+                <option value="0"> -- TODOS -- </option>
+                <option value="1"> ACTIVA </option>
+                <option value="2"> CANCELADA </option>
+            </select>
+        </div>        
     </div>
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover table-hover-custom">
@@ -67,6 +75,7 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CLIENTE</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">TOTAL</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">VENDIÓ</th>
+                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ESTATUS</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
             </thead>
@@ -103,8 +112,19 @@
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $venta->usuario->name }}
                     </td>
+                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                        {{ $venta->cancelada ? 'CANCELADA' : 'ACTIVA' }}
+                    </td>
                     <td colspan="2" class="px-3 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         <div class="row ml-1">
+                            <a wire:click="invertirEstatusVenta('{{ $venta->id }}')" wire:loading.attr="disabled" wire:target="invertirEstatusVenta" style="color: dimgrey;cursor:pointer">
+                                @if ($venta->cancelada)
+                                <i class='fa-solid fa-square-check' style="color: dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar"></i>
+                                @else
+                                <i class='fa-solid fa-rectangle-xmark' style="color: dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar"></i>
+                                 @endif
+                            </a>
+                            &nbsp; &nbsp;
                             <button class="btn col-md-1" data-toggle="collapse" data-target="#collapseDetalle{{ $venta->id }}" aria-expanded="false" aria-controls="collapseDetalle{{ $venta->id }}" wire:click="verDetalles('{{ $venta->id }}')" style="margin: 0; padding: 0; line-height: 1; outline: none;"  onclick="this.blur();" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'">
                                 @if (isset($collapsed[$venta->id]))
                                     <i class="fa-solid fa-angles-left" title="Ocultar detalles"></i>

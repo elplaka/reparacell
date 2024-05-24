@@ -1,17 +1,17 @@
 @php
     use Carbon\Carbon;
 @endphp
-<div wire:ignore.self class="modal fade" id="cobroCreditoTallerModal" name="cobroCreditoTallerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}">
+<div wire:ignore.self class="modal fade" id="ventaCreditoModal" name="ventaCreditoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}" >
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Crédito de Taller por ${{ $cobroACredito['monto'] }} </b> &nbsp;&nbsp; 
-               @if ($cobroACredito['idEstatus'] == 1) 
-               <span class="badge badge-danger">{{ $cobroACredito['estatus'] }}</span></h1>
+               <h1 class="text-xl font-bold"><b> Crédito de Venta por ${{ $ventaCredito['monto'] }}</b> &nbsp;&nbsp; 
+               @if ($ventaCredito['idEstatus'] == 1) 
+               <span class="badge badge-danger">{{ $ventaCredito['estatus'] }}</span></h1>
                @else
-               <span class="badge badge-success">{{ $cobroACredito['estatus'] }}</span></h1>
+               <span class="badge badge-success">{{ $ventaCredito['estatus'] }}</span></h1>
                @endif
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraCobroCreditoTallerModal">
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraVentaCreditoModal">
                    <span aria-hidden="true">&times;</span>
                </button> 
            </div> 
@@ -41,11 +41,8 @@
            <div class="ml-0">
                 <div class="container mt-0">
                     <div class="row mb-0">
-                        <label class="col-md-8 block text-sm-left text-gray-700" style="font-size: 11pt;">{{ __('CLIENTE: ') }} <b> {{ $cobroACredito['nombreCliente'] }} </b></label>
-                        <label class="col-md-4 block text-sm-left text-gray-700" style="font-size: 11pt;">{{ __('NUM. ORDEN: ') }} <b> {{ $cobroACredito['numOrden'] }} </b></label>
-                    </div>
-                    <div class="row mb-0">
-                        <label class="col-md-11 block text-sm-left text-gray-700" style="font-size: 11pt;">{{ __('EQUIPO: ') }} <b> {{ $cobroACredito['tipoEquipo'] }} &nbsp;  <i class="fa-solid fa-grip-lines-vertical"></i> &nbsp; {{ $cobroACredito['marcaEquipo'] }} &nbsp; <i class="fa-solid fa-grip-lines-vertical"></i> &nbsp; {{ $cobroACredito['modeloEquipo'] }} </b></label>
+                        <label class="col-md-8 block text-sm-left text-gray-700" style="font-size: 11pt;">{{ __('CLIENTE: ') }} <b> {{ $ventaCredito['nombreCliente'] }} </b></label>
+                        <label class="col-md-4 block text-sm-left text-gray-700" style="font-size: 11pt;">{{ __('ID. VENTA: ') }} <b> {{ $ventaCredito['id'] }} </b></label>
                     </div>
                 </div>
                 <br>
@@ -55,13 +52,13 @@
                     </div>
                     @if ($muestraDivAbono)
                     <button class="btn btn-success md-2 uppercase tracking-widest font-semibold text-xs" wire:click="liquidaCredito" id="btn-liquidar" wire:ignore>LIQUIDAR</button>
-                    <label for="cobroACredito.abono" class="col-md-2 block text-sm-right text-gray-700 pr-0" style="font-size:11pt;" id="label-abono" wire:ignore>{{ __('Abono $') }}</label>
+                    <label for="ventaCredito.abono" class="col-md-2 block text-sm-right text-gray-700 pr-0" style="font-size:11pt;" id="label-abono" wire:ignore>{{ __('Abono $') }}</label>
                     <div class="col-md-2 ml-0" id="div-abono" wire:ignore>
-                        <input wire:model="cobroACredito.abono" step="any" type="number" class="input-height form-control" style="font-size:11pt;">
+                        <input wire:model="ventaCredito.abono" step="any" type="number" class="input-height form-control" style="font-size:11pt;">
                     </div>
                     <button class="btn btn-primary md-2 uppercase tracking-widest font-semibold text-xs" wire:click="agregaAbono" id="btn-agregar" wire:ignore.self wire:loading.attr="disabled"  onclick="hideDivAbono()">AGREGAR</button>
                     @else
-                        @if ($cobroACredito['idEstatus'] == 1)
+                        @if ($ventaCredito['idEstatus'] == 1)
                         <div class="col-md-8 d-flex justify-content-end"> 
                             <a wire:ignore.self id="botonAgregarPago" class="btn btn-primary" title="Agregar abono" wire:loading.attr="disabled" wire:click="muestraDivAgregaAbono" onclick="ocultarBotonAgregarPago()">
                                 <i class="fas fa-plus"></i> 
@@ -71,9 +68,8 @@
                     @endif
                 </div>
            </div>
-
             {{-- <div class="table-responsive"> --}}
-            <div class="table-responsive" style="max-height: calc(5 * 40px); overflow-y: auto;">
+             <div class="table-responsive" style="max-height: calc(5 * 40px); overflow-y: auto;">
                 <table class="w-full table table-bordered table-hover">
                     <thead style="position: sticky; top: 0; z-index: 1;">
                         <tr>
@@ -85,15 +81,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {{-- <tbody @if($modalCobroCreditoTallerAbierta) wire:poll @endif> --}}
                         @if($detallesCredito !== null)
                             @if($detallesCredito->count())
                             @foreach ($detallesCredito as $detalles)
                             @php
                                 $fechaOriginal = $detalles->created_at;
-                                // Convertir a objeto Carbon
                                 $fechaCarbon = Carbon::parse($fechaOriginal);
-                                // Formatear la fecha
                                 $fechaFormateada = $fechaCarbon->format('d/m/Y H:i:s');
                             @endphp
                             <tr style="font-size: 10pt;">
@@ -104,7 +97,7 @@
                                         @if ($detalles->abono < 0)
                                         DEVOLUCIÓN
                                         @else
-                                            @if ($detalles == $detallesCredito->last() && $cobroACredito['idEstatus'] == 2)
+                                            @if ($detalles == $detallesCredito->last() && $ventaCredito['idEstatus'] == 2)
                                             LIQUIDACIÓN
                                             @else
                                             ABONO
@@ -119,11 +112,7 @@
                                     {{ $fechaFormateada }}
                                 </td>
                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    @if (is_null($detalles->usuario->name))
-                                    -
-                                    @else
-                                    {{ $detalles->usuario->name ? $detalles->usuario->name : '-' }}
-                                    @endif
+                                    {{ $detalles->usuario->name }}
                                 </td>
                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                                     @if ($detalles->id_abono > 0)
@@ -143,7 +132,7 @@
                         @endif
                     </tbody>
                 </table>
-            </div>
+            </div> 
             @if ($detallesCredito)
             <br>
             <hr>
@@ -156,12 +145,7 @@
                 </div>
             </div>
             @endif
-                <!-- Modal Footer con Botón de Cierre -->
-                {{-- <div class="modal-footer d-flex justify-content-center">
-                    <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="irCorteCaja" target="_blank">Generar</button>
-                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarCorteCajaModal" wire:click="cierraCorteCajaModal">Cerrar</button>
-                </div> --}}
-            </div>
+            </div> 
        </div>
     </div>
 </div>

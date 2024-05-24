@@ -63,6 +63,7 @@ Route::middleware(['auth'])
     Route::get('/taller/print/{num_orden}', [EquipoTallerController::class, 'print'])->name('taller.print');
     Route::get('/taller/print-final/{num_orden}', [EquipoTallerController::class, 'print_final'])->name('taller.print-final');
     Route::get('/taller/corte', [Taller::class, 'generaCorteCajaPDF'])->name('corte-caja');
+    Route::get('/taller/creditos', [EquipoTallerController::class, 'creditos'])->name('taller.creditos');
     Route::get('/reparaciones/reportes', [EquipoTallerController::class, 'reportesReparaciones'])->name('reparaciones.reportes');
 
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
@@ -74,8 +75,10 @@ Route::middleware(['auth'])
 
     Route::get('/productos/index', [ProductoController::class, 'index'])->name('productos.index');
     Route::get('/productos/inventario', [ProductoController::class, 'inventario'])->name('productos.inventario');
+    Route::get('/productos/reportes', [ProductoController::class, 'reportes'])->name('productos.reportes');
 
     Route::get('/ventas/index', [VentaController::class, 'index'])->name('ventas.index');
+    Route::get('/ventas/creditos', [VentaController::class, 'creditos'])->name('ventas.creditos');
 
     Route::get('/clientes/index', [ClienteController::class, 'index'])->name('clientes.index');
     Route::get('/clientes/historial', [ClienteController::class, 'historial'])->name('clientes.historial');

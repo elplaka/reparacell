@@ -158,6 +158,7 @@
                     {{-- </div> --}}
                     {{-- <div class="bg-white py-2 collapse-inner rounded"> --}}
                         <a class="collapse-item" href="{{ route('reparaciones.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
+                        <a class="collapse-item" href="{{ route('taller.creditos') }}"> <i class="fa-solid fa-credit-card"></i> Créditos </a>
                     </div>                    
                 </div>
             </li>
@@ -173,6 +174,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('caja.index') }}"> <i class="fa-solid fa-cash-register"></i> Caja</a>
                         <a class="collapse-item" href="{{ route('ventas.index') }}"> <i class="fa-solid fa-table"></i> Registros</a>
+                        <a class="collapse-item" href="{{ route('ventas.creditos') }}"> <i class="fa-solid fa-credit-card"></i> Créditos </a>
                     </div>
                 </div>
             </li>
@@ -209,7 +211,7 @@
                         <a class="collapse-item" href="{{ route('productos.index') }}">                     
                             {{-- <i class="fa-solid fa-rectangle-list"></i> Catálogo  --}}
                         <i class="fa-solid fa-boxes-stacked"></i> Inventario </a>
-
+                        <a class="collapse-item" href="{{ route('productos.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
                         </a> 
                         {{-- <a class="collapse-item" href="{{ route('productos.inventario') }}">                     <i class="fa-solid fa-boxes-stacked"></i> Inventario </a> --}}
                        {{-- <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a> --}}
@@ -395,7 +397,10 @@
             Livewire.on('abreCobroCreditoTallerModal', () => {
                 $('#cobroCreditoTallerModal').modal('show');
             })
-    
+
+            Livewire.on('abreVentaCreditoModal', () => {
+                $('#ventaCreditoModal').modal('show');
+            })
     });
 </script>
     <script>

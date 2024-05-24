@@ -75,23 +75,26 @@
                                     @if (!is_null($historialClienteTaller))
                                         @foreach($historialClienteTaller as $equipoCliente)
                                         @php
-                                            $fecha_entrada = Carbon::parse($equipoCliente->equiposTaller[0]->fecha_entrada);
+                                             $equipo_taller = App\Models\EquipoTaller::where('num_orden', $equipoCliente->num_orden)->first();
+
+                                            $fecha_entrada = Carbon::parse($equipo_taller->fecha_entrada);
 
                                             $fecha_salida = is_null($equipoCliente->fecha_salida) ? "AÚN EN TALLER" : Carbon::parse($equipoCliente->fecha_salida)->format('d/m/Y');
 
                                             $fallas_equipo = App\Models\FallaEquipoTaller::where('num_orden', $equipoCliente->num_orden)->get();
 
+                                       
                                             $imagenes_equipo = App\Models\ImagenEquipo::where('num_orden', $equipoCliente->num_orden)->get();
 
                                             $palabras_observaciones = str_word_count($equipoCliente->observaciones, 1);
 
                                             if (count($palabras_observaciones) > 3)
                                             {
-                                                $observaciones = implode(' ', array_slice(str_word_count($equipoCliente->equiposTaller[0]->observaciones, 1), 0, 3)) . "...";
+                                                $observaciones = implode(' ', array_slice(str_word_count($equipo_taller->observaciones, 1), 0, 3)) . "...";
                                             }
                                             else
                                             {
-                                                $observaciones = $equipoCliente->equiposTaller[0]->observaciones;
+                                                $observaciones = $equipo_taller->observaciones;
                                             }
 
                                             // O utilizando Storage::url()
@@ -114,7 +117,7 @@
                                                 {{ $fecha_salida }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
-                                                {{ $equipoCliente->equiposTaller[0]->estatus->descripcion }}
+                                                {{ $equipo_taller->estatus->descripcion }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {{ $observaciones }}

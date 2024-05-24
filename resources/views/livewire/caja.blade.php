@@ -2,6 +2,8 @@
     @include('livewire.modal-buscar-producto')
     @include('livewire.modal-buscar-cliente')
     @include('livewire.modal-corte-caja')
+    @include('livewire.creditos.modal-venta')
+
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-cash-register"></i> Caja</b></h4>
     </div>
@@ -79,25 +81,28 @@
         @if ($cantidadProductosCarrito)
         <div class="row justify-content-center align-items-center mx-auto" style="background-color: #e9ebf3; width: 100%;">
             @role('admin')
-                <div class="col-md-2 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                <b>  Cant. Productos: </b>
+            <div class="col-md-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
+                Cant. Productos:
+                &nbsp; <b> {{ $cantidadProductosCarrito }} </b>
                 </div>
-                <div class="col-md-1 px-2 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                    {{ $cantidadProductosCarrito }}
+                <div class="col-md-3 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
+                    Total calculado:
+                    &nbsp; <b> &#36; {{ number_format($totalCarrito, 2, '.', ',') }} </b>
                 </div>
-                <div class="col-md-2 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                    <b> Total calculado: </b>
+                @if (!$cliente['publicoGeneral'])
+                <div class="col-md-3 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
+                    Total a cobrar:
                 </div>
+                <div class="col-md-3 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
+                    <b> $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($totalCarritoDescuento), 2, '.', ',') }}">
+                    </b>
+                </div>
+                {{-- <div class="col-md-3 px-2 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
+                    Anticipo:
                 <div class="col-md-2 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                    &#36; {{ number_format($totalCarrito, 2, '.', ',') }}
-                </div>
-                <div class="col-md-2 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                    <b> Total a cobrar: </b>
-                </div>
-                <div class="col-md-3 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                    {{-- $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3;border: none; height: 25px; width: 50%" value="{{ number_format($totalCarritoDescuento, 2, '.', ',') }}"> --}}
-                    $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($totalCarritoDescuento), 2, '.', ',') }}">
-                </div>
+                   <b> $ <input type="number" step="0.5" wire:model.live="cobroFinal.anticipo" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($cobroFinal['anticipo']), 2, '.', ',') }}"> </b>
+                </div> --}}
+                @endif
             @else
                 <div class="col-md-6 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
                     <b>  Cant. Productos: </b>
@@ -115,23 +120,26 @@
         </div>
         <br>
         <div class="row d-flex justify-content-between align-items-center">
-            <div class="col-md-10">
+            <div class="col-md-7">
+                @if (!$cliente['publicoGeneral'])
                 @role('admin')
                 <div class="row justify-content-end">
-                    {{-- <div class="col-md-1 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                        <b> Total: </b>
-                    </div>
-                    <div class="col-md-2 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                        &#36; {{ number_format($totalCarrito, 2, '.', ',') }}
-                    </div> --}}
-                    <button class="btn btn-primary mr-2 text-xs" style="width=5%" wire:click="hazDescuento(50)"><strong> -50% </strong></button>
-                    <button class="btn btn-primary mr-2 text-xs" style="width=5%" wire:click="hazDescuento(25)"><strong> -25% </strong></button>
-                    <button class="btn btn-primary mr-2 text-xs" style="width=5%" wire:click="hazDescuento(20)"><strong> -20% </strong></button>
-                    <button class="btn btn-primary mr-2 text-xs" style="width=5%" wire:click="hazDescuento(15)"><strong> -15% </strong></button>
-                    <button class="btn btn-primary mr-2 text-xs" style="width=5%" wire:click="hazDescuento(10)"><strong> -10% </strong></button>
-                    <button class="btn btn-primary text-xs" style="width=5%" wire:click="hazDescuento(5)"><strong> -5% </strong></button>
+                    <button class="btn btn-success mr-2 text-xs" style="width=5%" wire:click="hazDescuento(50)"><strong> -50% </strong></button>
+                    <button class="btn btn-success mr-2 text-xs" style="width=5%" wire:click="hazDescuento(25)"><strong> -25% </strong></button>
+                    <button class="btn btn-success mr-2 text-xs" style="width=5%" wire:click="hazDescuento(20)"><strong> -20% </strong></button>
+                    <button class="btn btn-success mr-2 text-xs" style="width=5%" wire:click="hazDescuento(15)"><strong> -15% </strong></button>
+                    <button class="btn btn-success mr-2 text-xs" style="width=5%" wire:click="hazDescuento(10)"><strong> -10% </strong></button>
+                    <button class="btn btn-success text-xs" style="width=5%" wire:click="hazDescuento(5)"><strong> -5% </strong></button>
                 </div>
                 @endrole
+                @endif
+            </div>
+            <div class="col-md-3 text-right">
+                @if (!$cliente['publicoGeneral'])
+                <button wire:click="cobroCredito" class="btn btn-primary text-xs leading-4 font-medium text-white uppercase tracking-wider ml-8 p-2 px-4" style="letter-spacing: 1px;">
+                    {{ __('CRÉDITO [ F3 ]') }}
+                </button>
+                @endif
             </div>
             <div class="col-md-2 text-right">
                 <x-button wire:click="cobrar" class="ml-md-4">

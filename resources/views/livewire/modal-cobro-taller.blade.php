@@ -277,9 +277,11 @@
                                 </div>
                                 @endif
                                 <div class="col-md-3 text-right">
+                                    @if (!$cobroFinal['publicoGeneral'])
                                     <button wire:click="cobroCredito({{ $cobroFinal['numOrden'] }})" class="btn btn-primary text-xs leading-4 font-medium text-white uppercase tracking-wider ml-8 p-2 px-4" style="letter-spacing: 1px;">
                                         {{ __('CRÉDITO [ F3 ]') }}
                                     </button>
+                                    @endif
                                 </div>
                                 @if(!$cobroFinal['anticipo'])
                                 <div class="col-md-3 text-right">

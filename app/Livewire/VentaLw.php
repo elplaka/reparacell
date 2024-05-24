@@ -20,8 +20,17 @@ class VentaLw extends Component
         'fechaInicial',
         'fechaFinal',
         'cliente',
-        'idUsuario'
+        'idUsuario',
+        'cancelada'
     ];
+
+    public function invertirEstatusVenta($idVenta)
+    {
+        $venta = Venta::findOrFail($idVenta);
+
+        $venta->cancelada = !$venta->cancelada;
+        $venta->save();
+    } 
 
 
     public function render()
@@ -44,6 +53,17 @@ class VentaLw extends Component
             $ventasQuery->where('id_usuario', $this->filtrosVentas['idUsuario']);
         }
 
+        if ($this->filtrosVentas['idUsuario'] != 0)
+        {
+            $ventasQuery->where('id_usuario', $this->filtrosVentas['idUsuario']);
+        }
+
+        if ($this->filtrosVentas['cancelada'] > 0)
+        {
+            $this->filtrosVentas['cancelada'] == 1 ? $cancelada = 0 : $cancelada = 1;
+            $ventasQuery->where('cancelada', $cancelada);
+        }
+
         $ventas = $ventasQuery->paginate(10);
 
         return view('livewire.ventas.index', compact('ventas'));
@@ -63,7 +83,8 @@ class VentaLw extends Component
             'fechaInicial' => now()->subDays(7)->toDateString(),
             'fechaFinal' => now()->toDateString(),
             'cliente' => '',
-            'idUsuario' => 0
+            'idUsuario' => 0,
+            'cancelada' => 0
         ];
 
         $this->usuarios = User::all();

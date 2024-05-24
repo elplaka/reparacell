@@ -25,8 +25,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
-
-
 class Taller extends Component
 {
     use WithPagination;
@@ -50,6 +48,7 @@ class Taller extends Component
     public $muestraDivAbono;
     public $showMainErrors, $showModalErrors, $usuariosModal;
     public $sumaAbonos, $montoLiquidar;
+    public $datosCargados;
 
     public function rules()
     {
@@ -96,6 +95,7 @@ class Taller extends Component
         'idEstatusEquipo' => null,
         'anticipo' => null,
         'restante' => null,
+        'publicoGeneral' => null
     ];
 
     public $cobroACredito = 
@@ -206,6 +206,11 @@ class Taller extends Component
         $this->cobroFinal['fallasEquipo'][] = null;
         $this->cobroFinal['fallasEquipo'] = $cobro->equipoTaller->fallas;
         $this->cobroFinal['anticipo'] = null;
+        $telefonoContacto = $cobro->equipoTaller->equipo->cliente->telefono_contacto;        
+        if ($telefonoContacto == "0000000000")
+        {
+            $this->cobroFinal['publicoGeneral'] = true;
+        }
 
         $this->cobroFinal['fallasEquipo'] = $cobro->equipoTaller->fallas->map(function ($falla) {
             return [
@@ -872,7 +877,8 @@ class Taller extends Component
             'fallasEquipo' => [],
             'idEstatusEquipo' => null,
             'anticipo' => null,
-            'restante' => null
+            'restante' => null,
+            'publicoGeneral' => null
         ];
 
         $this->cobroACredito = 
@@ -900,6 +906,8 @@ class Taller extends Component
         $this->modalCobroCreditoTallerAbierta = false;
         $this->showMainErrors = true;
         $this->showModalErrors = false;
+
+        $this->datosCargados = true;
     }
 
     #[On('agregaEquipoAlTaller')] 
