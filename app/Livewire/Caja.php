@@ -414,6 +414,7 @@ class Caja extends Component
         return view('livewire.caja', compact('productosModal'));
     }
 
+    //QUIERO QUE CUANDO EL INVENTARIO SEA -1 NO RESTE INVENTARIO NI VALIDE SI HAY EN EXISTENCIA
     public function agregaProducto()
     {
         $this->cantidadProductoCapturado = 1;
@@ -421,9 +422,16 @@ class Caja extends Component
 
         if ($producto)
         {
-            $cantidadSolicitada = $this->cantidadProductoCapturado;
-            $inventarioActual = $producto->inventario;
-            $inventarioDisponible = $inventarioActual - $cantidadSolicitada; 
+            if ($producto->inventario == -1)  //SI EL PRODUCTO NO REQUIERE INVENTARIO
+            {
+                $inventarioDisponible = 1;   //ASIGNACION ARBITRARIA PARA QUE SIEMPRE TENGA INVENTARIO
+            }
+            else
+            {
+                $cantidadSolicitada = $this->cantidadProductoCapturado;
+                $inventarioActual = $producto->inventario;
+                $inventarioDisponible = $inventarioActual - $cantidadSolicitada;
+            }
 
             if ($inventarioDisponible >= 0)
             {
@@ -453,8 +461,15 @@ class Caja extends Component
             {
                 // Realizar acciones adicionales específicas para la cantidad
                 // Por ejemplo, recalcular el subtotal
-                $inventarioActual = $producto->inventario;
-                $inventarioDisponible = $inventarioActual - $value; 
+                if ($producto->inventario == -1)  //SI NO MANEJA INVENTARIO
+                {
+                    $inventarioDisponible = 1; //PARA ASEGURARSE QUE SIEMPRE HAYA INVENTARIO DISPONIBLE
+                }
+                else
+                {
+                    $inventarioActual = $producto->inventario;
+                    $inventarioDisponible = $inventarioActual - $value;
+                }
 
                 if ($inventarioDisponible >= 0)
                 {
@@ -557,8 +572,11 @@ class Caja extends Component
     {
         $producto = Producto::where('codigo', $codigoProducto)->first();
 
-        $inventarioRestante = $producto->inventario - $cantidad;
-        $producto->inventario = $inventarioRestante;
+        if ($producto->inventario != -1)   //SOLO SI EL PRODUCTO MANEJA INVENTARIO
+        {
+            $inventarioRestante = $producto->inventario - $cantidad;
+            $producto->inventario = $inventarioRestante;
+        }
 
         $producto->save();
     }
@@ -582,6 +600,7 @@ class Caja extends Component
                     {
                         $codigoProducto = $item['producto']->codigo;
                         $cantidad = $item['cantidad'];
+
                         $this->restaInventario($codigoProducto, $cantidad);
 
                         $subTotal = $item['producto']->precio_venta * $cantidad;

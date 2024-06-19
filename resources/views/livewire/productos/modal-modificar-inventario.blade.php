@@ -60,6 +60,13 @@
                             <input wire:model="inventarioMod.precioMayoreo" type="number" step="0.5" class="input-height form-control w-100" id="inventarioMod.precioMayoreo" style="font-size:11pt;" autofocus>
                         </div>
                     </div>
+                    <div class="row mb-1">
+                        <label for="productoConInventario" class="form-label text-gray-700" style="font-weight:400;font-size:11pt">
+                            <input type="checkbox" id="productoConInventario" wire:model.live="productoConInventario">
+                            El producto requiere inventario
+                        </label>
+                    </div>
+                    @if ($productoConInventario)
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3">
                             <label for="inventarioMod.existencia" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Inventario </label>
@@ -70,6 +77,7 @@
                             <input wire:model="inventarioMod.existenciaMinima" type="number" step="1" class="input-height form-control w-100" id="inventarioMod.inventarioMinimo" style="font-size:11pt;" autofocus>
                         </div>
                     </div>
+                    @endif
                     <!-- Modal Footer con Botón de Cierre -->
                     <div class="modal-footer d-flex justify-content-center">
                         <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="actualizaInventario" target="_blank">Actualizar</button>

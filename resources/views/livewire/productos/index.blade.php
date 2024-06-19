@@ -83,7 +83,7 @@
                        $ {{ $producto->precio_venta }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $producto->inventario }}
+                        {{ $producto->inventario == -1 ? "N/A" : $producto->inventario}}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $producto->departamento->nombre }}

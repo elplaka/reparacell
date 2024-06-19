@@ -1,5 +1,5 @@
 <div wire:ignore.self class="modal fade" id="nuevoProductoModal" name="nuevoProductoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="dialog" >
+    <div class="modal-dialog modal-lg" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}" >
        <div class="modal-content">
            <div class="modal-header">
                <h1 class="text-xl font-bold"><b> Nuevo producto</b></h1> &nbsp; &nbsp;
@@ -77,6 +77,13 @@
                             </select>
                         </div>
                     </div>
+                    <div class="row mb-1">
+                        <label for="productoConInventario" class="form-label text-gray-700" style="font-weight:400;font-size:11pt">
+                            <input type="checkbox" id="productoConInventario" wire:model.live="productoConInventario">
+                            El producto requiere inventario
+                        </label>
+                    </div>
+                    @if ($productoConInventario)
                     <div class="row mb-3">
                         <div class="col-md-3 mb-3">
                             <label for="productoMod.inventario" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Inventario </label>
@@ -87,6 +94,7 @@
                             <input wire:model="productoMod.inventarioMinimo" type="number" step="1" class="input-height form-control w-100" id="productoMod.inventarioMinimo" style="font-size:11pt;" autofocus>
                         </div>
                     </div>
+                    @endif
                     <!-- Modal Footer con Botón de Cierre -->
                     <div class="modal-footer d-flex justify-content-center">
                         <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="guardaProducto" target="_blank">Guardar</button>

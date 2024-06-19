@@ -48,6 +48,7 @@ class ProductoLw extends Component
 
     public $departamentos, $codigoRepetido;
     public $showMainErrors, $showModalErrors;
+    public $datosCargados, $productoConInventario;
 
     protected $rules = [
         'productoMod.codigo' => 'required|string',
@@ -159,12 +160,15 @@ class ProductoLw extends Component
 
     public function abreAgregaProducto()
     {
+        $this->productoConInventario = true;
         $this->departamentos = DepartamentoProducto::where('disponible', 1)->get();
+        $this->datosCargados = true;
     }
 
     public function cierraNuevoProductoModal()
     {
         $this->resetModal();
+        $this->datosCargados = false;
     }
 
     public function yaExisteCodigoProducto($codigoProducto)
@@ -205,8 +209,8 @@ class ProductoLw extends Component
             $producto->precio_costo = $this->productoMod['precioCosto'];
             $producto->precio_venta = $this->productoMod['precioVenta'];
             $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
-            $producto->inventario = $this->productoMod['inventario'];
-            $producto->inventario_minimo = $this->productoMod['inventarioMinimo'];
+            $producto->inventario = $this->productoConInventario ? $this->productoMod['inventario'] : -1;
+            $producto->inventario_minimo = $this->productoConInventario ? $this->productoMod['inventarioMinimo'] : -1;
             $producto->id_departamento = $this->productoMod['idDepartamento'];
             $producto->disponible = 1;
             $producto->save();
@@ -215,16 +219,16 @@ class ProductoLw extends Component
             $movimiento->id_tipo_movimiento = 1;
             $movimiento->codigo_producto = $this->productoMod['codigo'];
             $movimiento->existencia_anterior = 0;
-            $movimiento->existencia_movimiento = $this->productoMod['inventario'];
+            $movimiento->existencia_movimiento = $producto->inventario;
             $movimiento->existencia_minima_anterior = 0;
-            $movimiento->existencia_minima_movimiento = $this->productoMod['inventarioMinimo'];
+            $movimiento->existencia_minima_movimiento = $producto->inventario_minimo;
             $movimiento->precio_costo_anterior = 0;
             $movimiento->precio_costo_movimiento = $this->productoMod['precioCosto'];
             $movimiento->precio_venta_anterior = 0;
             $movimiento->precio_venta_movimiento = $this->productoMod['precioVenta'];
             $movimiento->precio_mayoreo_anterior = 0;
             $movimiento->precio_mayoreo_movimiento = $this->productoMod['precioMayoreo'];
-            $movimiento->id_usuario->movimiento = Auth::id();
+            $movimiento->id_usuario_movimiento = Auth::id();
             $movimiento->save();
 
             DB::commit();
@@ -273,7 +277,6 @@ class ProductoLw extends Component
 
     public function editaProducto($codigoProducto)
     {
-
         $producto = Producto::findOrFail($codigoProducto);
 
         $this->productoMod = [
@@ -350,8 +353,6 @@ class ProductoLw extends Component
             dd($e->getMessage());
             // Manejar la excepción según sea necesario
         }
-
-
     } 
 
     public function modificaInventario($codigoProducto)
@@ -368,6 +369,7 @@ class ProductoLw extends Component
             'existenciaMinima' => $producto->inventario_minimo
         ];
 
+        $this->productoConInventario = $producto->inventario != -1 ? true : false;
     }
 
     public function actualizaInventario()
@@ -397,9 +399,9 @@ class ProductoLw extends Component
             $movimiento->id_tipo_movimiento = 3;
             $movimiento->codigo_producto = $this->inventarioMod['codigo'];
             $movimiento->existencia_anterior = $producto->inventario;
-            $movimiento->existencia_movimiento = $this->inventarioMod['existencia'];
+            $movimiento->existencia_movimiento = $this->productoConInventario ? $this->inventarioMod['existencia'] : -1;
             $movimiento->existencia_minima_anterior = $producto->inventario_minimo;
-            $movimiento->existencia_minima_movimiento = $this->inventarioMod['existenciaMinima'];
+            $movimiento->existencia_minima_movimiento = $this->productoConInventario ? $this->inventarioMod['existenciaMinima'] : -1;
             $movimiento->precio_costo_anterior = $producto->precio_costo;
             $movimiento->precio_costo_movimiento = $this->inventarioMod['precioCosto'];
             $movimiento->precio_venta_anterior = $producto->precio_venta;
@@ -412,8 +414,8 @@ class ProductoLw extends Component
             $producto->precio_costo = $this->inventarioMod['precioCosto'];
             $producto->precio_venta = $this->inventarioMod['precioVenta'];
             $producto->precio_mayoreo = $this->inventarioMod['precioMayoreo'];
-            $producto->inventario = $this->inventarioMod['existencia'];
-            $producto->inventario_minimo = $this->inventarioMod['existenciaMinima'];
+            $producto->inventario = $this->productoConInventario ? $this->inventarioMod['existencia'] : -1;
+            $producto->inventario_minimo = $this->productoConInventario ? $this->inventarioMod['existenciaMinima'] : -1;
             $producto->save();
         
             DB::commit();

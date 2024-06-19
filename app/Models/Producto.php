@@ -25,7 +25,8 @@ class Producto extends Model
         'precio_mayoreo',
         'inventario',
         'inventario_minimo',
-        'id_departamento'
+        'id_departamento',
+        'disponible'
     ];
 
     public function departamento()
