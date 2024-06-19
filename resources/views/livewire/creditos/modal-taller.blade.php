@@ -11,9 +11,10 @@
                @else
                <span class="badge badge-success">{{ $cobroACredito['estatus'] }}</span></h1>
                @endif
+               &nbsp; <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraCobroCreditoTallerModal">
                    <span aria-hidden="true">&times;</span>
-               </button> 
+               </button>
            </div> 
            <div class="modal-body">
             @if ($showModalErrors)
@@ -126,10 +127,10 @@
                                     @endif
                                 </td>
                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    @if ($detalles->id_abono > 0)
+                                    {{-- @if ($detalles->id_abono > 0) --}}
                                     <button wire:click="preguntaBorraAbono('{{ $detalles->num_orden }}', '{{ $detalles->id_abono }}')" wire:loading.remove wire:target="borraAbono" class="label-button">
                                         <i class="fa-solid fa-trash-can" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Borrar abono"></i>
-                                    @endif
+                                    {{-- @endif --}}
                                 </td>
                             </tr>
                             @endforeach

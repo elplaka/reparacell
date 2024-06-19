@@ -50,12 +50,22 @@
                                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider col-6">
                                         MODELO
                                     </th>
+                                    @if ($modalSoloLectura)
+                                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider col-6">
+                                        ESTATUS
+                                    </th>
+                                    <th class="px-2 py-2 bg-gray-200 text-center text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
+                                    @endif
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @if (!is_null($equiposClienteModal))
                                         @foreach($equiposClienteModal as $equipo)
+                                        @if ($modalSoloLectura)
+                                        <tr style="font-size: 9pt;">
+                                        @else
                                         <tr style="font-size: 9pt; cursor: pointer;" wire:click="capturarFilaEquiposCliente({{ $equipo->id }})">
+                                        @endif
                                             <td class="d-none"> {{ $equipo->id }}</td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {!! $equipo->tipo_equipo->icono !!}
@@ -66,17 +76,29 @@
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {{ $equipo->modelo->nombre }}
                                             </td>
+                                            @if ($modalSoloLectura)
+                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                                {{ $equipo->disponible ? 'DISPONIBLE' : 'NO DISPONIBLE' }}
+                                            </td>
+                                            <td>
+                                                <a wire:click="abrirCreditoTaller({{ $equipo->id }})" title="Ir a Equipos del Cliente" style="color: dimgrey; cursor:pointer;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'">
+                                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                                </a>
+                                            </td>
+                                            @endif
                                         </tr>
                                         @endforeach
                                     @endif
                                 </tbody>
                             </table>
                         </div>
+                        @if (!$modalSoloLectura)
                         <div class="col-md-1 mb-3" wire:loading.remove>
                             <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" wire:click="nuevoEquipoCliente" title="Nuevo Equipo">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>
+                        @endif
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-center">

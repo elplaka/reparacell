@@ -1,6 +1,10 @@
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.modal-cliente-historial')
     @include('livewire.clientes.modal-ventas-historial')
+    @include('livewire.clientes.modal-creditos-taller-historial')
+    @include('livewire.clientes.modal-creditos-ventas-historial')
+    @include('livewire.modal-equipos-cliente')
+
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-clock-rotate-left"></i> Historial de Clientes </b></h4>
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
@@ -61,8 +65,8 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ID</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">TELÉFONO ID</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">NOMBRE</th>
-                    {{-- <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">DIRECCIÓN</th>
-                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">TELÉFONO CONTACTO</th>
+                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">DIRECCIÓN</th>
+                    {{--<th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">TELÉFONO CONTACTO</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ESTATUS</th> --}}
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
@@ -79,30 +83,42 @@
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $cliente->nombre }}
                     </td>
-                    {{-- <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $cliente->direccion }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $cliente->telefono_contacto }}
-                    </td>
-                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        @if ($cliente->disponible)
-                            DISPONIBLE
-                        @else
-                            NO DISPONIBLE
+                        @if($cliente->id != 6)  <!--SI NO ES PÚBLICO GENERAL -->
+                        <a wire:click.prevent="abrirEquiposClienteModal({{ $cliente->id }})" wire:loading.attr="disabled" wire:target="abreHistorialTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#equiposClienteModal" title="Ver equipos del cliente">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                        </a>  &nbsp;
                         @endif
-                    </td> --}}
-                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+
                         <a wire:click.prevent="abreHistorialTaller({{ $cliente->id }})" title="Historial en taller" wire:loading.attr="disabled" wire:target="abreHistorialTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#clienteHistorialModal"
                         >
                         <i class="fa-solid fa-screwdriver-wrench" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a>
-                        &nbsp;                 
                         <a wire:click.prevent="abreHistorialVentas({{ $cliente->id }})" title="Historial en ventas" wire:loading.attr="disabled" wire:target="abreHistorialVentas" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#ventasHistorialModal"
                             >
-                            <i class="fa-solid fa-dollar-sign" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
-                            </a>   
-                        </td>
+                            <i class="fa-solid fa-cart-shopping" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
+                        </a>
+                        &nbsp;
+                        @if($cliente->id != 6)  <!--SI NO ES PÚBLICO GENERAL -->
+                        <a wire:click.prevent="abreHistorialCreditosTaller({{ $cliente->id }})" title="Historial en créditos de taller" wire:loading.attr="disabled" wire:target="abreHistorialCreditosTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#creditosTallerHistorialModal" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"
+                            >
+                            <i class="fa-solid fa-credit-card"></i>
+                            <sup style="font-size: 0.5em; position: relative; top: -1em; margin-left: -0.6em;">
+                                <i class="fa-solid fa-screwdriver-wrench" ></i>
+                            </sup>
+                        </a>
+                        <a wire:click.prevent="abreHistorialCreditosVentas({{ $cliente->id }})" title="Historial en créditos de ventas" wire:loading.attr="disabled" wire:target="abreHistorialCreditosVentas" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#creditosVentasHistorialModal" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"
+                            >
+                            <i class="fa-solid fa-credit-card"></i>
+                            <sup style="font-size: 0.5em; position: relative; top: -1em; margin-left: -0.6em;">
+                                <i class="fa-solid fa-cart-shopping" ></i>
+                            </sup>
+                        </a>
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -112,4 +128,9 @@
                 {{ $clientes->links('livewire.paginame') }}
             </label>
         </div> 
+        <div style="display: none;">
+            @livewire('taller-credito-lw')
+            @livewire('venta-credito-lw')
+        </div>
     </div>
+    

@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Venta;
 use App\Models\VentaCredito;
 use App\Models\VentaCreditoDetalle;
 use App\Models\EstatusVentaCredito;
@@ -10,6 +11,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Livewire\Attributes\On; 
 
 class VentaCreditoLw extends Component
 {
@@ -133,28 +135,38 @@ class VentaCreditoLw extends Component
         $idVenta = $this->ventaCredito['id'];
         $idAbono = $this->ventaCredito['idAbonoSeleccionado'];
 
-        $detalleCredito =  VentaCreditoDetalle::where('id', $idVenta)
-        ->where('id_abono', $idAbono)
-        ->delete();
-
-        if ($detalleCredito)
+        try 
         {
-            $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)
-                                 ->where('id_abono', '>', 0)->get();
+            DB::transaction(function () use ($idVenta, $idAbono) 
+            {
+                $detalleCredito =  VentaCreditoDetalle::where('id', $idVenta)
+                ->where('id_abono', $idAbono)
+                ->delete();
 
-            $this->sumaAbonos = $this->detallesCredito->sum('abono');
-            $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+                if ($detalleCredito)
+                {
+                    $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)
+                                        ->where('id_abono', '>', 0)->get();
 
-            VentaCredito::where('id', $idVenta)->update(['id_estatus' => 1]);
+                    $this->sumaAbonos = $this->detallesCredito->sum('abono');
+                    $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
 
-            $this->ventaCredito['idEstatus'] = 1;
-            $this->ventaCredito['estatus'] = "SIN LIQUIDAR";
+                    VentaCredito::where('id', $idVenta)->update(['id_estatus' => 1]);
 
-            session()->flash('success', 'El ABONO se ha ELIMINADO con éxito.');
-        }
-        else
+                    $this->ventaCredito['idEstatus'] = 1;
+                    $this->ventaCredito['estatus'] = "SIN LIQUIDAR";
+
+                    session()->flash('success', 'El ABONO se ha ELIMINADO con éxito.');
+                }
+                else
+                {
+                    $this->addError('abono', 'El abono seleccionado no existe o hubo problemas con la base de datos.');
+                }
+            });
+        } catch (\Exception $e)
         {
-            $this->addError('abono', 'El abono seleccionado no existe o hubo problemas con la base de datos.');
+                // Manejo de errores si ocurre una excepción
+                dd($e);
         }
     }
 
@@ -199,6 +211,15 @@ class VentaCreditoLw extends Component
         $this->datosCargados = false;
 
         $this->muestraDivAbono = false;
+
+        $abreModalCreditoVentas = session('sesAbreModalCreditoVentas', false);
+
+        if ($abreModalCreditoVentas)
+        {
+            $idVenta = session('idVenta', null);
+            $this->abreVentaCredito($idVenta);
+            $this->dispatch('abreCobroCreditoVentasModal2');
+        }
     }
 
     public function muestraDivAgregaAbono()
@@ -270,5 +291,23 @@ class VentaCreditoLw extends Component
                 $this->addError('abono', 'El abono debe ser mayor que cero.');
             }
         }
+    }
+
+    #[On('lisCreditosVentasCliente')] 
+    public function abreVenta($idVenta)
+    {
+        $credito = Venta::where('id', $idVenta)->first();
+
+        $nombreClienteCredito = $credito->cliente->nombre;
+        $fechaInicioCredito = $credito->created_at;
+        $fechaFinCredito = $credito->created_at;
+
+        session()->flash('idVenta', $idVenta);
+        session()->flash('nombreClienteCredito', $nombreClienteCredito);
+        session()->flash('fechaInicioCredito', $fechaInicioCredito);
+        session()->flash('fechaFinCredito', $fechaFinCredito);
+        session()->flash('sesAbreModalCreditoVentas', true);
+
+        return redirect()->route('ventas.creditos');
     }
 }

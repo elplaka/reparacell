@@ -43,7 +43,7 @@
     padding-bottom: 5px !important; 
     padding-left: 10px !important; 
     padding-right: 10px !important;
-    color: rgb(70, 70, 70);
+    color: rgb(75, 75, 75);
     font-size: 11pt !important;
 }
 

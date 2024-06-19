@@ -30,6 +30,7 @@ class Caja extends Component
     public $clientesModal, $nombreClienteModal, $usuariosModal;
     public $descripcionProductoModal;
     public $muestraDivAbono, $detallesCredito, $datosCargados;
+    public $sumaAbonos, $montoLiquidar;
 
     public $corteCaja = [
         'fechaInicial',
@@ -289,13 +290,6 @@ class Caja extends Component
 
         $cliente = $this->regresacliente('0000000000');
 
-        //******************************************** */
-
-        $cliente = $this->regresacliente('6941088943');
-        $this->cliente['publicoGeneral'] = false;
-
-        //****************************************** */
-
         $this->usuariosModal = User::all();
 
         $this->corteCaja = [
@@ -375,31 +369,21 @@ class Caja extends Component
                 $ventaCreditoDetalle->abono = 0;
                 $ventaCreditoDetalle->id_usuario_venta = Auth::id();
 
+                $this->sumaAbonos = 0;
+                $this->montoLiquidar = $this->totalCarrito;
+
                 $ventaCreditoDetalle->save();
 
                 $this->ventaCredito['nombreCliente'] = $venta->cliente->nombre;
                 $this->ventaCredito['id'] = $idVenta;
                 $this->ventaCredito['idEstatus'] = 1;
                 $this->ventaCredito['estatus'] = "SIN LIQUIDAR";
+                $this->ventaCredito['monto'] = $this->montoLiquidar;
 
                 $this->muestraDivAbono = false;
 
+                $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->where('id_abono', '>', 0)->get();
 
-                $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->get();
-
-                // $this->sumaAbonos = $this->detallesCredito->sum('abono');
-                // $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
-        
-                // $this->modalCobroCreditoTallerAbierta = true;
-        
-                // $this->muestraDivAbono = false;
-        
-                // $this->cobroACredito['abono'] = null;
-        
-                // $this->showModalErrors = true;
-                // $this->showMainErrors = false;
-
-                // $this->dispatch('cierraCobroModal');
                 $this->dispatch('abreVentaCreditoModal');
 
                 $this->datosCargados = true;

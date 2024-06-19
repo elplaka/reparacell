@@ -11,6 +11,7 @@ use App\Models\DepartamentoProducto;
 use App\Models\MovimientoInventario;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ProductoLw extends Component
 {
@@ -45,7 +46,7 @@ class ProductoLw extends Component
         'existenciaMinima'
     ];
 
-    public $departamentos;
+    public $departamentos, $codigoRepetido;
     public $showMainErrors, $showModalErrors;
 
     protected $rules = [
@@ -151,6 +152,11 @@ class ProductoLw extends Component
         return view('livewire.productos.index', compact('productos'));
     }
 
+    public function updatedProductoModCodigo()
+    {
+        $this->codigoRepetido = Producto::where('codigo', $this->productoMod['codigo'])->exists();
+    }
+
     public function abreAgregaProducto()
     {
         $this->departamentos = DepartamentoProducto::where('disponible', 1)->get();
@@ -218,6 +224,7 @@ class ProductoLw extends Component
             $movimiento->precio_venta_movimiento = $this->productoMod['precioVenta'];
             $movimiento->precio_mayoreo_anterior = 0;
             $movimiento->precio_mayoreo_movimiento = $this->productoMod['precioMayoreo'];
+            $movimiento->id_usuario->movimiento = Auth::id();
             $movimiento->save();
 
             DB::commit();
@@ -312,8 +319,39 @@ class ProductoLw extends Component
     {
         $producto = Producto::findOrFail($codigoProducto);
 
-        $producto->disponible = !$producto->disponible;
-        $producto->save();
+        $activacion = $producto->disponible ? true : false; 
+
+        DB::beginTransaction();
+
+        try {
+            $producto->disponible = !$producto->disponible;
+            $producto->save();
+            
+            $movimiento = new MovimientoInventario();
+            $movimiento->id_tipo_movimiento = $activacion ? 2 : 4;
+            $movimiento->codigo_producto = $producto->codigo;
+            $movimiento->existencia_anterior = $producto->inventario;
+            $movimiento->existencia_movimiento = $producto->inventario;
+            $movimiento->existencia_minima_anterior = $producto->inventario_minimo;
+            $movimiento->existencia_minima_movimiento = $producto->inventario_minimo;
+            $movimiento->precio_costo_anterior = $producto->precio_costo;
+            $movimiento->precio_costo_movimiento = $producto->precio_costo;
+            $movimiento->precio_venta_anterior = $producto->precio_venta;
+            $movimiento->precio_venta_movimiento = $producto->precio_venta;
+            $movimiento->precio_mayoreo_anterior = $producto->precio_mayoreo;
+            $movimiento->precio_mayoreo_movimiento = $producto->precio_mayoreo;
+            $movimiento->id_usuario_movimiento = Auth::id();
+            $movimiento->save();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            dd($e->getMessage());
+            // Manejar la excepción según sea necesario
+        }
+
+
     } 
 
     public function modificaInventario($codigoProducto)
@@ -368,6 +406,7 @@ class ProductoLw extends Component
             $movimiento->precio_venta_movimiento = $this->inventarioMod['precioVenta'];
             $movimiento->precio_mayoreo_anterior = $producto->precio_mayoreo;
             $movimiento->precio_mayoreo_movimiento = $this->inventarioMod['precioMayoreo'];
+            $movimiento->id_usuario_movimiento = Auth::id();
             $movimiento->save();
         
             $producto->precio_costo = $this->inventarioMod['precioCosto'];
@@ -393,8 +432,6 @@ class ProductoLw extends Component
             dd($e->getMessage());
             // Manejar la excepción según sea necesario
         }
-
-   
     }
 
     public function cierraModificarInventarioModal()

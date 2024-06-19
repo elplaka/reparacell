@@ -113,12 +113,14 @@ class AgregaEquipoTaller extends Component
     public $imagenIndexToDelete;
     public $mensajeToast = ''; 
     public $fallasEquipoTaller;
+    public $modalSoloLectura;
 
     public function mount()
     {
 
         $this->cliente = [
             'estatus'           => 0,
+            'id'                => '',
             'nombre'            => '',
             'telefono'          => '',
             'direccion'         => '',
@@ -183,6 +185,8 @@ class AgregaEquipoTaller extends Component
 
         $this->muestraHistorialClienteModal = false;
         $this->muestraHistorialEquipoClienteModal = false;
+
+        $this->modalSoloLectura = false;
     }
 
     public function render()
@@ -501,7 +505,7 @@ class AgregaEquipoTaller extends Component
                         $cliente_existente->direccion = trim(mb_strtoupper($this->cliente['direccion']));
                         $cliente_existente->telefono_contacto = $this->cliente['telefonoContacto'];
                         $cliente_existente->disponible = 1;
-                        $cliente_existente->save();
+                        $cliente_existente->save(); 
                     }
                 }
 
@@ -696,6 +700,13 @@ class AgregaEquipoTaller extends Component
     public function abrirEquiposClienteModal()
     {
         $this->equiposClienteModal = $this->regresaEquiposCliente($this->cliente['id']);
+    }
+
+    public function regresaEquiposCliente($idCliente)
+    {
+        $equipos = Equipo::where('id_cliente', $idCliente)->get();
+
+        return $equipos;
     }
 
     public function hazParo()   //No hace nada pero hace que funcione updatedFallas
@@ -985,13 +996,6 @@ class AgregaEquipoTaller extends Component
         $equipo = Equipo::find($idEquipo);
 
         return $equipo;
-    }
-
-    public function regresaEquiposCliente($idCliente)
-    {
-        $equipos = Equipo::where('id_cliente', $idCliente)->get();
-
-        return $equipos;
     }
 
     public function updatedEquipoIdTipo()

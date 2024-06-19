@@ -80,14 +80,14 @@
                                             </td> 
                                             <td colspan="2" class="px-3 py-1 whitespace-no-wrap" style="vertical-align: middle">
                                                 <div class="row ml-1">
-                                                    <button class="btn col-md-1" data-toggle="collapse" data-target="#collapseDetalle{{ $ventaCliente->id }}" aria-expanded="false" aria-controls="collapseDetalle{{ $ventaCliente->id }}" wire:click="verDetalles('{{ $i }}')" style="margin: 0; padding: 0; line-height: 1; outline: none;"  onclick="this.blur();" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" wire:refresh>
+                                                    <button class="btn col-md-1" data-toggle="collapse" data-target="#collapseDetalle{{ $ventaCliente->id }}" wire:click="verDetalles('{{ $i }}')" style="margin: 0; padding: 0; line-height: 1; outline: none;"  onclick="this.blur();" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" wire:refresh>
                                                         @if (isset($collapsed[$i]))
                                                             <i class="fa-solid fa-angles-left" title="Ocultar detalles"></i>
                                                         @else
                                                             <i class="fa-solid fa-angles-right" title="Mostrar detalles"></i>
                                                         @endif
                                                     </button> &nbsp; &nbsp;
-                                                    <div wire:ignore class="collapse col-md-10" style="margin:0; padding:0" id="collapseDetalle{{ $ventaCliente->id }}">
+                                                    <div class="collapse col-md-10" style="margin:0; padding:0;display:{{ isset($collapsed[$i]) ? 'block' : 'none' }}" id="collapseDetalle{{ $ventaCliente->id }}">
                                                         <table class="w-full mb-0">
                                                             <thead>
                                                                 <tr class="no-hover">

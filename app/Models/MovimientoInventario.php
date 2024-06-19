@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Producto;
+use App\Models\TipoMovimientoInventario;
+use App\Models\User;
 
 class MovimientoInventario extends Model
 {
@@ -25,4 +28,19 @@ class MovimientoInventario extends Model
         'precio_mayoreo_anterior',
         'precio_mayoreo_movimiento',
     ];
+
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'codigo_producto');
+    }
+
+    public function tipoMovimiento()
+    {
+        return $this->belongsTo(TipoMovimientoInventario::class, 'id_tipo_movimiento');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'id_usuario_movimiento');
+    }
 }

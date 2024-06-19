@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\EquipoTallerController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\MarcaEquipoController;
@@ -69,6 +70,7 @@ Route::middleware(['auth'])
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
     Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
 
+    Route::get('/equipos/index', [EquipoController::class, 'index'])->name('equipos.index');
     Route::get('/equipos/fallas', [FallaEquipoController::class, 'index'])->name('equipos.fallas');
     Route::get('/equipos/marcas', [MarcaEquipoController::class, 'index'])->name('equipos.marcas');
     Route::get('/equipos/modelos', [ModeloEquipoController::class, 'index'])->name('equipos.modelos');

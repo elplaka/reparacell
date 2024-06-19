@@ -5,7 +5,6 @@
                <h1 class="text-xl font-bold"><b> Nuevo producto</b></h1> &nbsp; &nbsp;
                <div wire:loading class="text-center">
                 <i class="fa fa-spinner fa-spin"></i> Cargando...
-                <br><br>
                 </div>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraNuevoProductoModal">
                    <span aria-hidden="true">&times;</span>
@@ -34,12 +33,21 @@
                 </div>
                 @endif
             @endif
-            <div class="modal-body" wire:loading.remove>
+            <div class="modal-body">
                 <div class="container mt-3">
                     <div class="row mb-3">
                         <div class="col-md-3 mb-3">
-                            <label for="productoMod.codigo" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Código </label>
-                            <input wire:model="productoMod.codigo" type="text" class="input-height form-control w-100" id="productoMod.codigo" style="font-size:11pt;" autofocus>
+                            <label for="productoMod.codigo" class="form-label text-gray-700" style="font-weight:500;font-size:11pt">Código</label>
+                            <div class="d-flex align-items-center">
+                                <input wire:model.live="productoMod.codigo" type="text" class="input-height form-control w-100" id="productoMod.codigo" style="font-size:11pt;" autofocus> &nbsp;
+                                @if (strlen($productoMod['codigo']) > 0)
+                                    @if ($codigoRepetido)
+                                        <i class="fa-solid fa-circle-xmark ms-2" style="color: red;" title="Código no disponible"></i>                               
+                                    @else
+                                        <i class="fa-solid fa-circle-check ms-2" style="color: green;" title="Código disponible"></i> 
+                                    @endif
+                                @endif
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="productoMod.descripcion" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Descripción </label>

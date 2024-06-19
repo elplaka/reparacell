@@ -6,8 +6,9 @@ use Livewire\Component;
 use App\Models\Cliente;
 use App\Models\Equipo;
 use App\Models\Venta;
+use App\Models\CobroTallerCredito;
+use App\Models\VentaCredito;
 use Livewire\WithPagination;
-
 
 class ClienteHistorial extends Component
 {
@@ -16,7 +17,10 @@ class ClienteHistorial extends Component
     public $numberOfPaginatorsRendered = [];
     public $showMainErrors, $showModalErrors;
     public $muestraHistorialClienteModal, $muestraHistorialVentasModal;
+    public $muestraHistorialCreditosTallerModal, $muestraHistorialCreditosVentasModal;
     public $collapsed = [];
+    public $equiposClienteModal;
+    public $modalSoloLectura;
 
     public $cliente = [
         'id',
@@ -44,9 +48,31 @@ class ClienteHistorial extends Component
             'telefono' => null,  
             'direccion' => null,
             'telefonoContacto' => null,
-        ];
+        ];    
         
         $this->muestraHistorialClienteModal = false;
+        $this->equiposClienteModal = null;
+    
+        $this->modalSoloLectura = true;
+    }
+
+    public function cierraModalEquiposCliente()
+    {
+
+    }
+
+    public function abrirEquiposClienteModal($idCliente)
+    {
+        $this->equiposClienteModal = $this->regresaEquiposCliente($idCliente);
+
+        $this->cliente['nombre'] = $this->equiposClienteModal->first()->cliente->nombre;
+    }   
+
+    public function regresaEquiposCliente($idCliente)
+    {
+        $equipos = Equipo::where('id_cliente', $idCliente)->get();
+
+        return $equipos;
     }
 
 
@@ -71,15 +97,15 @@ class ClienteHistorial extends Component
             ->orderBy('equipos_taller.fecha_salida')
             ->orderBy('equipos_taller.num_orden')
             ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones') 
-            ->paginate(5);
+            ->paginate(5, ['*'], 'historial-equipos');
+
+            $this->resetPage('historial-equipos');
 
             $cliente = $this->regresaCliente($this->cliente['id']);
     
             if (isset($cliente))   //Cliente ya existente
             {
                 $this->cliente['nombre'] = $cliente->nombre;
-                // $this->cliente['direccion'] = $cliente->direccion;
-                // $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
             }
         }
         else
@@ -89,7 +115,10 @@ class ClienteHistorial extends Component
 
         if ($this->muestraHistorialVentasModal) 
         {
-            $historialClienteVentas = Venta::where('id_cliente', $this->cliente['id'])->paginate(5);
+            $historialClienteVentas = Venta::where('id_cliente', $this->cliente['id'])->paginate(5, ['*'], 'historial-ventas');
+
+            // Restablecer la página a la número 1
+            $this->resetPage('historial-ventas');
 
             $cliente = $this->regresaCliente($this->cliente['id']);
     
@@ -103,13 +132,50 @@ class ClienteHistorial extends Component
             $historialClienteVentas = null;
         }
 
-        // $this->goToPage(1);
+        if ($this->muestraHistorialCreditosTallerModal)
+        {
+            $historialCreditosTaller = CobroTallerCredito::where('id_cliente', $this->cliente['id'])->paginate(5, ['*'], 'historial-creditos-taller');
 
-        // dd($historialClienteTaller);
+            // Restablecer la página a la número 1
+            $this->resetPage('historial-creditos-taller');
+
+            $cliente = $this->regresaCliente($this->cliente['id']);
+    
+            if (isset($cliente))   //Cliente ya existente
+            {
+                $this->cliente['nombre'] = $cliente->nombre;
+            }
+        }
+        else
+        {
+            $historialCreditosTaller = null;
+        }
+
+        if ($this->muestraHistorialCreditosVentasModal)
+        {
+            $idCliente = $this->cliente['id'];
+
+            $historialCreditosVentas = Venta::whereHas('ventaCredito', function ($query) use ($idCliente) {
+                $query->where('id_cliente', $idCliente);
+            })->paginate(5, ['*'], 'historial-creditos-ventas');
+
+            $this->resetPage('historial-creditos-ventas');
+
+            $cliente = $this->regresaCliente($this->cliente['id']);
+    
+            if (isset($cliente))   //Cliente ya existente
+            {
+                $this->cliente['nombre'] = $cliente->nombre;
+            }
+        }
+        else
+        {
+            $historialCreditosVentas = null;
+        }
 
         $clientes = $clientesQuery->where('disponible', 1)->paginate(10);
 
-        return view('livewire.clientes.historial', compact('clientes', 'historialClienteTaller', 'historialClienteVentas'));
+        return view('livewire.clientes.historial', compact('clientes', 'historialClienteTaller', 'historialClienteVentas', 'historialCreditosTaller', 'historialCreditosVentas'));
     }
 
     protected function regresaCliente($id)
@@ -117,6 +183,46 @@ class ClienteHistorial extends Component
         $cliente = Cliente::find($id);
 
         return $cliente;
+    }
+
+    public function abrirCreditoTaller($numOrden)
+    {
+        $this->dispatch('cerrarModalCreditosTallerHistorial');
+
+        $this->dispatch('lisCreditosTallerCliente', numOrden:$numOrden)->to(TallerCreditoLw::class);  
+        
+    }
+
+    public function abrirCreditoVentas($id)
+    {
+        $this->dispatch('cerrarModalCreditosVentasHistorial');
+
+        $this->dispatch('lisCreditosVentasCliente', idVenta:$id)->to(VentaCreditoLw::class);  
+        
+    }
+
+    public function cierraModalCreditosTallerHistorial()
+    {
+         $this->muestraHistorialCreditosTallerModal = false;
+    }
+
+    public function cierraModalCreditosVentasHistorial()
+    {
+        $this->muestraHistorialCreditosVentasModal = false;
+    }
+
+    public function abreHistorialCreditosVentas($idCliente)
+    {
+        $this->cliente['id'] = $idCliente;
+
+        $this->muestraHistorialCreditosVentasModal = true;
+    }
+
+    public function abreHistorialCreditosTaller($idCliente)
+    {
+        $this->cliente['id'] = $idCliente;
+
+        $this->muestraHistorialCreditosTallerModal = true;
     }
 
     public function abreHistorialTaller($idCliente)
@@ -136,6 +242,8 @@ class ClienteHistorial extends Component
         $this->cliente['id'] = $idCliente;
 
         $this->muestraHistorialVentasModal = true;
+
+        $this->collapsed = [];
     }
 
     public function cierraModalVentasHistorial()

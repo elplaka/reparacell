@@ -188,6 +188,7 @@
                 </a>
                 <div id="collapseEquipos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ route('equipos.index') }}">                     <i class="fa-solid fa-rectangle-list"></i> Catálogo </a>
                         <a class="collapse-item" href="{{ route('equipos.marcas') }}">                     <i class="fa-solid fa-splotch"></i> Marcas </a>
                         <a class="collapse-item" href="{{ route('equipos.modelos') }}">                     <i class="fa-solid fa-bookmark"></i> Modelos </a>
                        <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a>
@@ -370,6 +371,24 @@
 
     <script>
         document.addEventListener('livewire:initialized', function () {
+            Livewire.on('cerrarModalCreditosTallerHistorial', () => {
+            document.getElementById('btnCerrarCreditosTallerHistorialModal').click();
+                })
+        });
+        </script>
+
+    <script>
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalCreditosVentasHistorial', () => {
+        document.getElementById('btnCerrarCreditosVentasHistorialModal').click();
+            })
+    });
+    </script>
+
+
+
+    <script>
+        document.addEventListener('livewire:initialized', function () {
                 Livewire.on('cerrarModalEquiposCliente', () => {
             document.getElementById('btnCerrarEquiposClienteModal').click();
                 })
@@ -400,7 +419,16 @@
 
             Livewire.on('abreVentaCreditoModal', () => {
                 $('#ventaCreditoModal').modal('show');
-            })
+            })  
+    });
+
+    document.addEventListener('abreCobroCreditoTallerModal2', function () {
+        $('#cobroCreditoTallerModal').modal('show');
+    });
+
+   
+    document.addEventListener('abreCobroCreditoVentasModal2', function () {
+        $('#ventaCreditoModal').modal('show');
     });
 </script>
     <script>
@@ -480,7 +508,7 @@
             }).then((result) => {
             // /* Read more about isConfirmed, isDenied below */
             if (result.isDenied) {
-                window.location.href = '{{ route('taller.index') }}';
+                window.location.href = '{{ route('productos.index') }}';
             }
             });
         });
