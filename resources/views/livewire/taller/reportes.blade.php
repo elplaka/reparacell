@@ -1,5 +1,7 @@
 @php
     use Carbon\Carbon;
+    $hayNoDisponibles = false;
+    $hayInexistentes = false;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -191,15 +193,44 @@
                         $taller->fecha_salida = Carbon::parse($taller->fecha_salida);
                         $equipos++;
                     @endphp
+                    {{-- PREGUNTA SI EL MODELO EXISTE DENTRO DE LA MARCA --}}
+                    @if(($taller->equipo->modelo->id_marca === $taller->equipo->marca->id)) 
                     <tr style="font-size: 10pt;" class="custom-status-color-{{ $taller->estatus->id }}" data-toggle="tooltip" data-title="">
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle" width="2%">
                             {!! $taller->equipo->tipo_equipo->icono !!}  
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->num_orden }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->fecha_entrada->format('d/m/Y') }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->marca->nombre }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->modelo->nombre }}</td>
-
+                        @if($taller->equipo->marca->id_tipo_equipo === $taller->equipo->id_tipo)
+                            @if($taller->equipo->marca->disponible)
+                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->marca->nombre }}</td>
+                            @else
+                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->marca->nombre . '*' }}</td>
+                                @php
+                                    $hayNoDisponibles = true;
+                                @endphp
+                            @endif
+                        @else
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">*****</td>
+                            @php
+                                $hayInexistentes = true;
+                            @endphp
+                        @endif
+                        @if($taller->equipo->modelo->id_marca === $taller->equipo->marca->id)
+                            @if($taller->equipo->modelo->disponible)
+                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->modelo->nombre }}</td>
+                            @else
+                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->modelo->nombre . '*' }}</td>
+                                @php
+                                    $hayNoDisponibles = true;
+                                @endphp
+                            @endif
+                        @else
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">*****</td>
+                        @php
+                            $hayInexistentes = true;
+                        @endphp
+                        @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             @foreach ($taller->fallas as $key => $equipo)
                                 {{ $equipo->falla->descripcion }}
@@ -219,6 +250,68 @@
                         </td>
                         @endif
                     </tr>
+                    {{-- SI NO EXISTE EL MODELO DENTRO DE LA MARCA LO VA A MOSTRAR SIEMPRE Y CUANDO
+                    NO SE ESTÉ BUSCANDO DICHO MODELO --}}
+                    @else
+                        @if (isset($this->busquedaEquipos['idModelos']) && $this->busquedaEquipos['idModelos'] != [])
+                        @else
+                        <tr style="font-size: 10pt;" class="custom-status-color-{{ $taller->estatus->id }}" data-toggle="tooltip" data-title="">
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle" width="2%">
+                                {!! $taller->equipo->tipo_equipo->icono !!}  
+                            </td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->num_orden }}</td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->fecha_entrada->format('d/m/Y') }}</td>
+                            @if($taller->equipo->marca->id_tipo_equipo === $taller->equipo->id_tipo)
+                                @if($taller->equipo->marca->disponible)
+                                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->marca->nombre }}</td>
+                                @else
+                                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->marca->nombre . '*' }}</td>
+                                    @php
+                                        $hayNoDisponibles = true;
+                                    @endphp
+                                @endif
+                            @else
+                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">*****</td>
+                                @php
+                                    $hayInexistentes = true;
+                                @endphp
+                            @endif
+                            @if($taller->equipo->modelo->id_marca === $taller->equipo->marca->id)
+                                @if($taller->equipo->modelo->disponible)
+                                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->modelo->nombre }}</td>
+                                @else
+                                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->modelo->nombre . '*' }}</td>
+                                    @php
+                                        $hayNoDisponibles = true;
+                                    @endphp
+                                @endif
+                            @else
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">*****</td>
+                            @php
+                                $hayInexistentes = true;
+                            @endphp
+                            @endif
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                @foreach ($taller->fallas as $key => $equipo)
+                                    {{ $equipo->falla->descripcion }}
+                                    @if (!$loop->last) <!-- Verifica si no es el último elemento -->
+                                        |
+                                    @endif
+                                @endforeach
+                            </td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre }}</td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
+                            <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
+                            </td>
+                            @if ($chkFechaSalida == true)
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                {{ $taller->fecha_salida->format('d/m/Y') }}
+                            </td>
+                            @endif
+                        </tr>
+                        @endif
+                    @endif
                 @endforeach
             </tbody>
         </table>
@@ -227,6 +320,13 @@
             <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
         </x-button>
         </div> --}}
+        @if ($hayNoDisponibles || $hayInexistentes)
+        <div class="col-md-5">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+               @if ($hayNoDisponibles)* NO DISPONIBLE @endif @if ($hayInexistentes) &nbsp; ***** INEXISTENTE @endif
+            </label>
+        </div>
+    @endif
     </div>
     <div class="col-mx">
         <label class="col-form-label float-left">

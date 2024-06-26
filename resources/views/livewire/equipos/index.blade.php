@@ -1,3 +1,7 @@
+@php
+    $hayNoDisponibles = false;
+    $hayInexistentes = false;
+@endphp
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.equipos.modal-nuevo-equipo')
     @include('livewire.equipos.modal-editar-equipo')
@@ -68,6 +72,43 @@
             </thead>
             <tbody>
                 @foreach($equipos as $equipo)
+                @php
+                    if($equipo->marca->id_tipo_equipo === $equipo->id_tipo)
+                    {                        
+                        if($equipo->marca->disponible)
+                        {
+                            $nombreMarca = $equipo->marca->nombre;
+                        }
+                        else 
+                        {
+                            $nombreMarca = $equipo->marca->nombre . "*";
+                            $hayNoDisponibles = true;
+                        }
+                    }
+                    else 
+                    {
+                        $nombreMarca = "*****";
+                        $hayInexistentes = true;
+                    }
+
+                    if($equipo->modelo->id_marca === $equipo->marca->id)
+                    {
+                        if ($equipo->modelo->disponible)
+                        {
+                            $nombreModelo = $equipo->modelo->nombre;
+                        }
+                        else 
+                        {
+                            $nombreModelo = $equipo->modelo->nombre . "*";
+                            $hayNoDisponibles = true;
+                        }
+                    }
+                    else 
+                    {
+                        $nombreModelo = "*****";
+                        $hayInexistentes = true;
+                    }
+                @endphp
                 <tr style="font-size: 10pt;">
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $equipo->id }} 
@@ -76,10 +117,10 @@
                         {!! $equipo->tipo_equipo->icono !!}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $equipo->marca->nombre }}
+                        {{ $nombreMarca }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $equipo->modelo->nombre }}
+                        {{ $nombreModelo }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $equipo->cliente->nombre }}
@@ -91,6 +132,10 @@
                         <a wire:click="editaEquipo('{{ $equipo->id }}')" title="Editar equipo" wire:loading.attr="disabled" wire:target="editaEquipo" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarEquipoModal"
                             >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
+                        </a>                        
+                        <a wire:click.prevent="abreHistorialTaller({{ $equipo->id }})" title="Historial en taller" wire:loading.attr="disabled" wire:target="abreHistorialTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#equipoHistorialModal"
+                            >
+                            <i class="fa-solid fa-screwdriver-wrench" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a>
                         <a wire:click="invertirEstatusEquipo('{{ $equipo->id }}')" wire:loading.attr="disabled" wire:target="invertirEstatusEquipo" style="color: dimgrey;cursor:pointer">
                             @if ($equipo->disponible)
@@ -99,17 +144,21 @@
                             <i class='fa-solid fa-square-check' style="color: dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Poner DISPONIBLE"></i>
                             @endif
                         </a>
-                        <a wire:click.prevent="abreHistorialTaller({{ $equipo->id }})" title="Historial en taller" wire:loading.attr="disabled" wire:target="abreHistorialTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#equipoHistorialModal"
-                            >
-                            <i class="fa-solid fa-screwdriver-wrench" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
-                            </a> 
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
-
+    @if ($hayNoDisponibles || $hayInexistentes)
+    <div class="row"> 
+        <div class="col-md-10">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+                @if ($hayNoDisponibles)* NO DISPONIBLE @endif @if ($hayInexistentes) &nbsp; ***** INEXISTENTE @endif
+            </label>
+        </div>
+    </div>
+    @endif
     <div class="col-mx">
         <label class="col-form-label float-left">
             {{ $equipos->links('livewire.paginame') }}

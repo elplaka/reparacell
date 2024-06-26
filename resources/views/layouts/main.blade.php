@@ -189,6 +189,7 @@
                 <div id="collapseEquipos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('equipos.index') }}">                     <i class="fa-solid fa-rectangle-list"></i> Catálogo </a>
+                        <a class="collapse-item" href="{{ route('equipos.tipos') }}">                     <i class="fa-solid fa-microchip"></i> Tipos </a>
                         <a class="collapse-item" href="{{ route('equipos.marcas') }}">                     <i class="fa-solid fa-splotch"></i> Marcas </a>
                         <a class="collapse-item" href="{{ route('equipos.modelos') }}">                     <i class="fa-solid fa-bookmark"></i> Modelos </a>
                        <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a>
@@ -214,8 +215,7 @@
                         <i class="fa-solid fa-boxes-stacked"></i> Inventario </a>
                         <a class="collapse-item" href="{{ route('productos.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
                         </a> 
-                        {{-- <a class="collapse-item" href="{{ route('productos.inventario') }}">                     <i class="fa-solid fa-boxes-stacked"></i> Inventario </a> --}}
-                       {{-- <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a> --}}
+                        <a class="collapse-item" href="{{ route('productos.departamentos') }}">                     <i class="fa-solid fa-layer-group"></i> Departamentos </a>
                     </div>
                 </div>
             </li>
@@ -351,8 +351,6 @@
         
     </script>
 
-
-
     <script>
         document.addEventListener('livewire:initialized', function () {
                 Livewire.on('abreModalEquiposCliente', () => {
@@ -457,17 +455,40 @@
             Livewire.on('mostrarToastError', (attr) => {
                 Swal.fire({
                     position: 'center',
-                    width: 300,
+                    width: 400,
                     icon: 'error',
                     title: attr[0],
-                    showConfirmButton: false,
-                    timer: 2000,
+                    showConfirmButton: true,
+                    // timer: 2000,
                     customClass: {
                         title: 'swal2-title-custom', // Clase CSS personalizada para el título
                         content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
                         icon: 'fa-xs'
                         },
                     })
+            });
+        });
+
+        document.addEventListener('livewire:initialized', function () {
+            Livewire.on('mostrarToastErrorRoute', (attr) => {
+                Swal.fire({
+                    position: 'center',
+                    width: 400,
+                    icon: 'error',
+                    title: attr[0],
+                    showConfirmButton: true,
+                    // timer: 3000, // Duración del Toast en milisegundos
+                    timerProgressBar: true,
+                    customClass: {
+                        title: 'swal2-title-custom', // Clase CSS personalizada para el título
+                        content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
+                        icon: 'fa-xs'
+                        },
+                    willClose: () => {
+                        // Redirecciona después de que el Toast se cierra
+                        window.location.href = attr[1];
+                    }
+                });
             });
         });
 
@@ -485,6 +506,30 @@
                     if (result.isConfirmed) {
                         Livewire.dispatch(attr[1]);
                     }
+                });
+            });
+        });
+
+        document.addEventListener('livewire:initialized', function () {
+            Livewire.on('mostrarToastAceptarCancelarParam', attr => {
+                Swal.fire({
+                    customClass: {
+                        title: 'swal2-title-custom', // Clase CSS personalizada para el título
+                        content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
+                        icon: 'fa-xs'
+                        },
+                    title: attr[0],
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Aceptar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch(attr[1], {'idTipo' : attr[2], 'idMarca' : attr[3], 'idModelo' : attr[4], 'idCliente' : attr[5] });
+                    }
+                    
                 });
             });
         });

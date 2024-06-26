@@ -9,7 +9,7 @@
             </a>
     </div>
 
-    <div class="row" wire:ignore>  {{-- El wire:ignore en el div exterior evita que desaparezcan los selectpickers de dentro --}}
+    <div class="row">  {{-- El wire:ignore en el div exterior evita que desaparezcan los selectpickers de dentro --}}
         <div class="col-md-3 mb-3">
             <label for="filtrosFallas.idTipoEquipo" class="form-label text-gray-700" style="font-weight:500; font-size:11pt"> Tipo Equipo </label>
             <select wire:model.live="filtrosFallas.idTipoEquipo" class="selectpicker select-picker w-100" id="filtrosFallas.idTipoEquipo" style="font-size:11pt;">
@@ -19,7 +19,10 @@
             @endforeach
             </select>
         </div>
-
+        <div class="col-md-3 mb-3">
+            <label for="filtrosFallas.descripcion" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Descripción </label>
+            <input type="text" class="form-control input-height" wire:model.live="filtrosFallas.descripcion" style="font-size:11pt;">
+        </div>
         <div class="col-md-3 mb-3">
             <label for="filtrosFallas.disponible" class="form-label  text-gray-700" style="font-weight:500;font-size:11pt">Estatus</label>
             <select wire:model.live="filtrosFallas.disponible" class="selectpicker select-picker w-100" id="filtrosFallas.disponible" style="font-size:11pt;">
@@ -27,11 +30,6 @@
                 <option value="0" data-content="<i class='fa-solid fa-rectangle-xmark'></i> &nbsp; NO DISPONIBLE"></option>
                 <option value="1" data-content="<i class='fa-solid fa-square-check'></i> &nbsp; DISPONIBLE"></option>
             </select>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <label for="filtrosFallas.descripcion" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Descripción </label>
-            <input type="text" class="form-control input-height" wire:model.live="filtrosFallas.descripcion" style="font-size:11pt;">
         </div>
 
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
@@ -75,7 +73,7 @@
                         {{-- <a wire:ignore.self wire:click="editaFalla({{ $falla->id }})" title="Editar falla" wire:loading.attr="disabled" wire:target="editaFalla" style="color: dimgrey;cursor:pointer" data-toggle="modal" data-target="#editarFallaModal" >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a> --}}
-                        <a wire:click="editaFalla({{ $falla->id }})" title="Editar falla {{ $falla->id }}" wire:loading.attr="disabled" wire:target="editaFalla" style="color: dimgrey;cursor:pointer">
+                        <a wire:click="editaFalla({{ $falla->id }})" title="Editar falla {{ $falla->id }}" wire:loading.attr="disabled" wire:target="editaFalla" style="color: dimgrey;cursor:pointer" data-toggle="modal" data-target="#editarFallaModal">
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a>
                         
@@ -107,12 +105,31 @@
 </div>
 
 <script>  //Abre la ventana modal y hace que el selectpicker sí tome el valor correcto
-    document.addEventListener('livewire:initialized', function () {
-    Livewire.on('abrirEditarFallaModal', function (tipoEquipoId) {
-        // Abrir la ventana modal aquí usando JavaScript
-        $('#editarFallaModal').modal('show');
-        var valor = tipoEquipoId[0];
-        $('#idTipoEquipoFallaModal').selectpicker('val', valor);
+//     document.addEventListener('livewire:initialized', function () {
+//     Livewire.on('abrirEditarFallaModal', function (tipoEquipoId) {
+//         // Abrir la ventana modal aquí usando JavaScript
+//         $('#editarFallaModal').modal('show');
+//         var valor = tipoEquipoId[0];
+//         $('#idTipoEquipoFallaModal').selectpicker('val', valor);
+//     });
+// });
+document.addEventListener('DOMContentLoaded', function () {
+    // Hook para manejar el commit de Livewire
+    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+        // Re-inicializar los selectpickers después de la actualización
+        $('.selectpicker').selectpicker();
+
+        succeed(({ snapshot, effect }) => {
+            // Destruir y volver a inicializar los selectpickers
+            $('select').selectpicker('destroy');
+            queueMicrotask(() => {
+                $('.selectpicker').selectpicker('refresh');
+            });
+        });
+
+        fail(() => {
+            console.error('Livewire commit failed');
+        });
     });
 });
 </script>

@@ -10,6 +10,7 @@ use App\Models\TipoEquipo;
 use App\Models\MarcaEquipo;
 use App\Models\ModeloEquipo;
 use App\Models\Cliente;
+use Livewire\Attributes\On;
 
 class EquipoLw extends Component
 {
@@ -21,6 +22,12 @@ class EquipoLw extends Component
     public $busquedaClienteHabilitada;
     public $nombreClienteAux;
     public $muestraHistorialEquipoTaller;
+
+    // protected $listeners = [
+    //     'lisGuardarEquipoExistente' => 'guardarEquipoExistente',
+    //     // 'lisBorraAbono' => 'borraAbono',
+    // ]; 
+    
 
     public $filtrosEquipos = [
         'id' => null,
@@ -131,23 +138,69 @@ class EquipoLw extends Component
         $this->showMainErrors = false;
     }
 
-    public function agregaEquipo()
+    #[On('lisGuardarEquipoExistente')] 
+    public function guardarEquipoExistente($idTipo, $idMarca, $idModelo, $idCliente)
     {
-        $this->validate();
-
         $equipo = new Equipo();
-        $equipo->id_tipo = $this->equipoMod['idTipo'];
-        $equipo->id_marca = $this->equipoMod['idMarca'];
-        $equipo->id_modelo = $this->equipoMod['idModelo'];
-        $equipo->id_cliente = $this->equipoMod['idCliente'];
+        $equipo->id_tipo = $idTipo;
+        $equipo->id_marca = $idMarca;
+        $equipo->id_modelo = $idModelo;
+        $equipo->id_cliente = $idCliente;
         $equipo->save();
 
         session()->flash('success', 'Equipo guardado exitosamente.');
     }
 
+    //ME QUEDÉ IMPIDIENDO QUE NO SE PERMITA INSERTAR (ACTUALIZAR) EQUIPOS DUPLICADOS PARA EL CLIENTE
+    public function agregaEquipo()
+    {
+        $this->validate();
+
+        $equipoBD = Equipo::where('id_tipo', $this->equipoMod['idTipo'])->where('id_marca', $this->equipoMod['idMarca'])->where('id_modelo', $this->equipoMod['idModelo'])->where('id_cliente', $this->equipoMod['idCliente'])->first();
+
+        if ($equipoBD)
+        {
+            $this->dispatch('mostrarToastAceptarCancelarParam', 
+            'El cliente ' . $this->equipoMod['nombreCliente'] . ' ya tiene un equipo con estas características. ¿Deseas agregar de todas formas?', 'lisGuardarEquipoExistente', $this->equipoMod['idTipo'], $this->equipoMod['idMarca'], $this->equipoMod['idModelo'], $this->equipoMod['idCliente']);
+        }
+        else
+        {
+            $equipo = new Equipo();
+            $equipo->id_tipo = $this->equipoMod['idTipo'];
+            $equipo->id_marca = $this->equipoMod['idMarca'];
+            $equipo->id_modelo = $this->equipoMod['idModelo'];
+            $equipo->id_cliente = $this->equipoMod['idCliente'];
+            $equipo->save();
+
+            session()->flash('success', 'Equipo guardado exitosamente.');
+        }
+    }
+
     public function cambia()
     {
         $this->render();
+    }
+
+    #[On('lisActualizarEquipoExistente')] 
+        public function actualizarEquipoExistente($idTipo, $idMarca, $idModelo, $idCliente)
+    {
+        $equipo = Equipo::find($this->equipoMod['id']);
+
+        // Verifica si el equipo existe
+        if ($equipo) {
+            // Actualiza el equipo con los nuevos valores
+            $equipo->update([
+                'id_tipo' => $idTipo,
+                'id_marca' => $idMarca,
+                'id_modelo' => $idModelo,
+                'id_cliente' => $idCliente,
+            ]);
+        } else {
+            // Manejo de error si el equipo no se encuentra
+            session()->flash('error', 'Equipo no encontrado');
+        }
+
+        session()->flash('success', 'Equipo actualizado exitosamente.');
     }
 
     public function actualizaEquipo()
@@ -163,14 +216,23 @@ class EquipoLw extends Component
             return;
         }
 
-        // $equipo->id = $this->equipoMod['id'];
-        $equipo->id_tipo = $this->equipoMod['idTipo'];
-        $equipo->id_marca = $this->equipoMod['idMarca'];
-        $equipo->id_modelo = $this->equipoMod['idModelo'];
-        $equipo->id_cliente = $this->equipoMod['idCliente'];
-        $equipo->save();
+        $equipoBD = Equipo::where('id', '!=', $this->equipoMod['id'])->where('id_tipo', $this->equipoMod['idTipo'])->where('id_marca', $this->equipoMod['idMarca'])->where('id_modelo', $this->equipoMod['idModelo'])->where('id_cliente', $this->equipoMod['idCliente'])->first();
 
-        session()->flash('success', 'Equipo actualizado exitosamente.');
+        if ($equipoBD)
+        {
+            $this->dispatch('mostrarToastAceptarCancelarParam', 
+            'El cliente ' . $this->equipoMod['nombreCliente'] . ' ya tiene un equipo con estas características. ¿Deseas actualizar de todas formas?', 'lisActualizarEquipoExistente', $this->equipoMod['idTipo'], $this->equipoMod['idMarca'], $this->equipoMod['idModelo'], $this->equipoMod['idCliente']);
+        }
+        else
+        {
+            $equipo->id_tipo = $this->equipoMod['idTipo'];
+            $equipo->id_marca = $this->equipoMod['idMarca'];
+            $equipo->id_modelo = $this->equipoMod['idModelo'];
+            $equipo->id_cliente = $this->equipoMod['idCliente'];
+            $equipo->save();
+    
+            session()->flash('success', 'Equipo actualizado exitosamente.');
+        }   
     }
 
     public function habilitaBusquedaCliente()
@@ -367,7 +429,7 @@ class EquipoLw extends Component
 
         if (trim($this->equipoMod['nombreCliente']) != '')
         {
-            $this->clientesMod = Cliente::where('nombre', 'like', '%'. $this->equipoMod['nombreCliente'] . '%')->get();
+            $this->clientesMod = Cliente::where('nombre', 'like', '%'. $this->equipoMod['nombreCliente'] . '%')->where('disponible', 1)->get();
         }
 
         if ($hayFiltros)
@@ -380,7 +442,7 @@ class EquipoLw extends Component
 
         if ($this->muestraHistorialEquipoTaller)
         {
-            $historialEquipoTaller = EquipoTaller::where('id_equipo', $idEquipo)->paginate(10);
+            $historialEquipoTaller = EquipoTaller::where('id_equipo', $idEquipo)->paginate(10, ['*'], 'historial-equipo-taller');
 
             $equipo = Equipo::findOrFail($idEquipo);
     
@@ -390,7 +452,7 @@ class EquipoLw extends Component
             $this->equipoHistorial['cliente'] = $equipo->cliente->nombre; 
         }
 
-        $tiposEquipos = TipoEquipo::all();
+        $tiposEquipos = TipoEquipo::where('disponible', 1)->get();
 
         return view('livewire.equipos.index', compact('equipos', 'tiposEquipos', 'marcas', 'modelos', 'historialEquipoTaller'));
     }

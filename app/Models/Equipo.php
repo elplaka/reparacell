@@ -46,4 +46,12 @@ class Equipo extends Model
     {
         return $this->belongsTo(TipoEquipo::class, 'id_tipo');
     }
+
+    public function checaModelo()
+    {
+        if ($this->modelo && $this->modelo->id_marca !== $this->id_marca) {
+            return 'Inconsistencia: El Mod no pertenece a la Marca especificada.';
+        }
+        return $this->modelo;
+    }
 }

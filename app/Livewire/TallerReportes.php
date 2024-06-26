@@ -231,6 +231,7 @@ class TallerReportes extends Component
                 $equipos_taller->whereHas('equipo.modelo', function ($query) {
                 $query->whereIn('id', $this->busquedaEquipos['idModelos']);
             });
+            
             }
         }
 
@@ -279,7 +280,7 @@ class TallerReportes extends Component
         $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
 
         $estatus_equipos = EstatusEquipo::all();
-        $tipos_equipos = TipoEquipo::all();
+        $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
      
         if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
         {
@@ -310,31 +311,29 @@ class TallerReportes extends Component
 
         if ($this->nombreCliente != '')
         {
-            $this->clientes = Cliente::where('nombre', 'like', '%' . $this->nombreCliente .'%')->get();
+            $this->clientes = Cliente::where('nombre', 'like', '%' . $this->nombreCliente .'%')->where('disponible', 1)->get();
         }
-
-
 
         return view('livewire.taller.reportes', compact('equipos_taller', 'estatus_equipos', 'tipos_equipos'));
     }
 
     public function aceptaParamMarcasModal()
     {
-        $this->marcasDiv = MarcaEquipo::whereIn('id', $this->marcasSeleccionadas)->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
+        $this->marcasDiv = MarcaEquipo::whereIn('id', $this->marcasSeleccionadas)->where('disponible', 1)->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
 
         $this->busquedaEquipos['idMarcas'] = $this->marcasSeleccionadas;
     }
 
     public function aceptaParamModelosModal()
     {
-        $this->modelosDiv = ModeloEquipo::whereIn('id', $this->modelosSeleccionados)->orderBy('nombre', 'asc')->orderBy('id_marca', 'asc')->get();
+        $this->modelosDiv = ModeloEquipo::whereIn('id', $this->modelosSeleccionados)->where('disponible', 1)->orderBy('nombre', 'asc')->orderBy('id_marca', 'asc')->get();
 
         $this->busquedaEquipos['idModelos'] = $this->modelosSeleccionados;
     }
 
     public function aceptaParamFallasModal()
     {
-        $this->fallasDiv = FallaEquipo::whereIn('id', $this->fallasSeleccionadas)->orderBy('descripcion', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
+        $this->fallasDiv = FallaEquipo::whereIn('id', $this->fallasSeleccionadas)->where('disponible', 1)->orderBy('descripcion', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
 
         $this->busquedaEquipos['idFallas'] = $this->fallasSeleccionadas;
     }

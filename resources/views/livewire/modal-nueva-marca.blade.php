@@ -37,14 +37,14 @@
            <div class="modal-body" wire:loading.remove>
                <div class="container mt-3">
                    <div class="row mb-3">
-                       <label for="marcaMod.idTipoEquipo" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 10pt;">{{ __('Tipo Equipo') }}</label>
-                       <div class="col-md-9" wire:ignore>
+                       <label for="marcaMod.idTipoEquipo" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 10pt;">{{ __('Tipo Equipo') }} </label>
+                       <div class="col-md-9">
                            {{-- <select wire:model.live="marcaMod.idTipoEquipo" type="text" class="select-height form-control" id="marcaMod.idTipoEquipo" style="font-size:11pt;" autofocus>
                                @foreach ($tipos_equipos as $tipo_equipo)
                                    <option value="{{ $tipo_equipo->id }}">{{ $tipo_equipo->nombre }}</option>
                                @endforeach
-                           </select> --}}
-                           <select wire:model="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size: 11pt;">
+                           </select> --}} 
+                           <select wire:model.live="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size: 11pt;">
                             @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                             @endforeach

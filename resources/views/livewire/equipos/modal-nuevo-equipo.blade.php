@@ -87,8 +87,6 @@
                         <div class="col-md-9 d-flex">
                         <input type="text" class="form-control input-height w-100" wire:model.live='equipoMod.nombreCliente' style="font-size:11pt;" @if(!$busquedaClienteHabilitada) disabled @endif placeholder="Escribe el cliente a buscar"> &nbsp;
                         @if (!$busquedaClienteHabilitada)
-                        {{-- <button wire:click="desHabilitaBusquedaCliente" class="btn btn-danger" style="font-size: 10pt; display: flex; align-items: center;" title="Descartar"><i class="fa-solid fa-xmark"></i></button>
-                        @else --}}
                         <button wire:click="habilitaBusquedaCliente" class="btn btn-secondary" style="font-size: 10pt; display: flex; align-items: center;"><i class="fa-solid fa-magnifying-glass"></i></button>
                         @endif         
                         </div>

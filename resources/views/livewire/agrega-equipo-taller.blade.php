@@ -8,7 +8,7 @@
     @include('livewire.modal-equipos-cliente')
     @include('livewire.modal-equipo-cliente-historial')
     @include('livewire.modal-cliente-historial')
-    @include('livewire.modal-advertencia-equipo-taller')
+    @include('livewire.modal-advertencia-equipo-taller') 
 
      <!-- Ventana modal de confirmación -->
     <div wire:ignore.self class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
@@ -348,42 +348,31 @@
 </div>
 </div>
 
-{{-- <script>
-document.addEventListener('livewire:initialized', function () {
-       Livewire.on('cerrarModalBuscarCliente', () => {
-       document.getElementById('btnCerrarBuscarClienteModal').click();
-        })
-   });
-</script> --}}
 
-{{-- <script>
-    document.addEventListener('livewire:initialized', function () {
-            Livewire.on('abreModalEquiposCliente', () => {
-                $('#equiposClienteModal').modal('show');
-            })
-       });
-</script> --}}
+
+
 
 {{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('La página se ha cargado completamente.');
+    // Inicializar los selectpickers al cargar la página
+    // $('.selectpicker').selectpicker();
+
+    // Hook para manejar el commit de Livewire
+    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+        // Re-inicializar los selectpickers después de la actualización
+        succeed(({ snapshot, effect }) => {
+            // Destruir y volver a inicializar los selectpickers
+            $('select').selectpicker('destroy');
+            queueMicrotask(() => {
+                $('.selectpicker').selectpicker('refresh');
+            });
+        });
+
+        fail(() => {
+            console.error('Livewire commit failed');
+        });
     });
-</script> --}}
-
-{{-- <script>
-    document.addEventListener('livewire:initialized', function () {
-            Livewire.on('cerrarModalEquiposCliente', () => {
-           document.getElementById('btnCerrarEquiposClienteModal').click();
-            })
-       });
-    </script>
-
-<script>
-    document.addEventListener('livewire:initialized', function () {
-            Livewire.on('lanzaAdvertenciaEquipoTaller', () => {
-                $('#warningEquipoTallerModal').modal('show');
-            })
-       });
-</script> --}}
+});
+</script>  --}}
 
 

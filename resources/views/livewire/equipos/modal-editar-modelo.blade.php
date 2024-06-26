@@ -1,3 +1,6 @@
+@php
+    use App\Models\MarcaEquipo;
+@endphp
 <div wire:ignore.self class="modal fade" id="editarModeloModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-md" role="document" >
         <div class="modal-content">
@@ -12,7 +15,6 @@
                 <br><br>
             </div>
             
-        
             @if($showModalErrors)
                 @if ($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show">
@@ -39,8 +41,8 @@
                 <div class="container mt-3">
                     <div class="row mb-3">
                         <label for="marcaMod.idTipoEquipo" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo Equipo') }}</label>
-                        <div class="col-md-9" wire:ignore>
-                            <select id="idTipoEquipoModeloModal" wire:model.defer="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size:11pt;" autofocus> 
+                        <div class="col-md-9">
+                            <select id="idTipoEquipoModeloModal" wire:model.live="marcaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="marcaMod.idTipoEquipo" style="font-size:11pt;" disabled> 
                                 @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                                 @endforeach
@@ -50,9 +52,9 @@
                     <div class="row mb-3">
                         <label for="modeloMod.idMarca" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Marca') }}</label>
                         <div class="col-md-9">
-                            <select id="idMarcaModeloModal" wire:model.live="modeloMod.idMarca" type="text" class="select-height form-control" id="modeloMod.idMarca" style="font-size:11pt;" autofocus data-live-search="true">
+                            <select id="idMarcaModeloModal" wire:model.live="modeloMod.idMarca" type="text" class="select-height form-control" id="modeloMod.idMarca" style="font-size:11pt;" autofocus wire:key={{ $marcaMod['idTipoEquipo'] }}>
                                 <option value="">-SELECCIONA-</option>
-                                @foreach ($marcas_equipos as $marca_equipo)
+                                @foreach (MarcaEquipo::where('id_tipo_equipo', $marcaMod['idTipoEquipo'])->where('disponible', 1)->orderBy('nombre', 'asc')->get() as $marca_equipo)
                                     <option value="{{ $marca_equipo->id }}">{{ $marca_equipo->nombre }}</option>
                                 @endforeach
                             </select>

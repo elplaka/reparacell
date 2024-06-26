@@ -10,5 +10,5 @@ class DepartamentoProducto extends Model
     use HasFactory;
 
     protected $table = 'departamentos_productos';
-    
+    public $timestamps = false;
 }

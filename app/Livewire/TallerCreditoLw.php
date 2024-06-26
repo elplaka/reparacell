@@ -225,7 +225,7 @@ class TallerCreditoLw extends Component
         $this->cobroACredito['id'] = $creditoTaller->id;
         $this->cobroACredito['idEstatus'] = $creditoTaller->id_estatus;
         $this->cobroACredito['estatus'] = $creditoTaller->estatus->descripcion;
-        $this->cobroACredito['monto'] = $creditoTaller->cobroTaller->cobro_realizado;
+        $this->cobroACredito['monto'] = $creditoTaller->cobroTaller ? $creditoTaller->cobroTaller->cobro_realizado: 0;
         $this->cobroACredito['tipoEquipo'] = $creditoTaller->equipoTaller->equipo->tipo_equipo->nombre;
         $this->cobroACredito['marcaEquipo'] = $creditoTaller->equipoTaller->equipo->marca->nombre;
         $this->cobroACredito['modeloEquipo'] = $creditoTaller->equipoTaller->equipo->modelo->nombre;

@@ -37,7 +37,7 @@
                <div class="container mt-3">
                 <div class="row mb-3">
                     <label for="fallaMod.idTipoEquipo" class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo Equipo') }}</label>
-                    <div class="col-md-8 d-flex" wire:ignore>
+                    <div class="col-md-8 d-flex">
                         <select wire:model.live="fallaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="fallaMod.idTipoEquipo" style="font-size: 11pt;">
                             @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>

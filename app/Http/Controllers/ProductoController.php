@@ -21,4 +21,9 @@ class ProductoController extends Controller
     {
         return view('productos.reportes');
     }
+
+    public function departamentos()
+    {
+        return view('productos.departamentos');
+    }
 }

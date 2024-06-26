@@ -52,7 +52,6 @@
                         wire:key="{{ $equipoMod['idTipo'] }}"
                         >
                         <option value="0">--SELECCIONA--</option>
-                        {{-- @foreach ($marcasMod as $marca) --}}
                         @foreach (MarcaEquipo::where('id_tipo_equipo', $this->equipoMod['idTipo'])->where('disponible', 1)->orderBy('nombre')->get() as $marca)
                             <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
                         @endforeach

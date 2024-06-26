@@ -24,6 +24,7 @@ class EquipoFallas extends Component
     public $fallaMod = [
         'id',
         'idTipoEquipo',
+        'tipoEquipo',
         'descripcion',
         'cveDescripcion',
         'costo'
@@ -77,6 +78,7 @@ class EquipoFallas extends Component
         $this->fallaEquipo = [
             'id' => '',
             'idTipoEquipo' => 1,
+            'tipoEquipo' => '',
             'descripcion' => '',
             'cveDescripcion' => '',
             'disponible' => 1
@@ -95,7 +97,7 @@ class EquipoFallas extends Component
             'costo' => ''
         ];
 
-        $this->tipos_equipos = TipoEquipo::all();
+        $this->tipos_equipos = TipoEquipo::where('disponible', 1)->get();
     }
     
     public function invertirEstatusFalla($idFalla)
@@ -108,6 +110,9 @@ class EquipoFallas extends Component
 
     public function abreAgregaFalla()
     {
+        $this->fallaMod['idTipoEquipo'] = 1;
+
+        $this->guardoFallaOK = false;
 
     }
 
@@ -116,6 +121,7 @@ class EquipoFallas extends Component
         $this->fallaMod = [
             'id' => null,
             'idTipoEquipo' => null,
+            'tipoEquipo' => null,
             'descripcion' => null,
             'cveDescripcion' => null,
             'costo' => null
@@ -141,7 +147,22 @@ class EquipoFallas extends Component
         ];
 
         $this->dispatch('abrirEditarFallaModal', $this->fallaMod['idTipoEquipo']);
+    }
 
+    
+    public function fallaYaExiste($idTipoEquipo, $descripcionFalla)
+    {
+        $falla = FallaEquipo::where('id_tipo_equipo', $idTipoEquipo)->where('descripcion', $descripcionFalla)->first();
+
+        if (is_null($falla))
+        {
+            return 0;   //Para indicar que el nombre de la falla no existe
+        }
+        else
+        {
+          $this->fallaMod['tipoEquipo'] = $falla->tipoEquipo->nombre;
+          return $falla->disponible ? 1 : 2;  //Si la falla está disponible regresa 1 si no regresa 2
+        }
     }
 
     public function guardaFalla()
@@ -166,17 +187,53 @@ class EquipoFallas extends Component
             'fallaMod.costo.numeric' => 'El campo <b> Costo </b> debe ser numérico.'
         ]);
 
-        $fallaEquipo = new FallaEquipo();
-        $fallaEquipo->id_tipo_equipo = $this->fallaMod['idTipoEquipo'];
-        $fallaEquipo->descripcion = trim(mb_strtoupper($this->fallaMod['descripcion']));
-        $fallaEquipo->cve_descripcion = trim(mb_strtoupper($this->fallaMod['cveDescripcion']));
-        $fallaEquipo->costo = $this->fallaMod['costo'];
-        $fallaEquipo->disponible = 1;
-        $fallaEquipo->save();
+        $estatusFalla = $this->fallaYaExiste($this->fallaMod['idTipoEquipo'], trim(mb_strtoupper($this->fallaMod['descripcion'])));
 
-        session()->flash('success', 'La FALLA se ha guardado correctamente.');
+        if ($estatusFalla == 1)
+        {
+            $this->dispatch('mostrarToastError', 'La falla ' . trim(mb_strtoupper($this->fallaMod['descripcion'])) . ' ya existe para el tipo de equipo ' . $this->fallaMod['tipoEquipo'] . '. Intenta con otra descripción.');
 
-        $this->guardoFallaOK = true;
+        }
+        elseif ($estatusFalla == 2)
+        {
+            $this->dispatch('mostrarToastError', 'La falla ' . trim(mb_strtoupper($this->fallaMod['descripcion'])) . ' ya existe para el tipo de equipo ' . $this->fallaMod['tipoEquipo'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otra descripción.');
+        }
+        else
+        {   
+            $fallaEquipo = new FallaEquipo();
+            $fallaEquipo->id_tipo_equipo = $this->fallaMod['idTipoEquipo'];
+            $fallaEquipo->descripcion = trim(mb_strtoupper($this->fallaMod['descripcion']));
+            $fallaEquipo->cve_descripcion = trim(mb_strtoupper($this->fallaMod['cveDescripcion']));
+            $fallaEquipo->costo = $this->fallaMod['costo'];
+            $fallaEquipo->disponible = 1;
+            $fallaEquipo->save();
+    
+            session()->flash('success', 'La FALLA se ha guardado correctamente.');
+    
+            $this->guardoFallaOK = true;
+        }
+    }
+
+    public function fallaYaExisteActualizar($idTipoEquipo, $descripcionFalla, $idFalla)
+    {
+        $falla = FallaEquipo::where('id_tipo_equipo', $idTipoEquipo)->where('descripcion', $descripcionFalla)->first();
+
+        if (is_null($falla))
+        {
+            return 0;
+        }
+        else
+        {
+            if ($idFalla != $falla->id)
+            {
+                $this->fallaMod['tipoEquipo'] = $falla->tipoEquipo->nombre;
+                return $falla->disponible ? 1 : 2;  //Si la marca está disponible regresa 1 si no regresa 2
+            }
+            else
+            {
+                return 0;
+            }
+        }
     }
 
     public function actualizaFalla()
@@ -209,24 +266,37 @@ class EquipoFallas extends Component
             'fallaMod.costo.numeric' => 'El campo <b> Costo </b> debe ser numérico.'
         ]);
 
-        // Buscar la falla existente en la base de datos
-        $fallaEquipo = FallaEquipo::find($this->fallaMod['id']);
+        $estatusFalla = $this->fallaYaExisteActualizar($this->fallaMod['idTipoEquipo'], trim(mb_strtoupper($this->fallaMod['descripcion'])), $this->fallaMod['id']);
 
-        if (!$fallaEquipo) {
-            // Manejar el caso donde la falla no existe
-            // Puedes lanzar una excepción, redireccionar o mostrar un mensaje de error
-            return;
+        if ($estatusFalla == 1)
+        {
+            $this->dispatch('mostrarToastError', 'La falla ' . trim(mb_strtoupper($this->fallaMod['descripcion'])) . ' ya existe para el tipo de equipo ' . $this->fallaMod['tipoEquipo'] . '. Intenta con otra descripción.');
+
         }
+        elseif ($estatusFalla == 2)
+        {
+            $this->dispatch('mostrarToastError', 'La falla ' . trim(mb_strtoupper($this->fallaMod['descripcion'])) . ' ya existe para el tipo de equipo ' . $this->fallaMod['tipoEquipo'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otra descripción.');
+        }
+        else
+        {    
+            // Buscar la falla existente en la base de datos
+            $fallaEquipo = FallaEquipo::find($this->fallaMod['id']);
 
-        // Actualizar los atributos de la falla
-        $fallaEquipo->id_tipo_equipo = $this->fallaMod['idTipoEquipo'];
-        $fallaEquipo->descripcion = trim(mb_strtoupper($this->fallaMod['descripcion']));
-        $fallaEquipo->cve_descripcion = trim(mb_strtoupper($this->fallaMod['cveDescripcion']));
-        $fallaEquipo->costo = $this->fallaMod['costo'];
-        $fallaEquipo->save();
+            if (!$fallaEquipo) {
+                // Manejar el caso donde la falla no existe
+                // Puedes lanzar una excepción, redireccionar o mostrar un mensaje de error
+                return;
+            }
 
-        session()->flash('success', 'La FALLA se ha actualizado correctamente.');
+            // Actualizar los atributos de la falla
+            $fallaEquipo->id_tipo_equipo = $this->fallaMod['idTipoEquipo'];
+            $fallaEquipo->descripcion = trim(mb_strtoupper($this->fallaMod['descripcion']));
+            $fallaEquipo->cve_descripcion = trim(mb_strtoupper($this->fallaMod['cveDescripcion']));
+            $fallaEquipo->costo = $this->fallaMod['costo'];
+            $fallaEquipo->save();
 
+            session()->flash('success', 'La FALLA se ha actualizado correctamente.');
+        }
     }
 
 }

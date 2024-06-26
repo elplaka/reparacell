@@ -6,6 +6,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\EquipoTallerController;
 use App\Http\Controllers\CajaController;
+use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\MarcaEquipoController;
 use App\Http\Controllers\FallaEquipoController;
 use App\Http\Controllers\ModeloEquipoController;
@@ -71,6 +72,7 @@ Route::middleware(['auth'])
     Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
 
     Route::get('/equipos/index', [EquipoController::class, 'index'])->name('equipos.index');
+    Route::get('/equipos/tipos', [TipoEquipoController::class, 'index'])->name('equipos.tipos');
     Route::get('/equipos/fallas', [FallaEquipoController::class, 'index'])->name('equipos.fallas');
     Route::get('/equipos/marcas', [MarcaEquipoController::class, 'index'])->name('equipos.marcas');
     Route::get('/equipos/modelos', [ModeloEquipoController::class, 'index'])->name('equipos.modelos');
@@ -78,6 +80,8 @@ Route::middleware(['auth'])
     Route::get('/productos/index', [ProductoController::class, 'index'])->name('productos.index');
     Route::get('/productos/inventario', [ProductoController::class, 'inventario'])->name('productos.inventario');
     Route::get('/productos/reportes', [ProductoController::class, 'reportes'])->name('productos.reportes');
+    Route::get('/productos/departamentos', [ProductoController::class, 'departamentos'])->name('productos.departamentos');
+
 
     Route::get('/ventas/index', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/ventas/creditos', [VentaController::class, 'creditos'])->name('ventas.creditos');

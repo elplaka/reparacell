@@ -35,10 +35,10 @@
            @endif
            <div class="modal-body" wire:loading.remove>
                <div class="container mt-3">
-                <div class="row mb-3" wire:ignore>
+                <div class="row mb-3">
                     <label for="fallaMod.idTipoEquipo" class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Tipo Equipo') }}</label>
                     <div class="col-md-8 d-flex">
-                        <select id="idTipoEquipoFallaModal" wire:model.live="fallaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="idTipoEquipo" style="font-size: 11pt;">
+                        <select id="idTipoEquipoFallaModal" wire:model="fallaMod.idTipoEquipo" class="selectpicker select-picker w-100" id="idTipoEquipo" style="font-size: 11pt;" disabled>
                             @foreach ($tipos_equipos as $tipo_equipo)
                                 <option value="{{ $tipo_equipo->id }}" data-content="{{ $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                             @endforeach

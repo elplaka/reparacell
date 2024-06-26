@@ -32,6 +32,7 @@ class ProductoLw extends Component
         'precioVenta',
         'precioMayoreo',
         'idDepartamento',
+        'departamento',
         'inventario',
         'inventarioMinimo'
     ];
@@ -50,15 +51,15 @@ class ProductoLw extends Component
     public $showMainErrors, $showModalErrors;
     public $datosCargados, $productoConInventario;
 
-    protected $rules = [
+    protected $baseRules = [
         'productoMod.codigo' => 'required|string',
         'productoMod.descripcion' => 'required|string',
         'productoMod.precioCosto' => 'required|numeric|min:0',
         'productoMod.precioVenta' => 'required|numeric|min:0',
         'productoMod.precioMayoreo' => 'required|numeric|min:0',
         'productoMod.idDepartamento' => 'required|exists:departamentos_productos,id',
-        'productoMod.inventario' => 'required|integer|min:0',
-        'productoMod.inventarioMinimo' => 'required|integer|min:0',
+        // 'productoMod.inventario' => 'required|integer|min:0',
+        // 'productoMod.inventarioMinimo' => 'required|integer|min:0',
 
         'inventarioMod.codigo' => 'required|string',
         'inventarioMod.precioCosto' => 'required|numeric|min:0',
@@ -100,6 +101,18 @@ class ProductoLw extends Component
         'inventarioMod.existenciaMinima.min' => 'El campo Inventario Mínimo debe ser mayor o igual a :min.',
     ];
 
+    public function rules()
+    {
+        $rules = $this->baseRules;
+
+        if ($this->productoMod['inventario'] != -1) {
+            $rules['productoMod.inventario'] = 'required|integer|min:0';
+            $rules['productoMod.inventarioMinimo'] = 'required|integer|min:0';
+        }
+
+        return $rules;
+    }
+
 
     public function mount()
     {
@@ -113,7 +126,7 @@ class ProductoLw extends Component
             'disponible' => -1
         ];
 
-        $this->departamentos = DepartamentoProducto::orderBy('nombre')->get();
+        $this->departamentos = DepartamentoProducto::where('disponible', 1)->orderBy('nombre')->get();
     }
 
     public function render()
@@ -161,7 +174,7 @@ class ProductoLw extends Component
     public function abreAgregaProducto()
     {
         $this->productoConInventario = true;
-        $this->departamentos = DepartamentoProducto::where('disponible', 1)->get();
+        $this->departamentos = DepartamentoProducto::where('disponible', 1)->orderBy('nombre')->get();
         $this->datosCargados = true;
     }
 
@@ -175,6 +188,21 @@ class ProductoLw extends Component
     {
         $producto = Producto::find($codigoProducto);
         return $producto ? true : false;
+    }
+
+    public function productoYaExiste($idDepartamento, $descripcion)
+    {
+        $producto = Producto::where('id_departamento', $idDepartamento)->where('descripcion', $descripcion)->first();
+
+        if (is_null($producto))
+        {
+            return 0;   //Para indicar que el nombre del producto no existe
+        }
+        else
+        {
+          $this->productoMod['departamento'] = $producto->departamento->nombre;
+          return $producto->disponible ? 1 : 2;  //Si el producto está disponible regresa 1 si no regresa 2
+        }
     }
 
     public function guardaProducto()
@@ -200,53 +228,67 @@ class ProductoLw extends Component
             return;
         }
 
-        DB::beginTransaction();
+        $estatusProducto = $this->productoYaExiste($this->productoMod['idDepartamento'], trim(mb_strtoupper($this->productoMod['descripcion'])));
 
-        try {
-            $producto = new Producto();
-            $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
-            $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
-            $producto->precio_costo = $this->productoMod['precioCosto'];
-            $producto->precio_venta = $this->productoMod['precioVenta'];
-            $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
-            $producto->inventario = $this->productoConInventario ? $this->productoMod['inventario'] : -1;
-            $producto->inventario_minimo = $this->productoConInventario ? $this->productoMod['inventarioMinimo'] : -1;
-            $producto->id_departamento = $this->productoMod['idDepartamento'];
-            $producto->disponible = 1;
-            $producto->save();
+        if ($estatusProducto == 1)
+        {
+            $this->dispatch('mostrarToastError', 'El producto ' . trim(mb_strtoupper($this->productoMod['descripcion'])) . ' ya existe para el departamento ' . $this->productoMod['departamento'] . '. Intenta con otra descripción.');
 
-            $movimiento = new MovimientoInventario();
-            $movimiento->id_tipo_movimiento = 1;
-            $movimiento->codigo_producto = $this->productoMod['codigo'];
-            $movimiento->existencia_anterior = 0;
-            $movimiento->existencia_movimiento = $producto->inventario;
-            $movimiento->existencia_minima_anterior = 0;
-            $movimiento->existencia_minima_movimiento = $producto->inventario_minimo;
-            $movimiento->precio_costo_anterior = 0;
-            $movimiento->precio_costo_movimiento = $this->productoMod['precioCosto'];
-            $movimiento->precio_venta_anterior = 0;
-            $movimiento->precio_venta_movimiento = $this->productoMod['precioVenta'];
-            $movimiento->precio_mayoreo_anterior = 0;
-            $movimiento->precio_mayoreo_movimiento = $this->productoMod['precioMayoreo'];
-            $movimiento->id_usuario_movimiento = Auth::id();
-            $movimiento->save();
-
-            DB::commit();
-
-            $this->showModalErrors = false;
-            $this->showMainErrors = true;
-    
-            session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
-    
-            $this->resetModal();
-    
-            $this->dispatch('cerrarModalNuevoProducto');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            dd($e->getMessage());
-            // Manejar la excepción según sea necesario
         }
+        elseif ($estatusProducto == 2)
+        {
+            $this->dispatch('mostrarToastError', 'El producto ' . trim(mb_strtoupper($this->productoMod['descripcion'])) . ' ya existe para el departamento ' . $this->productoMod['departamento'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otra descripción.');
+        }
+        else
+        {    
+            DB::beginTransaction();
+
+            try {
+                $producto = new Producto();
+                $producto->codigo = trim(mb_strtoupper($this->productoMod['codigo']));
+                $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
+                $producto->precio_costo = $this->productoMod['precioCosto'];
+                $producto->precio_venta = $this->productoMod['precioVenta'];
+                $producto->precio_mayoreo = $this->productoMod['precioMayoreo'];
+                $producto->inventario = $this->productoConInventario ? $this->productoMod['inventario'] : -1;
+                $producto->inventario_minimo = $this->productoConInventario ? $this->productoMod['inventarioMinimo'] : -1;
+                $producto->id_departamento = $this->productoMod['idDepartamento'];
+                $producto->disponible = 1;
+                $producto->save();
+    
+                $movimiento = new MovimientoInventario();
+                $movimiento->id_tipo_movimiento = 1;
+                $movimiento->codigo_producto = $this->productoMod['codigo'];
+                $movimiento->existencia_anterior = 0;
+                $movimiento->existencia_movimiento = $producto->inventario;
+                $movimiento->existencia_minima_anterior = 0;
+                $movimiento->existencia_minima_movimiento = $producto->inventario_minimo;
+                $movimiento->precio_costo_anterior = 0;
+                $movimiento->precio_costo_movimiento = $this->productoMod['precioCosto'];
+                $movimiento->precio_venta_anterior = 0;
+                $movimiento->precio_venta_movimiento = $this->productoMod['precioVenta'];
+                $movimiento->precio_mayoreo_anterior = 0;
+                $movimiento->precio_mayoreo_movimiento = $this->productoMod['precioMayoreo'];
+                $movimiento->id_usuario_movimiento = Auth::id();
+                $movimiento->save();
+    
+                DB::commit();
+    
+                $this->showModalErrors = false;
+                $this->showMainErrors = true;
+        
+                session()->flash('success', 'El PRODUCTO se ha agregado correctamente.');
+        
+                $this->resetModal();
+        
+                $this->dispatch('cerrarModalNuevoProducto');
+            } catch (\Exception $e) {
+                DB::rollBack();
+    
+                dd($e->getMessage());
+                // Manejar la excepción según sea necesario
+            }
+        }        
     }
 
     public function resetModal()
@@ -296,26 +338,72 @@ class ProductoLw extends Component
         $this->resetModal();
     }
 
+    public function productoYaExisteActualizar($idDepartamento, $descripcion, $codigo)
+    {
+        $producto = Producto::where('id_departamento', $idDepartamento)->where('descripcion', $descripcion)->first();
+
+        if (is_null($producto))
+        {
+            return 0;
+        }
+        else
+        {
+            if ($codigo != $producto->codigo)
+            {
+                $this->productoMod['departamento'] = $producto->departamento->nombre;
+                return $producto->disponible ? 1 : 2;  //Si el producto está disponible regresa 1 si no regresa 2
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+
     public function actualizaProducto()
     {
         $this->showModalErrors = true;
         $this->showMainErrors = false;
 
+        $this->inventarioMod = [
+            'codigo' => '0',
+            'descripcion' => '_INVENTARIO_',
+            'precioCosto' => 0,
+            'precioVenta' => 0,
+            'precioMayoreo' => 0,
+            'existencia' => 0,
+            'existenciaMinima' => 0
+        ];
+
         $this->validate();
 
-        $producto = Producto::findOrFail($this->productoMod['codigo']);
-        $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
-        $producto->id_departamento = $this->productoMod['idDepartamento'];
-        $producto->save();
+        $estatusProducto = $this->productoYaExisteActualizar($this->productoMod['idDepartamento'], trim(mb_strtoupper($this->productoMod['descripcion'])), $this->productoMod['codigo']);
 
-        $this->showModalErrors = false;
-        $this->showMainErrors = true;
+        if ($estatusProducto == 1)
+        {
+            $this->dispatch('mostrarToastError', 'El producto ' . trim(mb_strtoupper($this->productoMod['descripcion'])) . ' ya existe para el departamento ' . $this->productoMod['departamento'] . '. Intenta con otra descripción.');
 
-        session()->flash('success', 'El PRODUCTO se ha actualizado correctamente.');
-
-        $this->resetModal();
-
-        $this->dispatch('cerrarModalEditarProducto');
+        }
+        elseif ($estatusProducto == 2)
+        {
+            $this->dispatch('mostrarToastError', 'El producto ' . trim(mb_strtoupper($this->productoMod['descripcion'])) . ' ya existe para el departamento ' . $this->productoMod['departamento'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otra descripción.');
+        }
+        else
+        {    
+            $producto = Producto::findOrFail($this->productoMod['codigo']);
+            $producto->descripcion = trim(mb_strtoupper($this->productoMod['descripcion']));
+            $producto->id_departamento = $this->productoMod['idDepartamento'];
+            $producto->save();
+    
+            $this->showModalErrors = false;
+            $this->showMainErrors = true;
+    
+            session()->flash('success', 'El PRODUCTO se ha actualizado correctamente.');
+    
+            $this->resetModal();
+    
+            $this->dispatch('cerrarModalEditarProducto');
+        }
     }
 
     public function invertirEstatusProducto($codigoProducto)

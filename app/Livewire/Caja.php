@@ -247,7 +247,7 @@ class Caja extends Component
     {
         if (strlen($value) == 0) $this->clientesModal = null;
         else $this->clientesModal = Cliente::where('nombre', 'like', '%' . $value . '%')
-        ->where('telefono', '!=', '0000000000')
+        ->where('telefono', '!=', '0000000000')->where('disponible', 1)
         ->get();
 
         if (!is_null($this->clientesModal) && $this->clientesModal->count() == 0) 
@@ -290,7 +290,7 @@ class Caja extends Component
 
         $cliente = $this->regresacliente('0000000000');
 
-        $this->usuariosModal = User::all();
+        $this->usuariosModal = User::where('disponible', 1)->get();
 
         $this->corteCaja = [
             'fechaInicial' => now()->toDateString(),

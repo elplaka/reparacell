@@ -685,9 +685,9 @@ class Taller extends Component
         $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
 
         $estatus_equipos = EstatusEquipo::all();
-        $tipos_equipos = TipoEquipo::all();
+        $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
 
-        $this->dispatch('contentChanged');
+        // $this->dispatch('contentChanged');
 
         return view('livewire.taller', compact('equipos_taller', 'estatus_equipos', 'tipos_equipos'));
     }
@@ -833,7 +833,7 @@ class Taller extends Component
         $this->datosCobroCargados = false;
         $this->muestraDivAbono = false;
 
-        $this->usuariosModal = User::all();
+        $this->usuariosModal = User::where('disponible', 1)->get();
 
         $this->corteCaja = [
             'fechaInicial' => now()->toDateString(),
@@ -972,7 +972,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
     {
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
-        if ($idEstatus <= 3)
+        if ($idEstatus <= 5)
         {
             $idEstatus++;
             $equipoTaller->id_estatus = $idEstatus;

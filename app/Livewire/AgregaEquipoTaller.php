@@ -79,7 +79,9 @@ class AgregaEquipoTaller extends Component
 
     public $muestraHistorialClienteModal;
     public $muestraHistorialEquipoClienteModal;
- 
+
+    public $marcasEquiposMod, $datosCargados;
+
     public $imagenes = [];
 
     public $tipoEquipoMod = [
@@ -90,6 +92,7 @@ class AgregaEquipoTaller extends Component
 
     public $marcaMod = [
         'idTipoEquipo',
+        'tipoEquipo',
         'nombre'
     ];
 
@@ -149,6 +152,7 @@ class AgregaEquipoTaller extends Component
 
         $this->marcaMod = [
             'idTipoEquipo' => 1,
+            'tipoEquipo' => '',
             'nombre' => ''
         ];
     
@@ -187,17 +191,21 @@ class AgregaEquipoTaller extends Component
         $this->muestraHistorialEquipoClienteModal = false;
 
         $this->modalSoloLectura = false;
+
+        $this->marcasEquiposMod = collect();
     }
 
     public function render()
     {
-        $tipos_equipos = TipoEquipo::all();
+        $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
         $marcas_equipos = MarcaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])
+        ->where('disponible', 1)
         ->orderBy('nombre', 'asc') // Ordenar por nombre de manera ascendente (A-Z)
         ->get();
 
-        $modelos_equipos = ModeloEquipo::where('id_marca', $this->equipo['idMarca']) ->orderBy('nombre', 'asc')->get();
-        $fallas_equipos = FallaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])->get();
+        $modelos_equipos = ModeloEquipo::where('id_marca', $this->equipo['idMarca'])
+        ->where('disponible', 1)->where('disponible', 1)->orderBy('nombre', 'asc')->get();
+        $fallas_equipos = FallaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])->where('disponible', 1)->get();
         $estatus_equipos = EstatusEquipo::all();
 
         if ($this->muestraHistorialClienteModal) 
@@ -216,7 +224,6 @@ class AgregaEquipoTaller extends Component
 
         return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 'historialClienteTaller'));
     }
-
 
     public function regresaEquipoCliente($idCliente, $idTipoEquipo, $idMarcaEquipo, $idModeloEquipo)
     {
@@ -699,12 +706,16 @@ class AgregaEquipoTaller extends Component
 
     public function abrirEquiposClienteModal()
     {
+        $this->datosCargados = false;
+
         $this->equiposClienteModal = $this->regresaEquiposCliente($this->cliente['id']);
+
+        $this->datosCargados = true;
     }
 
     public function regresaEquiposCliente($idCliente)
     {
-        $equipos = Equipo::where('id_cliente', $idCliente)->get();
+        $equipos = Equipo::where('id_cliente', $idCliente)->where('disponible', 1)->get();
 
         return $equipos;
     }
@@ -1025,16 +1036,32 @@ class AgregaEquipoTaller extends Component
     public function nuevoModeloModal()
     {
         $this->marcaMod['idTipoEquipo'] = $this->equipo['idTipo'];
-        // $this->modeloMod['idMarca'] = $this->equipo['idMarca'];
-
-        $this->marcasEquiposMod = MarcaEquipo::where('id_tipo_equipo', $this->marcaMod['idTipoEquipo'])
-                                  ->orderBy('nombre', 'asc')->get();
 
         $this->modeloMod = [
-        'idMarca' => $this->equipo['idMarca'],
-        'nombre'=> ''
-        ];
-    }    
+            'idMarca' => $this->equipo['idMarca'],
+            'nombre'=> ''
+            ];
+
+        $this->marcasEquiposMod = MarcaEquipo::where('id_tipo_equipo', $this->marcaMod['idTipoEquipo'])->where('disponible', 1)->orderBy('nombre', 'asc')->get();
+
+        $this->guardoModeloOK = false;
+    } 
+    
+    public function modeloYaExiste($idMarca, $nombreModelo)
+    {
+        $modelo = ModeloEquipo::where('id_marca', $idMarca)->where('nombre', $nombreModelo)->first();
+
+        if (is_null($modelo))
+        {
+            return 0;   //Para indicar que el nombre del modelo no existe
+        }
+        else
+        {
+          $this->marcaMod['tipoEquipo'] = $modelo->marca->tipoEquipo->nombre;
+          $this->marcaMod['nombre'] = $modelo->marca->nombre;
+          return $modelo->disponible ? 1 : 2;  //Si el modelo está disponible regresa 1 si no regresa 2
+        }
+    }
 
     public function guardaModelo()
     {
@@ -1043,7 +1070,7 @@ class AgregaEquipoTaller extends Component
 
         $this->validate([
             'modeloMod.idMarca' => 'required|not_in:null',
-            'modeloMod.nombre'      => ['required', 'string', 'max:20', 'min:1'],
+            'modeloMod.nombre'  => ['required', 'string', 'max:20', 'min:1'],
         ], [
             'modeloMod.idMarca.not_in' => 'Por favor selecciona una <b> Marca </b>',
             'modeloMod.idMarca.required' => 'El campo <b> Marca </b> es obligatorio.',
@@ -1052,15 +1079,30 @@ class AgregaEquipoTaller extends Component
             'modeloMod.nombre.min' => 'El nombre debe tener al menos 1 caracter.',
         ]);
 
-        $modeloEquipo = new ModeloEquipo();
-        $modeloEquipo->id_marca = $this->modeloMod['idMarca'];
-        $modeloEquipo->nombre = trim(mb_strtoupper($this->modeloMod['nombre']));
-        $modeloEquipo->disponible = 1;
-        $modeloEquipo->save();
+        
+        $estatusModelo = $this->modeloYaExiste($this->modeloMod['idMarca'], trim(mb_strtoupper($this->modeloMod['nombre'])));
 
-        session()->flash('success', 'El MODELO se ha guardado correctamente.');
+        if ($estatusModelo == 1)
+        {
+            $this->dispatch('mostrarToastError', 'El modelo ' . trim(mb_strtoupper($this->modeloMod['nombre'])) . ' ya existe para la marca ' .  $this->marcaMod['nombre'] . '. Intenta con otro nombre.');
 
-        $this->guardoModeloOK = true;
+        }
+        elseif ($estatusModelo == 2)
+        {
+            $this->dispatch('mostrarToastError', 'La marca ' . trim(mb_strtoupper($this->modeloMod['nombre'])) . ' ya existe para la marca ' .  $this->marcaMod['nombre'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otro nombre.');
+        }
+        else
+        { 
+            $modeloEquipo = new ModeloEquipo();
+            $modeloEquipo->id_marca = $this->modeloMod['idMarca'];
+            $modeloEquipo->nombre = trim(mb_strtoupper($this->modeloMod['nombre']));
+            $modeloEquipo->disponible = 1;
+            $modeloEquipo->save();
+    
+            session()->flash('success', 'El MODELO se ha guardado correctamente.');
+    
+            $this->guardoModeloOK = true;
+        }
     }
     
     public function cierraMarcaModal()
@@ -1074,11 +1116,50 @@ class AgregaEquipoTaller extends Component
 
     public function nuevaMarcaModal()  
     {
-        // $this->marcaMod['idTipoEquipo'] = $this->equipo['idTipo'];
         $this->marcaMod = [
             'idTipoEquipo' => $this->equipo['idTipo'],
             'nombre' => ''
         ];
+
+        $this->guardoMarcaOK = false;
+    }
+
+    public function marcaYaExiste($idTipoEquipo, $nombreMarca)
+    {
+        $marca = MarcaEquipo::where('id_tipo_equipo', $idTipoEquipo)->where('nombre', $nombreMarca)->first();
+
+        if (is_null($marca))
+        {
+            return 0;   //Para indicar que el nombre de la marca no existe
+        }
+        else
+        {
+          $this->marcaMod['tipoEquipo'] = $marca->tipoEquipo->nombre;
+          return $marca->disponible ? 1 : 2;  //Si la marca está disponible regresa 1 si no regresa 2
+        }
+    }
+
+    public function guardaMarcaEnTabla()
+    {
+        try {
+            DB::transaction(function () {
+                $marcaEquipo = new MarcaEquipo();
+                $marcaEquipo->id_tipo_equipo = $this->marcaMod['idTipoEquipo'];
+                $marcaEquipo->nombre = trim(mb_strtoupper($this->marcaMod['nombre']));
+                $marcaEquipo->disponible = 1;
+                $marcaEquipo->save();
+
+                $modeloEquipo = new ModeloEquipo();
+                $modeloEquipo->id_marca = $marcaEquipo->id;
+                $modeloEquipo->nombre = 'GENÉRICO';
+                $modeloEquipo->disponible = 1;
+                $modeloEquipo->save();
+            });
+        } catch (\Exception $e) {
+            // Manejo de errores si ocurre una excepción
+            // Puedes agregar logs o notificaciones aquí
+            dd($e);
+        }
     }
 
     public function guardaMarca()
@@ -1093,22 +1174,26 @@ class AgregaEquipoTaller extends Component
             'marcaMod.nombre.max' => 'El nombre no puede tener más de 20 caracteres.',
             'marcaMod.nombre.min' => 'El nombre debe tener al menos 1 caracter.',
         ]);
-    
-        $marcaEquipo = new MarcaEquipo();
-        $marcaEquipo->id_tipo_equipo = $this->marcaMod['idTipoEquipo'];
-        $marcaEquipo->nombre = trim(mb_strtoupper($this->marcaMod['nombre']));
-        $marcaEquipo->disponible = 1;
-        $marcaEquipo->save();
 
-        $modeloEquipo = new ModeloEquipo();
-        $modeloEquipo->id_marca = $marcaEquipo->id;
-        $modeloEquipo->nombre = 'GENÉRICO';
-        $modeloEquipo->disponible = 1;
-        $modeloEquipo->save();
+        $estatusMarca = $this->marcaYaExiste($this->marcaMod['idTipoEquipo'], trim(mb_strtoupper($this->marcaMod['nombre'])));
 
-        session()->flash('success', 'La MARCA se ha guardado correctamente.');
+        if ($estatusMarca == 1)
+        {
+            $this->dispatch('mostrarToastError', 'La marca ' . trim(mb_strtoupper($this->marcaMod['nombre'])) . ' ya existe para el tipo de equipo ' . $this->marcaMod['tipoEquipo'] . '. Intenta con otro nombre.');
 
-        $this->guardoMarcaOK = true;
+        }
+        elseif ($estatusMarca == 2)
+        {
+            $this->dispatch('mostrarToastError', 'La marca ' . trim(mb_strtoupper($this->marcaMod['nombre'])) . ' ya existe para el tipo de equipo ' . $this->marcaMod['tipoEquipo'] . '. Pero tiene estatus NO DISPONIBLE. Intenta con otro nombre.');
+        }
+        else
+        {    
+            $this->guardaMarcaEnTabla();
+
+            session()->flash('success', 'La MARCA se ha guardado correctamente.');
+
+            $this->guardoMarcaOK = true;
+        }
     }
 
     public function updatedNombreClienteModal($value)
@@ -1116,6 +1201,7 @@ class AgregaEquipoTaller extends Component
         if (strlen($value) == 0) $this->clientesModal = null;
         else $this->clientesModal = Cliente::where('nombre', 'like', '%' . $value . '%')
         ->where('telefono', '!=', '0000000000')
+        ->where('disponible', 1)
         ->get();
 
         if (!is_null($this->clientesModal) && $this->clientesModal->count() == 0) 
@@ -1158,13 +1244,41 @@ class AgregaEquipoTaller extends Component
 
         $equipo = Equipo::findOrFail($idEquipo);
 
+        if ($equipo->marca->id_tipo_equipo != $equipo->id_tipo)  //MARCA INEXISTENTE
+        {
+            $this->dispatch('cerrarModalEquiposCliente');
+            $this->dispatch('mostrarToastErrorRoute', 'El equipo seleccionado tiene una MARCA INEXISTENTE. Favor de verificar dicho equipo del cliente ' . $this->cliente['nombre'] . '. El sistema se redireccionará a EQUIPOS - CATÁLOGOS.', route('equipos.index'));
+        }
+
+        if($equipo->modelo->id_marca != $equipo->marca->id)  //MODELO INEXISTENTE
+        {
+            $this->dispatch('cerrarModalEquiposCliente');
+            $this->dispatch('mostrarToastErrorRoute', 'El equipo seleccionado tiene un MODELO INEXISTENTE. Favor de verificar dicho equipo del cliente ' . $this->cliente['nombre'] . '. El sistema se redireccionará a EQUIPOS - CATÁLOGOS.', route('equipos.index'));
+        }
+
         $this->equipo['idTipo'] = $equipo->id_tipo;
         $this->equipo['idMarca'] = $equipo->id_marca;
         $this->equipo['idModelo'] = $equipo->id_modelo;
         $this->equipo['nombreTipo'] = $equipo->tipo_equipo->nombre;
-        $this->equipo['nombreMarca'] = $equipo->marca->nombre;
-        $this->equipo['nombreModelo'] = $equipo->modelo->nombre;
-        
+
+        if($equipo->marca->disponible)
+        {
+            $this->equipo['nombreMarca'] = $equipo->marca->nombre;
+        }
+        else
+        {
+            $this->equipo['nombreMarca'] = $equipo->marca->nombre . "*";
+        }
+
+        if($equipo->modelo->disponible)
+        {
+            $this->equipo['nombreModelo'] = $equipo->modelo->nombre;
+        }
+        else
+        {
+            $this->equipo['nombreModelo'] = $equipo->modelo->nombre . "*";
+        }
+
         $this->equipoSeleccionadoModal = true;
         
         if ($this->equipo['estatus'] < 3)
@@ -1265,7 +1379,7 @@ class AgregaEquipoTaller extends Component
         $this->guardoTipoEquipoOK = true;
     }
     
-    public function cierraTipoEquipoModal()
+    public function cierraTipoEquipoModal() 
     {
         $this->resetValidation();
         $this->tipoEquipoMod = [
@@ -1364,9 +1478,11 @@ class AgregaEquipoTaller extends Component
     public function muestraDivArriba()
     {
         $this->muestraDivAgregaEquipo = true;
+        $this->datosCargados = true;
         $this->equipo['estatus'] = 0;
         $this->cliente['estatus'] = 0;
         $this->equipoTaller['estatus'] = 0;
+        // $this->dispatch('refrescaSelectPickers');
     }
 
     // #[On('ocultaDivAgregaEquipo')] 
@@ -1407,7 +1523,9 @@ class AgregaEquipoTaller extends Component
         $cobroEstimado = CobroEstimadoTaller::where('num_orden', $numOrden)->first();
 
         if ($cobroEstimado->credito) {
-            $this->equipoTaller['anticipo'] = $cobroEstimado->credito->detalles()->where('id_abono', 1)->first()->abono;
+            // $this->equipoTaller['anticipo'] = $cobroEstimado->credito->detalles()->where('id_abono', 1)->first()->abono;
+            $detalle = $cobroEstimado->credito->detalles()->where('id_abono', 0)->first();
+            $this->equipoTaller['anticipo'] = $detalle ? $detalle->abono : 0; //Determina si hay anticipo
         } else 
         {
             $this->equipoTaller['anticipo'] = 0;

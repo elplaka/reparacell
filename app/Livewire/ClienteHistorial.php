@@ -20,7 +20,7 @@ class ClienteHistorial extends Component
     public $muestraHistorialCreditosTallerModal, $muestraHistorialCreditosVentasModal;
     public $collapsed = [];
     public $equiposClienteModal;
-    public $modalSoloLectura;
+    public $modalSoloLectura, $datosCargados;
 
     public $cliente = [
         'id',
@@ -63,14 +63,19 @@ class ClienteHistorial extends Component
 
     public function abrirEquiposClienteModal($idCliente)
     {
+        $this->datosCargados = false;
+
         $this->equiposClienteModal = $this->regresaEquiposCliente($idCliente);
 
         $this->cliente['nombre'] = $this->equiposClienteModal->first()->cliente->nombre;
+
+        $this->datosCargados = true;
+
     }   
 
     public function regresaEquiposCliente($idCliente)
     {
-        $equipos = Equipo::where('id_cliente', $idCliente)->get();
+        $equipos = Equipo::where('id_cliente', $idCliente)->where('disponible', 1)->get();
 
         return $equipos;
     }

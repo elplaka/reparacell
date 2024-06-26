@@ -1,6 +1,9 @@
 @php
     use Carbon\Carbon;
     use App\Models\CobroTallerCreditoDetalle;
+
+    $hayNoDisponibles = false;
+    $hayInexistentes = false;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -92,13 +95,50 @@
                         } else {
                             $restante = 0; // O cualquier valor apropiado por defecto
                         }
+                        $modeloAux = $credito->equipoTaller->equipo->marca->modelos->where('id_marca',$credito->equipoTaller->equipo->id_marca)->first();
+
+                        if($credito->equipoTaller->equipo->marca->id_tipo_equipo === $credito->equipoTaller->equipo->id_tipo)
+                        {                        
+                            if($credito->equipoTaller->equipo->marca->disponible)
+                            {
+                                $nombreMarca = $credito->equipoTaller->equipo->marca->nombre;
+                            }
+                            else 
+                            {
+                                $nombreMarca = $credito->equipoTaller->equipo->marca->nombre . "*";
+                                $hayNoDisponibles = true;
+                            }
+                        }
+                        else 
+                        {
+                            $nombreMarca = "*****";
+                            $hayInexistentes = true;
+                        }
+
+                        if($credito->equipoTaller->equipo->modelo->id_marca === $credito->equipoTaller->equipo->marca->id)
+                        {
+                            if ($credito->equipoTaller->equipo->modelo->disponible)
+                            {
+                                $nombreModelo = $credito->equipoTaller->equipo->modelo->nombre;
+                            }
+                            else 
+                            {
+                                $nombreModelo = $credito->equipoTaller->equipo->modelo->nombre . "*";
+                                $hayNoDisponibles = true;
+                            }
+                        }
+                        else 
+                        {
+                            $nombreModelo = "*****";
+                            $hayInexistentes = true;
+                        }
                     @endphp
                     <tr style="font-size: 10pt;" data-toggle="tooltip" data-title="">
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle" width="8%">
                             {{ $credito->num_orden }}  
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $fecha_salida }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {!! $credito->equipoTaller->equipo->tipo_equipo->icono !!}   {{ '  ' . $credito->equipoTaller->equipo->marca->nombre . ' :: ' . $credito->equipoTaller->equipo->modelo->nombre }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {!! $credito->equipoTaller->equipo->tipo_equipo->icono !!}   {{ '  ' . $nombreMarca . ' :: ' .  $nombreModelo }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $credito->equipoTaller->equipo->cliente->nombre }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             $ {{ $credito->cobroTaller ? $credito->cobroTaller->cobro_realizado : 0 }}
@@ -116,6 +156,15 @@
                 @endforeach
             </tbody>
         </table>
+        @if ($hayNoDisponibles || $hayInexistentes)
+        {{-- <div class="row">  --}}
+            <div class="col-md-10">
+                <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+                    @if ($hayNoDisponibles)* NO DISPONIBLE @endif @if ($hayInexistentes) &nbsp; ***** INEXISTENTE @endif
+                </label>
+            </div>
+        {{-- </div> --}}
+        @endif
     </div>
     <div class="col-mx">
         <label class="col-form-label float-left">
