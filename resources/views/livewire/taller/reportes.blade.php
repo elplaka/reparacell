@@ -34,135 +34,164 @@
             <span wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         </div>
     </div>
-    <div class="row mb-2">
-        <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <b> Fecha de Entrada </b>
-        </div>
-         <div class="col-md-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <b> Tipo(s) de Equipo </b>
-        </div>
-       <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <b>Marca(s)</b>
-        </div>
-       <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-           <b> Modelo(s) </b>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-4 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <div class="row align-items-center">
-                &nbsp; &nbsp;  Del &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
-                &nbsp; al &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
-            </div>
-        </div>
-        
-        <div class="col-md-2 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <select wire:model.live="busquedaEquipos.idTipos" id="selectIdTipos" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
-                @foreach ($tipos_equipos as $tipo_equipo)
-                    <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
-                @endforeach
-            </select>
-        </div>
 
-        @if($marcasDiv)
-        <div class="col-md-3 mb-3" data-toggle="modal" data-target="#paramMarcasModal" wire:click="abreParamMarcasModal">
-            <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
-            @foreach($marcasDiv as $marca)
-            <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $marca->tipoEquipo->icono !!} &nbsp; {{ $marca->nombre }} 
-            <a href="#" wire:click.prevent="eliminarMarca({{ $marca->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
-            @endforeach
+    <div class="w-100">     
+        <!-- Encabezados visibles solo en pantallas medianas y grandes -->
+        <div class="row mb-2 d-none d-md-flex">
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Fecha de Entrada</b>
             </div>
-        </div>       
-        @else
-        <div class="col-md-3 mb-3">
-            <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramMarcasModal">
-            --TODAS--
+            <div class="col-md-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Tipo(s) de Equipo</b>
             </div>
-        </div>
-        @endif
-
-        @if($modelosDiv)
-        <div class="col-md-3 mb-4" data-toggle="modal" data-target="#paramModelosModal" wire:click="abreParamModelosModal">
-            <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
-            @foreach($modelosDiv as $modelo)
-            <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->nombre }}  &nbsp; [ {{ $modelo->marca->nombre }} ]
-            <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
-            @endforeach
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Marca(s)</b>
             </div>
-        </div>       
-        @else
-        <div class="col-md-3 mb-3">
-            <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramModelosModal">
-            --TODOS--
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Modelo(s)</b>
             </div>
         </div>
-        @endif
-    </div>
+    
+        <!-- Fila de campos -->
+        <div class="row">
+            <!-- Fecha de Entrada -->
+            <div class="col-12 col-md-4 mb-2">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Fecha de Entrada</label>
+                <div class="row">
+                    <div class="col-12 col-md-6 d-flex align-items-center mb-2">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">Del</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaEntradaInicio" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-center mb-2">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">&nbsp;&nbsp;Al</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Tipo(s) de Equipo -->
+            <div class="col-12 col-md-2 mb-2">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Tipo(s) de Equipo</label>
+                <select wire:model.live="busquedaEquipos.idTipos" id="selectIdTipos" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
+                    @foreach ($tipos_equipos as $tipo_equipo)
+                        <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
+                    @endforeach
+                </select>
+            </div>
+    
+            <!-- Marca(s) -->
+            @if($marcasDiv)
+            <div class="col-12 col-md-3 mb-3" data-toggle="modal" data-target="#paramMarcasModal" wire:click="abreParamMarcasModal">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Marca(s)</label>
+                <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+                    @foreach($marcasDiv as $marca)
+                    <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $marca->tipoEquipo->icono !!} &nbsp; {{ $marca->nombre }} 
+                    <a href="#" wire:click.prevent="eliminarMarca({{ $marca->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="col-12 col-md-3 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Marca(s)</label>
+                <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramMarcasModal">
+                    --TODAS--
+                </div>
+            </div>
+            @endif
+    
+            <!-- Modelo(s) -->
+            @if($modelosDiv)
+            <div class="col-12 col-md-3 mb-4" data-toggle="modal" data-target="#paramModelosModal" wire:click="abreParamModelosModal">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
+                <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+                    @foreach($modelosDiv as $modelo)
+                    <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->nombre }}  &nbsp; [ {{ $modelo->marca->nombre }} ]
+                    <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="col-12 col-md-3 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
+                <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramModelosModal">
+                    --TODOS--
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>   
     <hr>
-    <div class="row mb-2">
-        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <b> Falla(s) </b>
-        </div>
-        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <b> Cliente(s) </b>
-        </div>
-        @if($chkFechaSalida == true)
-        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
-        </div>
-        @endif
-    </div>
-    <div class="row">
-        @if($fallasDiv)
-        <div class="col-md-4 mb-4" data-toggle="modal" data-target="#paramFallasModal" wire:click="abreParamFallasModal">
-            <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
-            @foreach($fallasDiv as $falla)
-            <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $falla->tipoEquipo->icono !!} &nbsp; {{ $falla->descripcion }} 
-            <a href="#" wire:click.prevent="eliminarFalla({{ $falla->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
-            @endforeach
+    <div class="w-100 mt-2">     
+        <div class="row mb-2 d-none d-md-flex">
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider mb-01" style="font-size: 11pt;">
+                <b> Falla(s) </b>
             </div>
-        </div>       
-        @else
-        <div class="col-md-4 mb-3">
-            <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramFallasModal">
-            --TODAS--
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider mb-0" style="font-size: 11pt;">
+                <b> Cliente(s) </b>
             </div>
-        </div>
-        @endif
-        @if($clientesDiv)
-        <div class="col-md-4 mb-4" data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
-            <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-96" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
-            @foreach($clientesDiv as $cliente)
-            <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt"> {{ $cliente->nombre }} 
-            <a href="#" wire:click.prevent="eliminarCliente({{ $cliente->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
-            @endforeach
+            @if($chkFechaSalida)
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
             </div>
-        </div>       
-        @else
-        <div class="col-md-4 mb-3">
-            <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
-            --TODOS--
+            @endif
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-4 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-0" style="font-size: 11pt;">Falla(s)</label>
+                @if($fallasDiv)
+                <div data-toggle="modal" data-target="#paramFallasModal" wire:click="abreParamFallasModal">
+                    <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+                        @foreach($fallasDiv as $falla)
+                        <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $falla->tipoEquipo->icono !!} &nbsp; {{ $falla->descripcion }} 
+                        <a href="#" wire:click.prevent="eliminarFalla({{ $falla->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramFallasModal">
+                    --TODAS--
+                </div>
+                @endif
             </div>
-        </div>
-        @endif
-        @if($chkFechaSalida == 1)
-        <div class="col-md-4 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <div class="row align-items-center">
-                &nbsp; &nbsp;  Del &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaSalidaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
-                &nbsp; al &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaSalidaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
+    
+            <div class="col-12 col-md-4 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-0" style="font-size: 11pt;">Cliente(s)</label>
+                @if($clientesDiv)
+                <div data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
+                    <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+                        @foreach($clientesDiv as $cliente)
+                        <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt"> {{ $cliente->nombre }} 
+                        <a href="#" wire:click.prevent="eliminarCliente({{ $cliente->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramClientesModal" wire:click="abreParamClientesModal">
+                    --TODOS--
+                </div>
+                @endif
             </div>
+    
+            @if($chkFechaSalida)
+            <div class="col-12 col-md-4 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700 mb-2" style="font-size: 11pt;">Fecha de Salida</label>
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-6 mb-2 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">Del</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaSalidaInicio" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                    <div class="col-12 col-md-6 mb-2 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">&nbsp;&nbsp;Al</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaSalidaFin" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="col-12 col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider mb-2" style="font-size: 11pt;">
+                <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
+            </div>
+            @endif
         </div>
-        @else
-        <div class="col-md-4 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <input type="checkbox" wire:model.live="chkFechaSalida"> <b> Fecha de Salida </b>
-        </div>
-        @endif
-    </div>
-    <div>
     </div>
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
@@ -233,13 +262,34 @@
                         @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             @foreach ($taller->fallas as $key => $equipo)
-                                {{ $equipo->falla->descripcion }}
+                            @if($equipo->falla->id_tipo_equipo === $taller->equipo->id_tipo)
+                                @if($equipo->falla->disponible)
+                                    {{ $equipo->falla->descripcion }}
+                                @else
+                                    {{ $equipo->falla->descripcion . "*" }}
+                                    @php
+                                        $hayNoDisponibles = true;
+                                    @endphp
+                                @endif
                                 @if (!$loop->last) <!-- Verifica si no es el último elemento -->
                                     |
                                 @endif
+                            @else
+                                @php
+                                    $hayInexistentes = true;
+                                @endphp
+                                *****
+                            @endif
                             @endforeach
                         </td>
+                        @if($taller->equipo->cliente->disponible)
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre }}</td>
+                        @else
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre . '*' }}</td>
+                        @php
+                            $hayNoDisponibles = true;
+                        @endphp
+                        @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>

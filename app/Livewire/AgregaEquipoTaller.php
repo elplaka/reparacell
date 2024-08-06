@@ -81,6 +81,7 @@ class AgregaEquipoTaller extends Component
     public $muestraHistorialEquipoClienteModal;
 
     public $marcasEquiposMod, $datosCargados;
+    public $modalBuscarClienteAbierta;
 
     public $imagenes = [];
 
@@ -117,10 +118,10 @@ class AgregaEquipoTaller extends Component
     public $mensajeToast = ''; 
     public $fallasEquipoTaller;
     public $modalSoloLectura;
+    public $hayItemsNoDisponibles, $hayItemsInexistentes;
 
     public function mount()
     {
-
         $this->cliente = [
             'estatus'           => 0,
             'id'                => '',
@@ -192,6 +193,8 @@ class AgregaEquipoTaller extends Component
 
         $this->modalSoloLectura = false;
 
+        $this->modalBuscarClienteAbierta = false;
+
         $this->marcasEquiposMod = collect();
     }
 
@@ -251,8 +254,6 @@ class AgregaEquipoTaller extends Component
 
     public function equipoEnTallerActualiza($idEquipo)
     {
-        // dd($this->equipoTaller['numOrden']);
-
         $equipoTaller = EquipoTaller::where('id_equipo', $idEquipo)
         ->where('num_orden', '!=', $this->equipoTaller['numOrden'])
         ->whereNotIn('id_estatus', [5, 6])
@@ -563,21 +564,38 @@ class AgregaEquipoTaller extends Component
                 $idCliente = $equipo_taller->equipo->cliente->id;
 
                 //array_filter se utiliza para filtrar los elementos con valor true, y luego array_keys se utiliza para obtener los índices correspondientes.
+                // $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
+                //     return $valor === true;
+                // }));
+
+                // $k = 0;
+                // $cobroEstimado = 0;
+                // foreach ($this->fallas as $fallaId) {
+                //     $falla = new FallaEquipoTaller();
+                //     $falla->num_orden = $numOrden;
+                //     $falla->id_falla = $idsFallas[$k];
+                //     $catFallas = FallaEquipo::find($idsFallas[$k]);
+                //     $cobroEstimado += $catFallas->costo;
+                //     $falla->save();
+                //     $k++;
+                // }
+
                 $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
                     return $valor === true;
                 }));
 
-                $k = 0;
                 $cobroEstimado = 0;
-                foreach ($this->fallas as $fallaId) {
+                foreach ($idsFallas as $fallaId) {
                     $falla = new FallaEquipoTaller();
                     $falla->num_orden = $numOrden;
-                    $falla->id_falla = $idsFallas[$k];
-                    $catFallas = FallaEquipo::find($idsFallas[$k]);
-                    $cobroEstimado += $catFallas->costo;
+                    $falla->id_falla = $fallaId;
+                    $catFallas = FallaEquipo::find($fallaId);
+                    if ($catFallas) {
+                        $cobroEstimado += $catFallas->costo;
+                    }
                     $falla->save();
-                    $k++;
                 }
+
 
                 // if (!$this->cobroRepetido($numOrden, $cobroEstimado))
                 // {
@@ -711,11 +729,64 @@ class AgregaEquipoTaller extends Component
         $this->equiposClienteModal = $this->regresaEquiposCliente($this->cliente['id']);
 
         $this->datosCargados = true;
+        $this->hayItemsNoDisponibles = false;
+        $this->hayItemsInexistentes = false;     
     }
 
     public function regresaEquiposCliente($idCliente)
     {
         $equipos = Equipo::where('id_cliente', $idCliente)->where('disponible', 1)->get();
+
+        // $equipos = Equipo::where('id_cliente', $idCliente)
+        // ->where('disponible', 1)
+        // ->with(['modelo', 'marca', 'tipo_equipo'])
+        // ->get()
+        // ->map(function ($equipo) {
+        //     $equipo->total_marcas_inexistentes = DB::table('equipos as e')
+        //         ->join('marcas_equipos as m', 'e.id_marca', '=', 'm.id')
+        //         ->join('tipos_equipos as t', 'e.id_tipo', '=', 't.id')
+        //         ->where('e.id_cliente', $equipo->id_cliente)
+        //         ->where('e.disponible', 1)
+        //         ->whereColumn('m.id_tipo_equipo', '<>', 'e.id_tipo')
+        //         ->count();
+
+        //     $equipo->total_modelos_inexistentes = DB::table('equipos as e')
+        //         ->join('modelos_equipos as mo', 'e.id_modelo', '=', 'mo.id')
+        //         ->join('marcas_equipos as m', 'e.id_marca', '=', 'm.id')
+        //         ->where('e.id_cliente', $equipo->id_cliente)
+        //         ->where('e.disponible', 1)
+        //         ->whereColumn('mo.id_marca', '<>', 'm.id')
+        //         ->count();
+
+        //     $equipo->total_tipos_equipos_no_disponibles = DB::table('equipos as e')
+        //         ->join('tipos_equipos as t', 'e.id_tipo', '=', 't.id')
+        //         ->where('e.id_cliente', $equipo->id_cliente)
+        //         ->where('e.disponible', 1)
+        //         ->where('t.disponible', 0)
+        //         ->distinct()
+        //         ->count('t.id');
+
+        //     $equipo->total_marcas_no_disponibles = DB::table('equipos as e')
+        //         ->join('marcas_equipos as m', 'e.id_marca', '=', 'm.id')
+        //         ->where('e.id_cliente', $equipo->id_cliente)
+        //         ->where('e.disponible', 1)
+        //         ->where('m.disponible', 0)
+        //         ->distinct()
+        //         ->count('m.id');
+            
+        //     $equipo->total_modelos_no_disponibles = DB::table('equipos as e')
+        //         ->join('modelos_equipos as mo', 'e.id_modelo', '=', 'mo.id')
+        //         ->where('e.id_cliente', $equipo->id_cliente)
+        //         ->where('e.disponible', 1)
+        //         ->where('mo.disponible', 0)
+        //         ->distinct()
+        //         ->count('mo.id');
+
+        //     return $equipo;
+        // });
+        
+
+        // dd($equipos);
 
         return $equipos;
     }
@@ -742,89 +813,94 @@ class AgregaEquipoTaller extends Component
 
     public function updatedClienteTelefono($value)
     {
-        if ($this->cliente['estatus'] != 3)   //Si el cliente no es editable entonces que busque clientes
+        if (!$this->modalBuscarClienteAbierta)
         {
-            if(strlen($value) == 10)
+            if ($this->cliente['estatus'] != 3)   //Si el cliente no es editable entonces que busque clientes
             {
-                $cliente = $this->regresaCliente($this->cliente['telefono']);
-
-                if (isset($cliente))   //Cliente ya existente
+                if(strlen($value) == 10)
                 {
-                    $this->cliente['id'] = $cliente->id;
-                    $this->cliente['estatus'] = 2;  //Cliente solo lectura
-                    $this->cliente['nombre'] = $cliente->nombre;
-                    $this->cliente['direccion'] = $cliente->direccion;
-                    $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
-                    $this->equiposClienteModal = $this->regresaEquiposCliente($cliente->id);
-                    $this->tieneEquiposCliente = $this->equiposClienteModal->count() > 0 ? true : false;
-                    $this->equipoSeleccionadoModal = false;
-
-                    $this->cliente['estatus'] = 2;
-                    $this->cliente['publicoGeneral'] = false;
-                    $this->equipoTaller['estatus'] = 0;
-
-                    if ($this->tieneEquiposCliente && $this->cliente['telefonoContacto'] != "0000000000")
-                    {
-                        $this->equipo['estatus'] = 0;
-                        $this->dispatch('abreModalEquiposCliente');    //El listener está en layouts.main
-                    }
-
-                    if ($this->cliente['telefonoContacto'] == "0000000000")
-                    {
-                        $this->equipo['estatus'] = 1;
-                        $this->cliente['publicoGeneral'] = true;
-                        $this->cliente['estatus'] = 2;
-                        // $this->equipoTaller['estatus'] = 0;
-                    }
-                }
-                else   //Cliente nuevo
-                {
-                    $this->cliente['id'] = -1;
-                    $this->cliente['estatus'] = 1;  //Cliente nuevo
-                    $this->cliente['nombre'] = '';
-                    $this->cliente['direccion'] = '';
-                    $this->cliente['telefonoContacto'] = $this->cliente['telefono'];
-                    $this->equipo['id_tipo'] = 1;   //Valor por default (Celular)
-
-                    $this->equipo['estatus'] = 1;
-                    $this->equipo['idMarca'] = null;
-                    $this->equipo['idModelo']  = null;
-                    // 'nombreTipo'        => null,
-                    // 'nombreMarca'       => null,
-                    // 'nombreModelo'      => null
-
-                    $this->equipoTaller['estatus'] = 0;
-                }
-
-                $this->cliente['publicoGeneral'] = $this->cliente['telefono'] == '0000000000' ? true : false;
-            }
-            else
-            {
-                if (strlen($value) >= 2 && $value == '00')   //Público General
-                {
-                    $this->cliente['telefono'] = '0000000000';
                     $cliente = $this->regresaCliente($this->cliente['telefono']);
-                    if (isset($cliente))
+
+                    if (isset($cliente))   //Cliente ya existente
                     {
                         $this->cliente['id'] = $cliente->id;
-                        $this->cliente['estatus'] = 2;
+                        $this->cliente['estatus'] = 2;  //Cliente solo lectura
                         $this->cliente['nombre'] = $cliente->nombre;
                         $this->cliente['direccion'] = $cliente->direccion;
                         $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
-                    }
-                    $this->cliente['publicoGeneral'] = true;
-                    $this->equipo['estatus'] = 1;
-                    $this->equipoTaller['estatus'] = 0;
-                }
-                else  
-                {
-                    // $this->cliente['estatus'] = 2;
-                    if (strlen($value) <= 10) 
-                    {
+                        $this->equiposClienteModal = $this->regresaEquiposCliente($cliente->id);
+                        $this->tieneEquiposCliente = $this->equiposClienteModal->count() > 0 ? true : false;
+                        $this->equipoSeleccionadoModal = false;
+
+                        $this->cliente['estatus'] = 2;
                         $this->cliente['publicoGeneral'] = false;
-                        $this->cliente['estatus'] = 0;
                         $this->equipoTaller['estatus'] = 0;
-                        // $this->equipo['estatus'] = 2;
+
+                        if ($this->tieneEquiposCliente && $this->cliente['telefonoContacto'] != "0000000000")
+                        {
+                            $this->equipo['estatus'] = 0;
+                            $this->hayItemsNoDisponibles = false;
+                            $this->hayItemsInexistentes = false;
+                            $this->dispatch('abreModalEquiposCliente');    //El listener está en layouts.main
+                        }
+
+                        if ($this->cliente['telefonoContacto'] == "0000000000")
+                        {
+                            $this->equipo['estatus'] = 1;
+                            $this->cliente['publicoGeneral'] = true;
+                            $this->cliente['estatus'] = 2;
+                            // $this->equipoTaller['estatus'] = 0;
+                        }
+                    }
+                    else   //Cliente nuevo
+                    {
+                        $this->cliente['id'] = -1;
+                        $this->cliente['estatus'] = 1;  //Cliente nuevo
+                        $this->cliente['nombre'] = '';
+                        $this->cliente['direccion'] = '';
+                        $this->cliente['telefonoContacto'] = $this->cliente['telefono'];
+                        $this->equipo['id_tipo'] = 1;   //Valor por default (Celular)
+
+                        $this->equipo['estatus'] = 1;
+                        $this->equipo['idMarca'] = null;
+                        $this->equipo['idModelo']  = null;
+                        // 'nombreTipo'        => null,
+                        // 'nombreMarca'       => null,
+                        // 'nombreModelo'      => null
+
+                        $this->equipoTaller['estatus'] = 0;
+                    }
+
+                    $this->cliente['publicoGeneral'] = $this->cliente['telefono'] == '0000000000' ? true : false;
+                }
+                else
+                {
+                    if (strlen($value) >= 2 && $value == '00')   //Público General
+                    {
+                        $this->cliente['telefono'] = '0000000000';
+                        $cliente = $this->regresaCliente($this->cliente['telefono']);
+                        if (isset($cliente))
+                        {
+                            $this->cliente['id'] = $cliente->id;
+                            $this->cliente['estatus'] = 2;
+                            $this->cliente['nombre'] = $cliente->nombre;
+                            $this->cliente['direccion'] = $cliente->direccion;
+                            $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
+                        }
+                        $this->cliente['publicoGeneral'] = true;
+                        $this->equipo['estatus'] = 1;
+                        $this->equipoTaller['estatus'] = 0;
+                    }
+                    else  
+                    {
+                        // $this->cliente['estatus'] = 2;
+                        if (strlen($value) <= 10) 
+                        {
+                            $this->cliente['publicoGeneral'] = false;
+                            $this->cliente['estatus'] = 0;
+                            $this->equipoTaller['estatus'] = 0;
+                            // $this->equipo['estatus'] = 2;
+                        }
                     }
                 }
             }
@@ -840,6 +916,8 @@ class AgregaEquipoTaller extends Component
         ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones')
         ->paginate(5);
         // ->get();
+
+        $this->gotoPage(1);
 
         // dd($this->historialClienteTaller);
 
@@ -858,12 +936,12 @@ class AgregaEquipoTaller extends Component
 
     public function cierraModalEquiposCliente()
     {
-
+        
     }
 
     public function cierraBuscarClienteModal()
     {
-        
+        $this->modalBuscarClienteAbierta = false;
     }
     
 
@@ -1228,6 +1306,8 @@ class AgregaEquipoTaller extends Component
 
         if ($this->tieneEquiposCliente)
         {
+            $this->hayItemsNoDisponibles = false;
+            $this->hayItemsInexistentes = false;
             $this->dispatch('abreModalEquiposCliente');            
         }
 
@@ -1297,6 +1377,8 @@ class AgregaEquipoTaller extends Component
         $this->equipo['estatus'] = 2;
 
         $this->dispatch('cerrarModalEquiposCliente');
+
+        $this->modalEquiposClienteAbierta = false;
     }
 
     public function abreEquipoClienteHistorial()
@@ -1310,6 +1392,8 @@ class AgregaEquipoTaller extends Component
     {
         $this->nombreClienteModal = '';
         $this->clientesModal = null;
+
+        $this->modalBuscarClienteAbierta = true;
     }
 
     public function cierraModalBuscarCliente()
@@ -1508,10 +1592,62 @@ class AgregaEquipoTaller extends Component
 
         $this->equipo['id'] = $equipoTaller->id_equipo;
         $this->equipo['idTipo'] = $equipoTaller->equipo->id_tipo;
+
+        // if($equipoTaller->equipo->marca->disponible)
+        // {
+        //     $this->equipo['nombreMarca'] = $equipoTaller->equipo->marca->nombre;
+        // }
+        // else
+        // {
+        //     $this->equipo['nombreMarca'] = $equipoTaller->equipo->marca->nombre . "*";
+        // }
+
+        // if($equipoTaller->equipo->modelo->disponible)
+        // {
+        //     $this->equipo['nombreModelo'] = $equipoTaller->equipo->modelo->nombre;
+        // }
+        // else
+        // {
+        //     $this->equipo['nombreModelo'] = $equipoTaller->equipo->modelo->nombre . "*";
+        // }
+
         $this->equipo['nombreTipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
-        $this->equipo['idMarca'] = $equipoTaller->equipo->id_marca;
+        if($equipoTaller->equipo->modelo->disponible)
+        {
+            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
+            {
+                $this->equipo['idModelo'] = $equipoTaller->equipo->id_modelo;
+            }
+            else
+            {
+                $this->equipo['idModelo'] = null;
+            }
+        }
+        else
+        {
+            $this->equipo['idModelo'] = null;
+        }
+        
+        if($equipoTaller->equipo->marca->disponible)
+        {
+            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
+            {
+                $this->equipo['idMarca'] = $equipoTaller->equipo->id_marca;
+            }
+            else
+            {
+                $this->equipo['idMarca'] = null;
+                $this->equipo['idModelo'] = null;
+            }
+        }
+        else
+        {
+            $this->equipo['idMarca'] = null;
+            $this->equipo['idModelo'] = null;
+        }
         $this->equipo['nombreMarca'] = $equipoTaller->equipo->marca->nombre;
-        $this->equipo['idModelo'] = $equipoTaller->equipo->id_modelo;
+
+
         $this->equipo['nombreModelo'] = $equipoTaller->equipo->modelo->nombre;
         $this->equipo['estatus'] = 3;
 

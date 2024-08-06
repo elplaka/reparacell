@@ -195,11 +195,50 @@ class Taller extends Component
         $this->estatusEquipos = EstatusEquipo::whereIn('id', [5, 6])->get();
 
         $this->cobroFinal['numOrden'] = $numOrden;
-        $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre;
+
+        if ($cobro->equipoTaller->equipo->cliente->disponible)
+        {
+            $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre;
+        }
+        else
+        {
+            $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre . "*";
+        }
         $this->cobroFinal['fecha'] = now();
-        $this->cobroFinal['tipoEquipo'] = $cobro->equipoTaller->equipo->tipo_equipo->nombre;
-        $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre;
-        $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre;
+
+        $this->cobroFinal['tipoEquipo'] =  $cobro->equipoTaller->equipo->tipo_equipo->disponible? $cobro->equipoTaller->equipo->tipo_equipo->nombre : $cobro->equipoTaller->equipo->tipo_equipo->nombre . "*";
+        if ($cobro->equipoTaller->equipo->marca->disponible)
+        {
+            if($cobro->equipoTaller->equipo->marca->id_tipo_equipo === $cobro->equipoTaller->equipo->id_tipo)
+            {
+                $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre;
+            }
+            else
+            {
+                $this->cobroFinal['marcaEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre . "*";
+        }
+
+        if ($cobro->equipoTaller->equipo->modelo->disponible)
+        {
+            if ($cobro->equipoTaller->equipo->modelo->id_marca === $cobro->equipoTaller->equipo->marca->id)
+            {
+                $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre;
+            }
+            else
+            {
+                $this->cobroFinal['modeloEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre . "*";
+        }
+
         $this->cobroFinal['cobroEstimado'] = $cobro->cobro_estimado;
         $this->cobroFinal['cobroRealizado'] = $cobro->cobro_estimado;
         $this->cobroFinal['idEstatusEquipo'] = 5;
@@ -293,11 +332,79 @@ class Taller extends Component
                             $cobroTallerCreditoDetalle->save();
                         }
 
-                        $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->nombre;
                         $this->cobroACredito['numOrden'] = $numOrden;
-                        $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
-                        $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-                        $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+
+                        $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
+                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
+                        if ($equipoTaller->equipo->marca->disponible)
+                        {
+                            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
+                            {
+                                $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+                            }
+                            else
+                            {
+                                $this->cobroACredito['marcaEquipo'] = "*****";
+                            }
+                        }
+                        else
+                        {
+                            $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
+                        }
+
+                        if ($equipoTaller->equipo->modelo->disponible)
+                        {
+                            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
+                            {
+                                $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+                            }
+                            else
+                            {
+                                $this->cobroACredito['modeloEquipo'] = "*****";
+                            }
+                        }
+                        else
+                        {
+                            $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
+                        }
+
+                        $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
+                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
+                        if ($equipoTaller->equipo->marca->disponible)
+                        {
+                            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
+                            {
+                                $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+                            }
+                            else
+                            {
+                                $this->cobroACredito['marcaEquipo'] = "*****";
+                            }
+                        }
+                        else
+                        {
+                            $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
+                        }
+
+                        if ($equipoTaller->equipo->modelo->disponible)
+                        {
+                            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
+                            {
+                                $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+                            }
+                            else
+                            {
+                                $this->cobroACredito['modeloEquipo'] = "*****";
+                            }
+                        }
+                        else
+                        {
+                            $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
+                        }
+
+                        // $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
+                        // $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+                        // $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
 
                         $this->cobroACredito['idEstatus'] = 1;
                         $this->cobroACredito['estatus'] = "SIN LIQUIDAR";
@@ -343,11 +450,13 @@ class Taller extends Component
 
                 $idCliente = $equipoTaller->equipo->cliente->id;
 
-                $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->nombre;
                 $this->cobroACredito['numOrden'] = $numOrden;
-                $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
-                $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-                $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+
+                // $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->nombre;
+                // $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
+                // $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+                // $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+
                 $this->cobroACredito['idEstatus'] = $equipoTaller->cobroTallerCredito->estatus->id;
                 $this->cobroACredito['estatus'] = $equipoTaller->cobroTallerCredito->estatus->descripcion;
                 if ($equipoTaller->cobroTaller)
@@ -442,11 +551,47 @@ class Taller extends Component
 
         $idCliente = $equipoTaller->equipo->cliente->id;
 
-        $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->nombre;
+        $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
         $this->cobroACredito['numOrden'] = $numOrden;
-        $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
-        $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-        $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+        
+        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
+        if ($equipoTaller->equipo->marca->disponible)
+        {
+            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
+            {
+                $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+            }
+            else
+            {
+                $this->cobroACredito['marcaEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
+        }
+
+        if ($equipoTaller->equipo->modelo->disponible)
+        {
+            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
+            {
+                $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+            }
+            else
+            {
+                $this->cobroACredito['modeloEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
+        }
+
+
+        // $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->nombre;
+        // $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+        // $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+
         $this->cobroACredito['idEstatus'] = $equipoTaller->cobroTallerCredito->estatus->id;
         $this->cobroACredito['estatus'] = $equipoTaller->cobroTallerCredito->estatus->descripcion;
         if ($equipoTaller->cobroTaller)
@@ -1011,8 +1156,38 @@ public function obtenerIconoSegunEstatus($id_estatus)
         $equipoTaller = EquipoTaller::find($numOrden);
 
         $this->anotacionesMod['numOrden'] = $equipoTaller->num_orden;
-        $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-        $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+        if ($equipoTaller->equipo->marca->disponible)
+        {
+            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
+            {
+                $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
+            }
+            else
+            {
+                $this->anotacionesMod['marcaEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
+        }
+
+        if ($equipoTaller->equipo->modelo->disponible)
+        {
+            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
+            {
+                $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
+            }
+            else
+            {
+                $this->anotacionesMod['modeloEquipo'] = "*****";
+            }
+        }
+        else
+        {
+            $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
+        }
+
         $this->anotacionesMod['clienteEquipo'] = $equipoTaller->equipo->cliente->nombre;
         $this->anotacionesMod['estatusEquipo'] = $equipoTaller->id_estatus;
 

@@ -277,27 +277,45 @@ class TallerReportes extends Component
             }
         }
 
-        $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
+        // $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
+
+        $equipos_taller = $equipos_taller->whereHas('equipo.tipo_equipo', function ($query) {
+            $query->where('disponible', 1);
+        })->orderBy('fecha_entrada', 'asc')->paginate(10);        
 
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
-     
+
         if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
         {
-            $this->marcas = MarcaEquipo::whereIn('id_tipo_equipo', $this->busquedaEquipos['idTipos'])->where('disponible', 1)->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
+            $this->marcas = MarcaEquipo::whereIn('id_tipo_equipo', $this->busquedaEquipos['idTipos'])->where('disponible', 1)->whereHas('tipoEquipo', function ($query) {
+                $query->where('disponible', 1);
+            })->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
         }
         else
         {
-            $this->marcas = MarcaEquipo::where('disponible', 1)->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
+            $this->marcas = MarcaEquipo::where('disponible', 1)->whereHas('tipoEquipo', function ($query) {
+                $query->where('disponible', 1);
+            })->orderBy('nombre', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
         }
 
         if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
         {
-            $this->modelos = ModeloEquipo::whereIn('id_marca', $this->busquedaEquipos['idMarcas'])->where('disponible', 1)->orderBy('nombre', 'asc')->get();
+            $this->modelos = ModeloEquipo::whereIn('id_marca', $this->busquedaEquipos['idMarcas'])->where('disponible', 1)->whereHas('marca', function ($query) {
+                $query->where('disponible', 1)
+                    ->whereHas('tipoEquipo', function ($query) {
+                        $query->where('disponible', 1);
+                    });
+            })->orderBy('nombre', 'asc')->get();
         }
         else
         {
-            $this->modelos = ModeloEquipo::where('disponible', 1)->orderBy('nombre', 'asc')->get();
+            $this->modelos = ModeloEquipo::where('disponible', 1)->whereHas('marca', function ($query) {
+                $query->where('disponible', 1)
+                    ->whereHas('tipoEquipo', function ($query) {
+                        $query->where('disponible', 1);
+                    });
+            })->orderBy('nombre', 'asc')->get();
         }
 
         if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])

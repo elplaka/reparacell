@@ -187,8 +187,8 @@ class TallerCreditoLw extends Component
                         if ($acumulado == $this->cobroACredito['monto'])
                         {
                             CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
-                            $this->cobroACredito['estatus'] = $ventaCreditoDetalles->first()->ventaCredito->estatus->descripcion;
-                            $this->ventaCredito['idEstatus'] = 2;
+                            $this->cobroACredito['estatus'] = $cobroCreditoDetalles->first()->cobroCredito->estatus->descripcion;
+                            $this->cobroACredito['idEstatus'] = 2;
                         }
                     });
                 } catch (\Exception $e)
@@ -226,9 +226,26 @@ class TallerCreditoLw extends Component
         $this->cobroACredito['idEstatus'] = $creditoTaller->id_estatus;
         $this->cobroACredito['estatus'] = $creditoTaller->estatus->descripcion;
         $this->cobroACredito['monto'] = $creditoTaller->cobroTaller ? $creditoTaller->cobroTaller->cobro_realizado: 0;
+        if($creditoTaller->equipoTaller->equipo->marca->id_tipo_equipo === $creditoTaller->equipoTaller->equipo->id_tipo)
+        {
+            $nombreMarca = $creditoTaller->equipoTaller->equipo->marca->nombre;
+        }
+        else
+        {
+            $nombreMarca = "*****";
+        }
+
+        if($creditoTaller->equipoTaller->equipo->modelo->id_marca === $creditoTaller->equipoTaller->equipo->marca->id)
+        {
+            $nombreModelo = $creditoTaller->equipoTaller->equipo->modelo->nombre;
+        }
+        else
+        {
+            $nombreModelo = "*****";
+        }
         $this->cobroACredito['tipoEquipo'] = $creditoTaller->equipoTaller->equipo->tipo_equipo->nombre;
-        $this->cobroACredito['marcaEquipo'] = $creditoTaller->equipoTaller->equipo->marca->nombre;
-        $this->cobroACredito['modeloEquipo'] = $creditoTaller->equipoTaller->equipo->modelo->nombre;
+        $this->cobroACredito['marcaEquipo'] = $nombreMarca;
+        $this->cobroACredito['modeloEquipo'] = $nombreModelo;
 
         $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
 
@@ -306,16 +323,18 @@ class TallerCreditoLw extends Component
     {
         $credito = CobroTallerCredito::where('num_orden', $numOrden)->first();
 
-        $nombreClienteCredito = $credito->equipoTaller->equipo->cliente->nombre;
-        $fechaInicioCredito = $credito->created_at;
-        $fechaFinCredito = $credito->created_at;
+        if ($credito) {
+            $nombreClienteCredito = $credito->equipoTaller->equipo->cliente->nombre;
+            $fechaInicioCredito = $credito->created_at;
+            $fechaFinCredito = $credito->created_at;
 
-        session()->flash('numOrden', $numOrden);
-        session()->flash('nombreClienteCredito', $nombreClienteCredito);
-        session()->flash('fechaInicioCredito', $fechaInicioCredito);
-        session()->flash('fechaFinCredito', $fechaFinCredito);
-        session()->flash('sesAbreModalCobroCreditoTaller', true);
+            session()->flash('numOrden', $numOrden);
+            session()->flash('nombreClienteCredito', $nombreClienteCredito);
+            session()->flash('fechaInicioCredito', $fechaInicioCredito);
+            session()->flash('fechaFinCredito', $fechaFinCredito);
+            session()->flash('sesAbreModalCobroCreditoTaller', true);
 
-        return redirect()->route('taller.creditos');
+            return redirect()->route('taller.creditos');
+        }
     }
 }

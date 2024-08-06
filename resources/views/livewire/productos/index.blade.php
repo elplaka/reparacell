@@ -1,3 +1,6 @@
+@php
+    $hayNoDisponibles = false;
+@endphp
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.productos.modal-nuevo')
     @include('livewire.productos.modal-editar')
@@ -86,7 +89,14 @@
                         {{ $producto->inventario == -1 ? "N/A" : $producto->inventario}}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $producto->departamento->nombre }}
+                        @if ($producto->departamento->disponible)
+                            {{ $producto->departamento->nombre }}
+                        @else
+                            {{ $producto->departamento->nombre . "*" }}
+                            @php
+                                $hayNoDisponibles = true;
+                            @endphp
+                        @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         @if ($producto->disponible)
@@ -116,6 +126,13 @@
                 @endforeach
             </tbody>
         </table>
+        @if ($hayNoDisponibles)
+        <div class="col-md-5">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+               @if ($hayNoDisponibles)* NO DISPONIBLE @endif
+            </label>
+        </div>
+        @endif
     </div>
 
     <div class="col-mx">

@@ -70,7 +70,6 @@ class ClienteHistorial extends Component
         $this->cliente['nombre'] = $this->equiposClienteModal->first()->cliente->nombre;
 
         $this->datosCargados = true;
-
     }   
 
     public function regresaEquiposCliente($idCliente)

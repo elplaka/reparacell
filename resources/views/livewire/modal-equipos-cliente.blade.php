@@ -1,6 +1,6 @@
 @php
-    $hayNoDisponibles = false;
-    $hayInexistentes = false;
+    $hayItemsNoDisponibles = false;
+    $hayItemsInexistentes = false;
 @endphp
 <div wire:ignore.self class="modal fade" id="equiposClienteModal" name="equiposClienteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-md" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}">
@@ -15,9 +15,9 @@
                 <div wire:loading>
                     <i class="fa fa-spinner fa-spin"></i> Cargando...
                 </div>
-                <div wire:loading.remove>
+                {{-- <div wire:loading.remove>
                     &nbsp; <!-- Espacio en blanco -->
-                </div>
+                </div> --}}
             </div>
            @if($showModalErrors)
                 @if ($errors->any())
@@ -42,7 +42,7 @@
                 @endif
            @endif
            <div class="modal-body">
-               <div class="container mt-3 font-sans text-gray-900 antialiased">
+               <div class="container font-sans text-gray-900 antialiased">
                     <div class="row mb-3">
                         <div class="col-md-11 table-responsive">
                             <table class="table table-sm table-hover table-bordered">
@@ -62,7 +62,7 @@
                                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider col-6">
                                         ESTATUS
                                     </th>
-                                    <th class="px-2 py-2 bg-gray-200 text-center text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
+                                    {{-- <th class="px-2 py-2 bg-gray-200 text-center text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th> --}}
                                     @endif
                                     </tr>
                                 </thead>
@@ -77,7 +77,7 @@
                                             else 
                                             {
                                                 $tipoEquipo = $equipo->tipo_equipo->icono . "*";
-                                                $hayNoDisponibles = true;
+                                                $hayItemsNoDisponibles = true;
                                             }
 
                                             if ($equipo->marca->disponible)
@@ -87,7 +87,7 @@
                                             else
                                             {
                                                 $nombreMarca = $equipo->marca->nombre . "*";
-                                                $hayNoDisponibles = true;
+                                                $hayItemsNoDisponibles = true;
                                             }    
                                             if ($equipo->modelo->disponible)
                                             {
@@ -96,14 +96,17 @@
                                             else
                                             {
                                                 $nombreModelo = $equipo->modelo->nombre . "*";
-                                                $hayNoDisponibles = true;
+                                                $hayItemsNoDisponibles = true;
                                             } 
-                                            
                                         @endphp
                                         @if ($modalSoloLectura)
                                         <tr style="font-size: 9pt;">
                                         @else
-                                        <tr style="font-size: 9pt; cursor: pointer;" wire:click="capturarFilaEquiposCliente({{ $equipo->id }})">
+                                            @if ($equipo->tipo_equipo->disponible)
+                                            <tr style="font-size: 9pt; cursor: pointer;" wire:click="capturarFilaEquiposCliente({{ $equipo->id }})">
+                                            @else
+                                            <tr style="font-size: 9pt;">
+                                            @endif
                                         @endif
                                             <td class="d-none"> {{ $equipo->id }}</td>
                                             <td class="px-2 py-1 whitespace-no-wrap">
@@ -118,7 +121,7 @@
                                                 *****
                                             </td>
                                             @php
-                                                $hayInexistentes = true;
+                                                $hayItemsInexistentes = true;
                                             @endphp
                                             @endif
 
@@ -131,21 +134,27 @@
                                                 *****
                                             </td>
                                             @php
-                                                $hayInexistentes = true;
+                                                $hayItemsInexistentes = true;
                                             @endphp
                                             @endif
                                             @if ($modalSoloLectura)
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {{ $equipo->disponible ? 'DISPONIBLE' : 'NO DISPONIBLE' }}
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 <a wire:click="abrirCreditoTaller({{ $equipo->id }})" title="Ir a Equipos del Cliente" style="color: dimgrey; cursor:pointer;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'">
                                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                                 </a>
-                                            </td>
+                                            </td> --}}
                                             @endif
                                         </tr>
                                         @endforeach
+                                    @endif
+                                    @if($hayItemsNoDisponibles || $hayItemsInexistentes)
+                                    <div class="col-md-10">
+                                        <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">                                        @if ($hayItemsNoDisponibles)* NO DISPONIBLE @endif @if ($hayItemsInexistentes) &nbsp; ***** INEXISTENTE @endif
+                                        </label>
+                                    </div>
                                     @endif
                                 </tbody>
                             </table>
@@ -157,15 +166,14 @@
                             </button>
                         </div>
                         @endif
+                        {{-- @if($hayItemsNoDisponibles || $hayItemsInexistentes)
                         <div class="col-md-10">
                             <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                            @if ($hayNoDisponibles)* NO DISPONIBLE @endif @if ($hayInexistentes) &nbsp; ***** INEXISTENTE @endif
+                            @if ($hayItemsNoDisponibles)* NO DISPONIBLE @endif @if ($hayItemsInexistentes) &nbsp; ***** INEXISTENTE @endif
                             </label>
                         </div>
+                        @endif --}}
                     </div>
-                    {{-- @if ($hayNoDisponibles || $hayInexistentes) --}}
- 
-                    {{-- @endif --}}
                 </div>
                 <div class="modal-footer d-flex justify-content-center">
                     <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarEquiposClienteModal" wire:click="cierraModalEquiposCliente">Cerrar</button>

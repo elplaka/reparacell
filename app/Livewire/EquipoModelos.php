@@ -54,7 +54,13 @@ class EquipoModelos extends Component
         $modelos = collect();
         if ($this->filtrosModelos['idTipoEquipo'] == 0 && $this->filtrosModelos['disponible'] == -1 && $this->filtrosModelos['nombre'] == '')
         {
-            $modelos = ModeloEquipo::orderBy('nombre')->paginate(10);
+            $modelos = ModeloEquipo::whereHas('marca', function ($query) {
+                $query->whereHas('tipoEquipo', function ($query) {
+                        $query->where('disponible', 1);
+                    });
+            })
+            ->orderBy('nombre')
+            ->paginate(10);
         }
         else
         {
@@ -79,8 +85,13 @@ class EquipoModelos extends Component
                 $modelosQuery->where('nombre', 'like', '%' . $this->filtrosModelos['nombre'] . '%');
             }
 
+            $modelos = $modelosQuery->whereHas('marca', function ($query) {
+                $query->whereHas('tipoEquipo', function ($query) {
+                        $query->where('disponible', 1);
+                    });
+            })
+            ->orderBy('nombre')->paginate(10);
             $this->goToPage(1);
-            $modelos = $modelosQuery->orderBy('nombre')->paginate(10);
         }
 
         return view('livewire.equipos.modelos', compact('modelos'));
@@ -125,6 +136,8 @@ class EquipoModelos extends Component
     public function abreAgregaModelo()
     {
         $this->marcas_equipos = MarcaEquipo::where('id_tipo_equipo', $this->marcaMod['idTipoEquipo'])->where('disponible',1)->orderBy('nombre')->get();
+
+        $this->guardoModeloOK = false;
 
     }
 
@@ -226,7 +239,7 @@ class EquipoModelos extends Component
     {
         $this->showModalErrors = true;
         $this->showMainErrors = false;
-        
+
         $this->validate([
             'modeloMod.idMarca' => 'required|not_in:null',
             'modeloMod.nombre' => ['required', 'string', 'max:20', 'min:1'],
@@ -256,7 +269,6 @@ class EquipoModelos extends Component
 
     public function editaModelo($idModelo)
     {
-
         $modelo = ModeloEquipo::findOrFail($idModelo);
 
         $this->marcaMod = [
@@ -265,7 +277,7 @@ class EquipoModelos extends Component
 
        $this->modeloMod = [
             'id' => $modelo->id,
-            'idMarca' => $modelo->id_marca,
+            'idMarca' => $modelo->marca->disponible ? $modelo->id_marca : null,
             'nombre' => $modelo->nombre,
        ]; 
 

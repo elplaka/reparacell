@@ -235,7 +235,8 @@ class Caja extends Component
 
     public function cierraBuscarClienteModal()
     {
-        
+        $this->nombreClienteModal = '';
+        $this->clientesModal = null;
     }
 
     public function cierraModalBuscarCliente()
@@ -270,6 +271,9 @@ class Caja extends Component
         $this->dispatch('cerrarModalBuscarCliente');
 
         $this->cliente['publicoGeneral'] = false;
+
+        $this->nombreClienteModal = '';
+        $this->clientesModal = null;
     }
 
     public function mount()
@@ -311,6 +315,72 @@ class Caja extends Component
     public function muestraDivAgregaAbono()
     {
         $this->muestraDivAbono = true;
+    }
+
+    public function agregaAbono()
+    {
+        if (floatval($this->ventaCredito['abono']) > 0)  //Si el abono es mayor que cero
+        {
+            //Para saber si se sobrepasa el monto a pagar
+            $acumulado =$this->sumaAbonos + $this->ventaCredito['abono'];  
+            $idVenta = $this->ventaCredito['id'];
+
+            if ($acumulado > $this->ventaCredito['monto'])
+            {
+                $this->muestraDivAbono = false;
+                $this->ventaCredito['abono'] = null;
+                $this->addError('abono', 'Debes capturar un monto menor en el abono.');
+                $this->dispatch('muestraBotonAgregarPago');
+            }
+            else
+            {
+                try 
+                {
+                    DB::transaction(function () use ($idVenta, $acumulado) 
+                    {
+                        $ultimoIdAbono = VentaCreditoDetalle::where('id', $idVenta)->max('id_abono');
+
+                        $ventaCreditoDetalles = new VentaCreditoDetalle();
+                        $ventaCreditoDetalles->id = $idVenta;
+                        $ventaCreditoDetalles->id_abono = $ultimoIdAbono + 1;
+                        $ventaCreditoDetalles->abono = $this->ventaCredito['abono'];
+                        $ventaCreditoDetalles->id_usuario_venta = Auth::id();
+                        $ventaCreditoDetalles->save();
+
+                        $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)
+                        ->where('id_abono', '>', 0)->get();
+                        $this->sumaAbonos = $this->detallesCredito->sum('abono');
+                        $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+
+                        if ($acumulado == $this->ventaCredito['monto'])
+                        {
+                            VentaCredito::where('id', $idVenta)->update(['id_estatus' => 2]);
+                            $this->ventaCredito['estatus'] = $ventaCreditoDetalles->first()->ventaCredito->estatus->descripcion;
+                            $this->ventaCredito['idEstatus'] = 2;
+                        }
+                    });
+                } catch (\Exception $e)
+                {
+                        // Manejo de errores si ocurre una excepción
+                        dd($e);
+                }
+                $this->muestraDivAbono = false;
+                $this->ventaCredito['abono'] = null;
+
+                session()->flash('success', 'El ABONO ha sido agregado exitosamente.');
+            }
+        }
+        else
+        {
+            if (strlen(trim($this->ventaCredito['abono'])) == 0)
+            {
+                $this->addError('abono', 'Debes capturar el abono.');
+            }
+            else
+            {
+                $this->addError('abono', 'El abono debe ser mayor que cero.');
+            }
+        }
     }
 
     public function cobroCredito()
@@ -435,7 +505,15 @@ class Caja extends Component
 
             if ($inventarioDisponible >= 0)
             {
+                if ($producto->disponible)
+                {
                 $this->agregaAlCarrito($producto);
+                }
+                else
+                {
+                    $this->codigoProductoCapturado = '';
+                    $this->dispatch('mostrarToastErrorRouteInventario', 'El producto ' . $producto->descripcion . ' no está DISPONIBLE para su venta.', '<i class="fa-solid fa-boxes-stacked"></i> Ir a inventario');
+                }
             }
             else
             {

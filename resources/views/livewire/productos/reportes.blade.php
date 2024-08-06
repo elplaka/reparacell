@@ -1,5 +1,6 @@
 @php
     use Carbon\Carbon;
+    $hayNoDisponibles = false;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -112,7 +113,14 @@
                             {{ $producto->inventario }}
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            {{ $producto->departamento->nombre }}
+                            @if ($producto->departamento->disponible)
+                                {{ $producto->departamento->nombre }}
+                            @else
+                                {{ $producto->departamento->nombre . "*" }}
+                                @php
+                                    $hayNoDisponibles = true;
+                                @endphp
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -148,7 +156,14 @@
                             {{ $producto->tipoMovimiento->descripcion }}  
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                           @if ($producto->producto->disponible)
                            {{ $producto->producto->descripcion }}
+                           @else
+                           {{ $producto->producto->descripcion . "*" }}
+                           @php
+                                $hayNoDisponibles = true;
+                           @endphp
+                           @endif
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle">
                             @if ($producto->id_tipo_movimiento == 1)
@@ -191,13 +206,27 @@
                             $ {{ $producto->precio_mayoreo_movimiento }}  
                          </td>
                          <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle">
-                            {{ $producto->usuario->name }}  
+                           @if ($producto->usuario->disponible)
+                           {{ $producto->usuario->name }} 
+                           @else
+                           {{ $producto->usuario->name . "*" }}
+                           @php
+                                $hayNoDisponibles = true;
+                           @endphp
+                           @endif
                          </td>
                     </tr>
                 @endforeach
                 @endif
             </tbody>
         </table>
+        @endif
+        @if ($hayNoDisponibles)
+        <div class="col-md-5">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+            @if ($hayNoDisponibles)* NO DISPONIBLE @endif
+            </label>
+        </div>
         @endif
     </div>
     @if (!is_null($productos))

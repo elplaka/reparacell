@@ -1,6 +1,7 @@
 @php
     use Carbon\Carbon;
     use App\Models\VentaCreditoDetalle;
+    $hayNoDisponibles = false;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -93,10 +94,28 @@
                             {{ $credito->id }}  
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $fecha_venta }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $credito->venta->cliente->nombre }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            @if ($credito->venta->cliente->disponible)
+                            {{ $credito->venta->cliente->nombre }}
+                            @else
+                            {{ $credito->venta->cliente->nombre . "*" }}
+                            @php
+                                 $hayNoDisponibles = true;
+                            @endphp
+                            @endif
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">$ {{ $credito->venta->total }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">$ {{ number_format($restante, 2) }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {{ $credito->venta->usuario->name }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            @if ($credito->venta->usuario->disponible)
+                                {{ $credito->venta->usuario->name }}
+                            @else
+                                {{ $credito->venta->usuario->name . "*" }}
+                                @php
+                                    $hayNoDisponibles = true;
+                                @endphp
+                            @endif
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {{ $credito->estatus->descripcion }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> 
                             <button wire:click="abreVentaCredito({{ $credito->id }})" wire:loading.remove wire:target="abreVentaCredito" class="label-button">
@@ -108,6 +127,13 @@
                 @endforeach
             </tbody>
         </table>
+        @if ($hayNoDisponibles)
+        <div class="col-md-5">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+            @if ($hayNoDisponibles)* NO DISPONIBLE @endif
+            </label>
+        </div>
+        @endif
     </div>
     <div class="col-mx">
         <label class="col-form-label float-left">

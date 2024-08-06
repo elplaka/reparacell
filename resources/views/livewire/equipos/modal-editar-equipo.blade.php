@@ -48,7 +48,7 @@
                     <div class="row mb-3">
                         <label for="equipoModidMarca" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size:11pt;">{{ __('Marca') }} </label> 
                         <div class="col-md-9 d-flex">
-                        <select wire:model.live="equipoMod.idMarca" type="text" class="select-height form-control" id="equipoModidMarca" style="font-size: 11pt;" 
+                        <select wire:model.live="equipoMod.idMarca" type="text" class="select-height form-control select-hover" id="equipoModidMarca" style="font-size: 11pt;" 
                         wire:key="{{ $equipoMod['idTipo'] }}"
                         >
                         <option value="0">--SELECCIONA--</option>
@@ -61,10 +61,10 @@
                     <div class="row mb-3">
                         <label for="equipoModidModelo" class="col-md-3 block text-sm-right text-gray-700 pr-0" style="font-size:11pt;">{{ __('Modelo') }} </label> 
                         <div class="col-md-9 d-flex">
-                        <select wire:model.live="equipoMod.idModelo" type="text" class="select-height form-control" id="equipoModidModelo" style="font-size: 11pt;" 
+                        <select wire:model.live="equipoMod.idModelo" type="text" class="select-height form-control select-hover" id="equipoModidModelo" style="font-size: 11pt;" 
                         wire:key="{{ $equipoMod['idMarca'] }}"
                         >
-                        <option value="0">--SELECCIONA--</option>
+                        <option value="0" class="custom-option">--SELECCIONA--</option>
                         {{-- @foreach ($modelosMod as $modelo) --}}
                         @foreach (ModeloEquipo::where('id_marca', $this->equipoMod['idMarca'])
                         ->where('disponible', 1)->whereHas('marca', function($query) {

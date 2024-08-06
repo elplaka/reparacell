@@ -120,10 +120,10 @@
                                     {{ $fechaFormateada }}
                                 </td>
                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    @if (is_null($detalles->usuario->name))
-                                    -
+                                    @if ($detalles->usuario)
+                                        {{ $detalles->usuario->name }}
                                     @else
-                                    {{ $detalles->usuario->name ? $detalles->usuario->name : '-' }}
+                                        -
                                     @endif
                                 </td>
                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">

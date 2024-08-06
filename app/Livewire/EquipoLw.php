@@ -70,7 +70,6 @@ class EquipoLw extends Component
         'equipoMod.idCliente.min' => 'Selecciona un CLIENTE',
     ];
 
-
     public function mount()
     {
         $this->filtrosEquipos = [
@@ -272,6 +271,13 @@ class EquipoLw extends Component
         {
             $idMar = 0;  //SE PONE EN 0 PARA INDICAR QUE NO SE HA SELECCIONADO LA IDMODELO
         }
+        else
+        {
+            if (!$marca->disponible) //LA MARCA NO ESTÁ DISPONIBLE
+            {
+                $idMar = 0;
+            }
+        }
 
         return $idMar;
     }
@@ -289,6 +295,13 @@ class EquipoLw extends Component
         if ($modelo->id_marca != $idMarca)
         {
             $idMod = 0;  //SE PONE EN 0 PARA INDICAR QUE NO SE HA SELECCIONADO LA IDMODELO
+        }
+        else
+        {
+            if (!$modelo->disponible) //EL MODELO NO ESTÁ DISPONIBLE
+            {
+                $idMod = 0;
+            }
         }
 
         return $idMod;
@@ -309,6 +322,8 @@ class EquipoLw extends Component
 
     public function editaEquipo($idEquipo)
     {
+        $this->resetErrorBag();
+
         $this->datosCargados = false;
         $this->busquedaClienteHabilitada = false;
 
@@ -319,9 +334,16 @@ class EquipoLw extends Component
             $this->equipoMod['id'] = $equipo->id;
             $this->equipoMod['idTipo'] = $equipo->id_tipo;
             $this->equipoMod['idMarca'] = $this->validaMarca($this->equipoMod['idTipo'], $equipo->id_marca);
-            $this->equipoMod['idModelo'] = $this->validaModelo($equipo->id_marca, $equipo->id_modelo);
+            $this->equipoMod['idModelo'] =  $this->equipoMod['idMarca'] ? $this->validaModelo($equipo->id_marca, $equipo->id_modelo) : 0;
             $this->equipoMod['idCliente'] = $equipo->id_cliente;
-            $this->equipoMod['nombreCliente'] = $equipo->cliente->nombre;
+            if ($equipo->cliente->disponible)
+            {
+                $this->equipoMod['nombreCliente'] = $equipo->cliente->nombre;
+            }
+            else
+            {
+                $this->equipoMod['nombreCliente'] = "*";
+            }
             $this->equipoMod['disponible'] = $equipo->disponible;
         }
 
@@ -356,10 +378,27 @@ class EquipoLw extends Component
     public function render()
     {
         $hayFiltros = false;
-        $equipos = Equipo::paginate(10);
 
-        $marcas = MarcaEquipo::where('disponible', 1)->orderBy('nombre')->get();
-        $modelos = ModeloEquipo::where('disponible', 1)->orderBy('nombre')->get();
+        $equipos = Equipo::whereHas('tipo_equipo', function ($query) {
+            $query->where('disponible', 1);
+        })->paginate(10);
+        
+        $marcas = MarcaEquipo::where('disponible', 1)
+        ->whereHas('tipoEquipo', function ($query) {
+            $query->where('disponible', 1);
+        })
+        ->orderBy('nombre')
+        ->get();
+
+        $modelos = ModeloEquipo::where('disponible', 1)
+        ->whereHas('marca', function ($query) {
+            $query->where('disponible', 1)
+                ->whereHas('tipoEquipo', function ($query) {
+                    $query->where('disponible', 1);
+                });
+        })
+        ->orderBy('nombre')
+        ->get();
 
         $equiposQuery = Equipo::query();
 
@@ -434,7 +473,9 @@ class EquipoLw extends Component
 
         if ($hayFiltros)
         {
-            $equipos = $equiposQuery->paginate(10);            
+            $equipos = $equiposQuery->whereHas('tipo_equipo', function ($query) {
+                $query->where('disponible', 1);
+            })->paginate(10);            
         }
 
         $historialEquipoTaller = null;
@@ -447,9 +488,49 @@ class EquipoLw extends Component
             $equipo = Equipo::findOrFail($idEquipo);
     
             $this->equipoHistorial['iconoTipo'] = $equipo->tipo_equipo->icono;
-            $this->equipoHistorial['marca'] = $equipo->marca->nombre;
-            $this->equipoHistorial['modelo'] = $equipo->modelo->nombre;
-            $this->equipoHistorial['cliente'] = $equipo->cliente->nombre; 
+            if($equipo->marca->id_tipo_equipo === $equipo->id_tipo)
+            {                        
+                if($equipo->marca->disponible)
+                {
+                    $nombreMarca = $equipo->marca->nombre;
+                }
+                else 
+                {
+                    $nombreMarca = $equipo->marca->nombre . "*";
+                }
+            }
+            else 
+            {
+                $nombreMarca = "*****";
+            }
+
+            if($equipo->modelo->id_marca === $equipo->marca->id)
+            {
+                if ($equipo->modelo->disponible)
+                {
+                    $nombreModelo = $equipo->modelo->nombre;
+                }
+                else 
+                {
+                    $nombreModelo = $equipo->modelo->nombre . "*";
+                }
+            }
+            else 
+            {
+                $nombreModelo = "*****";
+            }
+
+            if ($equipo->cliente->disponible)
+            {
+                $nombreCliente = $equipo->cliente->nombre;
+            }
+            else 
+            {
+                $nombreCliente = $equipo->cliente->nombre . "*";
+            }
+            $this->equipoHistorial['marca'] = $nombreMarca;
+            $this->equipoHistorial['modelo'] = $nombreModelo;
+            $this->equipoHistorial['cliente'] = $nombreCliente; 
         }
 
         $tiposEquipos = TipoEquipo::where('disponible', 1)->get();

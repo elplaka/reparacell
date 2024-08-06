@@ -123,6 +123,59 @@
   display: none;
 } */
 
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+input[type="date"] {
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+input[type="date"]:hover {
+    background-color: #dbdfee;
+}
+
+.hover-bg {
+            cursor: pointer;
+            transition: background-color 0.1s ease, color 0.1s ease;
+        }
+
+.hover-bg:hover {
+    background-color: #dbdfee;
+}
+
+.select-hover {
+    cursor: pointer;
+    background-color: #ffffff; /* Color gris claro */
+    transition: background-color 0.3s ease; /* Suavizar la transición */
+}
+
+.select-hover:hover {
+    background-color: #dbdfee; /* Color al pasar el mouse por encima */
+}
+
+.select-hover option {
+    background-color: #fff; /* Color de fondo blanco para los elementos de la lista */
+    cursor: pointer;
+}
+
+.custom-option {
+    cursor: pointer;
+}
+
+.custom-option:hover {
+    background-color: #dbdfee;
+}
 </style>
 
 <body id="page-top">
@@ -459,6 +512,7 @@
                     icon: 'error',
                     title: attr[0],
                     showConfirmButton: true,
+                    confirmButtonColor: "#3085d6",
                     // timer: 2000,
                     customClass: {
                         title: 'swal2-title-custom', // Clase CSS personalizada para el título
@@ -476,9 +530,11 @@
                     width: 400,
                     icon: 'error',
                     title: attr[0],
+                    // confirmButtonText: "Save",
                     showConfirmButton: true,
-                    // timer: 3000, // Duración del Toast en milisegundos
-                    timerProgressBar: true,
+                    confirmButtonColor: "#3085d6",
+                    // timer: 6000, // Duración del Toast en milisegundos
+                    // timerProgressBar: true,
                     customClass: {
                         title: 'swal2-title-custom', // Clase CSS personalizada para el título
                         content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
@@ -543,15 +599,17 @@
             icon: 'error',
             showDenyButton: true,
             confirmButtonText: "Aceptar",
-            // denyButtonText: '<i class="fa-solid fa-boxes-stacked"></i> Ir a inventario',
+            denyButtonText: '<i class="fa-solid fa-boxes-stacked"></i> Ir a inventario',
             denyButtonText: attr[1],
+            confirmButtonColor: "#3085d6",
+            denyButtonColor: "#FF0000",
             customClass: {
                 title: 'swal2-title-custom', // Clase CSS personalizada para el título
-                content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
+                // content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
                 icon: 'fa-xs'
                 },
             }).then((result) => {
-            // /* Read more about isConfirmed, isDenied below */
+            /* Read more about isConfirmed, isDenied below */
             if (result.isDenied) {
                 window.location.href = '{{ route('productos.index') }}';
             }

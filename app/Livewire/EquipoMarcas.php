@@ -42,7 +42,11 @@ class EquipoMarcas extends Component
         $marcas = collect();
         if ($this->filtrosMarcas['idTipoEquipo'] == 0 && $this->filtrosMarcas['disponible'] == -1 && $this->filtrosMarcas['nombre'] == '')
         {
-            $marcas = MarcaEquipo::paginate(10);
+            $marcas = MarcaEquipo::whereHas('tipoEquipo', function ($query) {
+                $query->where('disponible', 1);
+            })
+            ->orderBy('nombre')
+            ->paginate(10);
         }
         else
         {
@@ -60,7 +64,11 @@ class EquipoMarcas extends Component
                 $marcasQuery->where('nombre', 'like', '%' . $this->filtrosMarcas['nombre'] . '%');
             }
             
-            $marcas = $marcasQuery->paginate(10);
+            $marcas = $marcasQuery->whereHas('tipoEquipo', function ($query) {
+                $query->where('disponible', 1);
+            })
+            ->orderBy('nombre')->paginate(10);
+
             $this->goToPage(1);
         }
 
@@ -91,7 +99,7 @@ class EquipoMarcas extends Component
 
     public function abreAgregaMarca()
     {
- 
+        $this->guardoMarcaOK = false;
     }
 
     public function cierraMarcaModal()

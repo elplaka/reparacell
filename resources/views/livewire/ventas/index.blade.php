@@ -1,6 +1,7 @@
 @php
     use App\Models\VentaDetalle;
     use Carbon\Carbon;
+    $hayNoDisponibles = false;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -104,13 +105,27 @@
                         {{ $fechaFormateada }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                        @if ($venta->cliente->disponible)
                         {{ $venta->cliente->nombre }}
+                        @else
+                        {{ $venta->cliente->nombre . "*" }}
+                        @php
+                             $hayNoDisponibles = true;
+                        @endphp
+                        @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                        $ {{ $venta->total }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                        @if ($venta->usuario->disponible)
                         {{ $venta->usuario->name }}
+                        @else
+                        {{ $venta->usuario->name . "*" }}
+                        @php
+                            $hayNoDisponibles = true;
+                        @endphp
+                        @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $venta->cancelada ? 'CANCELADA' : 'ACTIVA' }}
@@ -176,6 +191,13 @@
                 @endforeach
             </tbody>
         </table>
+        @if ($hayNoDisponibles)
+        <div class="col-md-5">
+            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
+            @if ($hayNoDisponibles)* NO DISPONIBLE @endif
+            </label>
+        </div>
+        @endif
     </div>
 
     <div class="col-mx">

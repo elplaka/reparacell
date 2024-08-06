@@ -1,8 +1,9 @@
 @php
     use Carbon\Carbon;
     // $i = 0;
+    $hayItemsNoDisponibles = false;
+    $hayItemsInexistentes = false;
 @endphp
-
 <div wire:ignore.self class="modal fade" id="clienteHistorialModal" name="clienteHistorialModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" >
     <div class="modal-dialog modal-xl" role="dialog">
        <div class="modal-content">
@@ -14,7 +15,6 @@
            </div>
            <div wire:loading class="text-center">
                <i class="fa fa-spinner fa-spin"></i> Cargando...
-               <br><br>
            </div>
            @if($showModalErrors)
                 @if ($errors->any())
@@ -39,7 +39,7 @@
                 @endif
            @endif
            <div class="modal-body" wire:loading.remove style="{{ $muestraHistorialClienteModal ? 'display: block' : 'display: none'}}">
-               <div class="container mt-3 font-sans text-gray-900 antialiased">
+               <div class="container mt-2 font-sans text-gray-900 antialiased">
                     <div class="row mb-3">
                         @if ($historialClienteTaller && !$historialClienteTaller->isEmpty())
                         {{-- @if (!is_null($historialClienteTaller) && $historialClienteTaller->count() > 0) --}}
@@ -99,20 +99,68 @@
 
                                             // O utilizando Storage::url()
                                             $url = asset('storage/imagenes-equipos');
+
+                                            if ($equipoCliente->tipo_equipo->disponible)
+                                            {
+                                                $tipoEquipo = $equipoCliente->tipo_equipo->icono;
+                                            }
+                                            else 
+                                            {
+                                                $tipoEquipo = $equipoCliente->tipo_equipo->icono . "*";
+                                                $hayItemsNoDisponibles = true;
+                                            }
+
+                                            if ($equipoCliente->marca->disponible)
+                                            {
+                                                $nombreMarca = $equipoCliente->marca->nombre;
+                                            }
+                                            else
+                                            {
+                                                $nombreMarca = $equipoCliente->marca->nombre . "*";
+                                                $hayItemsNoDisponibles = true;
+                                            }    
+                                            if ($equipoCliente->modelo->disponible)
+                                            {
+                                                $nombreModelo = $equipoCliente->modelo->nombre;
+                                            }
+                                            else
+                                            {
+                                                $nombreModelo = $equipoCliente->modelo->nombre . "*";
+                                                $hayItemsNoDisponibles = true;
+                                            } 
                                         @endphp
                                         <tr style="font-size: 9pt;">
                                             <td class="px-2 py-1 whitespace-no-wrap">
-                                                {!! $equipoCliente->tipo_equipo->icono !!}
+                                                {!! $tipoEquipo !!}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap"> 
                                                 {{ $fecha_entrada->format('d/m/Y') }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap"> 
-                                                {{ $equipoCliente->marca->nombre }}
+                                            @if($equipoCliente->marca->id_tipo_equipo === $equipoCliente->id_tipo)
+                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                                {{ $nombreMarca }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap"> 
-                                                {{ $equipoCliente->modelo->nombre }}
-                                            </td> 
+                                            @else
+                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                                *****
+                                            </td>
+                                            @php
+                                                $hayItemsInexistentes = true;
+                                            @endphp
+                                            @endif
+
+                                            @if($equipoCliente->modelo->id_marca === $equipoCliente->marca->id)
+                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                                {{ $nombreModelo }}
+                                            </td>
+                                            @else
+                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                                *****
+                                            </td>
+                                            @php
+                                                $hayItemsInexistentes = true;
+                                            @endphp
+                                            @endif
                                             <td class="px-2 py-1 whitespace-no-wrap">
                                                 {{ $fecha_salida }}
                                             </td>
@@ -141,12 +189,19 @@
                                         @endforeach
                                     @endif
                                 </tbody>
+ 
                             </table>
                         </div>
                         @else
                             <div class="px-2 py-2 bg-gray-200 text-center text-lg leading-4 font-medium text-gray-700 uppercase tracking-wider">
                                 EL CLIENTE NO TIENE HISTORIAL
                             </div>
+                        @endif
+                        @if($hayItemsNoDisponibles || $hayItemsInexistentes)
+                        <div class="col-md-10">
+                            <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">                                        @if ($hayItemsNoDisponibles)* NO DISPONIBLE @endif @if ($hayItemsInexistentes) &nbsp; ***** INEXISTENTE @endif
+                            </label>
+                        </div>
                         @endif
                         @if ($historialClienteTaller)
                         <div class="col-mx">

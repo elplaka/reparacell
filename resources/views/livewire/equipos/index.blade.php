@@ -1,6 +1,7 @@
 @php
     $hayNoDisponibles = false;
     $hayInexistentes = false;
+    $itemDisponible = true;
 @endphp
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.equipos.modal-nuevo-equipo')
@@ -73,6 +74,18 @@
             <tbody>
                 @foreach($equipos as $equipo)
                 @php
+                    $itemDisponible = true;
+                    if ($equipo->tipo_equipo->disponible)
+                    {
+                        $tipoEquipo = $equipo->tipo_equipo->icono;
+                    }
+                    else 
+                    {
+                        $tipoEquipo = $equipo->tipo_equipo->icono . "*";
+                        $hayNoDisponibles = true;
+                        $itemDisponible = false;
+                    }
+
                     if($equipo->marca->id_tipo_equipo === $equipo->id_tipo)
                     {                        
                         if($equipo->marca->disponible)
@@ -114,7 +127,7 @@
                         {{ $equipo->id }} 
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {!! $equipo->tipo_equipo->icono !!}
+                        {!! $tipoEquipo !!}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $nombreMarca }}
@@ -122,17 +135,24 @@
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $nombreModelo }}
                     </td>
-                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        {{ $equipo->cliente->nombre }}
-                    </td>
+                    @if($equipo->cliente->disponible)
+                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $equipo->cliente->nombre }}</td>
+                    @else
+                    <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $equipo->cliente->nombre . '*' }}</td>
+                    @php
+                        $hayNoDisponibles = true;
+                    @endphp
+                    @endif
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $equipo->disponible == 1 ? 'DISPONIBLE' : 'NO DISPONIBLE'  }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                        @if ($itemDisponible)
                         <a wire:click="editaEquipo('{{ $equipo->id }}')" title="Editar equipo" wire:loading.attr="disabled" wire:target="editaEquipo" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarEquipoModal"
                             >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
-                        </a>                        
+                        </a>
+                        @endif                    
                         <a wire:click.prevent="abreHistorialTaller({{ $equipo->id }})" title="Historial en taller" wire:loading.attr="disabled" wire:target="abreHistorialTaller" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#equipoHistorialModal"
                             >
                             <i class="fa-solid fa-screwdriver-wrench" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>

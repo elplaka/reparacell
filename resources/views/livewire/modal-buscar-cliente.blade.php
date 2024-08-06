@@ -2,15 +2,15 @@
     <div class="modal-dialog modal-lg" role="dialog" >
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Buscar cliente</b></h1>
+               <h1 class="text-xl font-bold"><b> Buscar cliente</b></h1> &nbsp; &nbsp; <span wire:loading class="text-center">
+                <i class="fa fa-spinner fa-spin"></i> Cargando... </span>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraBuscarClienteModal">
                    <span aria-hidden="true">&times;</span>
                </button> 
            </div>
-           <div wire:loading class="text-center">
+           {{-- <div wire:loading class="text-center">
                <i class="fa fa-spinner fa-spin"></i> Cargando...
-               <br><br>
-           </div>
+           </div> --}}
            @if($showModalErrors)
                 @if ($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show">

@@ -27,7 +27,7 @@
         </div>
         <div class="col-md-3 mb-3">
             <label for="filtrosModelos.idMarca" class="form-label text-gray-700" style="font-weight:500; font-size:11pt"> Marca </label>
-            <select wire:model.live="filtrosModelos.idMarca" type="text" class="select-height form-control w-100" id="filtrosModelos.idMarca" style="font-size: 11pt;" wire:key={{ $filtrosModelos['idTipoEquipo'] }}>
+            <select wire:model.live="filtrosModelos.idMarca" type="text" class="select-height form-control w-100 select-hover" id="filtrosModelos.idMarca" style="font-size: 11pt;" wire:key={{ $filtrosModelos['idTipoEquipo'] }}>
                 <option value="0"> -- TODAS -- </option>
                 @foreach (MarcaEquipo::where('id_tipo_equipo', $this->filtrosModelos['idTipoEquipo'])->where('disponible', 1)->orderBy('nombre')->get() as $marca)
                     <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
@@ -66,14 +66,22 @@
                         {!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->marca->tipoEquipo->nombre }}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        @if ($modelo->marca->disponible)
-                           {{ $modelo->marca->nombre }}
-                        @else   
-                           {{ $modelo->marca->nombre . '*' }}
-                           @php
-                               $hayNoDisponibles = true;
-                           @endphp
-                        @endif
+                        {{-- @if($taller->equipo->marca->id_tipo_equipo === $taller->equipo->id_tipo) --}}
+                        {{-- @if($modelo->marca->id_tipo_equipo === $modelo->marca->tipoEquipo->id_tipo) --}}
+                            @if ($modelo->marca->disponible)
+                                {{ $modelo->marca->nombre }}
+                            @else   
+                                {{ $modelo->marca->nombre . '*' }}
+                                @php
+                                    $hayNoDisponibles = true;
+                                @endphp
+                            @endif
+                        {{-- @else
+                            *****
+                            @php
+                                $hayInexistentes = true;
+                            @endphp
+                        @endif --}}
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         {{ $modelo->nombre }}

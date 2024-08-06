@@ -52,6 +52,14 @@
         </div>
         @endif
     @endif
+    @if(!$muestraDivAgregaEquipo)
+    <div class="d-flex justify-content-center">
+        <span wire:loading class="ml-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Cargando...</span>
+        </span>
+    </div>
+    @endif
     <div style="display: @if(!$muestraDivAgregaEquipo) none @endif">
     <div wire:ignore.self class="collapse" id="collapseAgregaEquipoTaller">
     <div class="modal-header">
@@ -61,7 +69,8 @@
             @else
             <h4 class="text-xl font-bold"><i class="fa-solid fa-arrow-right-to-bracket"></i><b> Agregar equipo al taller</b></h4>
             @endif
-        </span>        
+        </span>
+        <span wire:loading class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>        
     </div>
     <div class="modal-body">
         <div class="rounded p-3 border"> 
@@ -69,73 +78,66 @@
                 <span class="text-gray-700 uppercase tracking-wider" style="background-color:rgb(249, 250, 253); font-size:11pt"> <strong>&nbsp; CLIENTE &nbsp;</strong></span>
                 @if ($cliente['estatus'] == 1) &nbsp;&nbsp;&nbsp;&nbsp; <span class="uppercase tracking-wider" style="background-color:green; color:white; vertical-align:top; font-size: 8pt">&nbsp;Nuevo&nbsp;</span> @endif <span style="background-color:rgb(249, 250, 253);" wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             </h3>
-            <div class="container mt-3">
-                <div class="row">
-                    <label for="cliente.telefono" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size:11pt;">{{ __('Teléfono') }}</label>
-                    <div class="col col-md-3">
-                        <div class="row">
-                            <div class="col-md-7">
-                                <input wire:model.live="cliente.telefono" type="text" class="input-height form-control"
-                                wire:input="validarNumeros"
-                                style="font-size: 11pt;"
-                                @if ($cliente['estatus'] == 3) readonly @endif 
-                                autofocus>
-                                </div>
-                                @if ($cliente['estatus'] == 0)
-                                <div class="col-md-5">                              
-                                <button class="btn btn-secondary" 
-                                        data-toggle="modal" 
-                                        data-target="#buscarClienteModal" 
-                                        style="font-size: 10pt"
-                                        onclick="abreModalBuscarCliente()">
-                                    <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-magnifying-glass"></i>
-                                </button>
-                                </div>
-                                @endif                    
-                            </div>
-                        </div>
-                        @if (!$cliente['publicoGeneral'])
-                            @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] >= 2)
-                                <div class="col col-md-8 d-flex justify-content-end">
-                                    @if ($cliente['estatus'] >= 2)   {{-- Cliente ya existente --}}
-                                    {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarCliente" title="Editar cliente">
-                                        <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-edit"></i>
-                                    </button> 
-                                    <button class="btn btn-secondary" style="font-size: 10pt" wire:click="guardarCliente" title="Guardar cliente">
-                                        <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-save"></i>
-                                    </button>
-                                    &nbsp; --}}
-                                    <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equiposClienteModal" title="Ver equipos del cliente" wire:click="abrirEquiposClienteModal">
-                                        <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-mobile-screen"></i>
-                                    </button>  &nbsp;
-                                    <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#clienteHistorialModal" wire:click="abreClienteHistorial" title="Ver historial del cliente">
-                                        <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
-                                    </button>
-                                    @endif
-                                </div>
-                            @endif
-                        @endif
-                    </div>
-                </div>
-                <div class="container mt-3">
+            <div class="row mt-3">
+                <label for="cliente.telefono" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0 mb-1" style="font-size: 11pt;">
+                    {{ __('Teléfono') }}
+                </label>
+    
+                <div class="col-12 col-md-3">
                     <div class="row">
-                        @if (strlen($cliente['telefono']) == 10  ||  $cliente['estatus'] == 3)
-                        <label for="cliente.nombre" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Nombre') }}</label>
-                        <div class="col-md-3">
-                            <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                        <div class="col-8 col-md-7 pr-0">
+                            <input wire:model.live="cliente.telefono" type="text" class="input-height form-control"
+                                   wire:input="validarNumeros"
+                                   style="font-size: 11pt;"
+                                   @if ($cliente['estatus'] == 3) readonly @endif 
+                                   autofocus>
                         </div>
-                        <label for="cliente.direccion" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Dirección') }}</label>
-                        <div class="col-md-3">
-                            <input wire:model="cliente.direccion" type="text" class="input-height form-control" id="cliente.direccion" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
-                        </div>
-                        <label for="cliente.telefonoContacto" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Contacto') }}</label>
-                        <div class="col-md-2 mb-2">
-                            <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control" id="cliente.telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumeros" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                        @if ($cliente['estatus'] == 0)
+                        <div class="col-4 col-md-5 pl-1">
+                            <button class="btn btn-secondary btn-sm btn-md d-inline-flex align-items-center" 
+                                    data-toggle="modal" 
+                                    data-target="#buscarClienteModal" 
+                                    style="font-size: 10pt"
+                                    onclick="abreModalBuscarCliente()">
+                                <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
                         </div>
                         @endif
                     </div>
                 </div>
+                <!-- Additional buttons for existing client -->
+                @if (!$cliente['publicoGeneral'])
+                    @if (strlen($cliente['telefono']) == 10 || $cliente['estatus'] >= 2)
+                        <div class="col-12 col-md-8 d-flex justify-content-end mt-2 mt-md-0">
+                            @if ($cliente['estatus'] >= 2)   {{-- Cliente ya existente --}}
+                            <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equiposClienteModal" title="Ver equipos del cliente" wire:click="abrirEquiposClienteModal">
+                                <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-mobile-screen"></i>
+                            </button>
+                            <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#clienteHistorialModal" wire:click="abreClienteHistorial" title="Ver historial del cliente">
+                                <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
+                            </button>
+                            @endif
+                        </div>
+                    @endif
+                @endif
             </div>
+            <div class="row mt-3">
+                @if (strlen($cliente['telefono']) == 10  ||  $cliente['estatus'] == 3)
+                <label for="cliente.nombre" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0 mb-1" style="font-size: 11pt;">{{ __('Nombre') }}</label>
+                <div class="col-md-3">
+                    <input wire:model="cliente.nombre" type="text" class="input-height form-control mb-3" id="cliente.nombre" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                </div>
+                <label for="cliente.direccion" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0 mb-1" style="font-size: 11pt;">{{ __('Dirección') }}</label>
+                <div class="col-md-3">
+                    <input wire:model="cliente.direccion" type="text" class="input-height form-control mb-3" id="cliente.direccion" style="font-size:11pt;" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                </div>
+                <label for="cliente.telefonoContacto" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0 mb-1" style="font-size: 11pt;">{{ __('Contacto') }}</label>
+                <div class="col-md-2 mb-2">
+                    <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control mb-3" id="cliente.telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumeros" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                </div>
+                @endif
+            </div>
+        </div>
             <br>
             @if (strlen($cliente['telefono']) == 10)
                 @if(!$tieneEquiposCliente || $cliente['estatus'] == 1 || $equipoSeleccionadoModal || $equipo['estatus'] == 1 || $cliente['publicoGeneral'])

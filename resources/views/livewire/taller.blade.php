@@ -2,6 +2,7 @@
     use Carbon\Carbon;
     $hayNoDisponibles = false;
     $hayInexistentes = false;
+    $itemDisponible = true;
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
@@ -29,60 +30,81 @@
         @endif
     @endif
     @livewire('agrega-equipo-taller')
-    <div class="w-100 d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-screwdriver-wrench"></i> Taller</b></h4>
-            <span wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        </div>
-        <a wire:ignore.self id="botonAgregar" class="btn btn-primary" data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseAgregaEquipoTaller" wire:click="abreAgregaEquipo" title="Agregar equipo" wire:loading.attr="disabled" wire:target="abreAgregaEquipo" onclick="ocultarBoton()">
-            <i class="fas fa-plus"></i>
-        </a>
-    </div>
-    <div class="row mb-2">
-        <div class="col-md-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <b> Tipo Equipo </b>
-        </div>
-        <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <b> Cliente </b>
-        </div>
-        <div class="col-md-4 ml-0 px-0 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <b> Fecha de Entrada </b>
-        </div>
-        <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-           <b> Estatus </b>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-2 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
-                @foreach ($tipos_equipos as $tipo_equipo)
-                    <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-3 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <input type="text" wire:model.live="busquedaEquipos.nombreCliente" class="col-md-10 input-height form-control" style="font-size:11pt">
-        </div>
-        <div class="col-md-4 mb-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <div class="row align-items-center">
-                Del &nbsp; &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
-                &nbsp; al &nbsp;
-                <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
+     <div class="w-100">
+        <div class="row align-items-center mb-4">
+            <div class="col-12 col-md-6 d-flex align-items-center">
+                <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-screwdriver-wrench"></i> Taller</b></h4>
+                <span wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="row justify-content-end">
+                    <div class="w-10">
+                        <a wire:ignore.self id="botonAgregar" class="btn btn-primary w-100" data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseAgregaEquipoTaller" wire:click="abreAgregaEquipo" title="Agregar equipo" wire:loading.attr="disabled" wire:target="abreAgregaEquipo" onclick="ocultarBoton()">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3 text-xs leading-4 font-bo_ld text-gray-700 tracking-wider" style="font-size: 11pt; {{ $muestraDivAgregaEquipo ? 'display:none;' : '' }}">
-            <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker w-100" multiple>
-                <optgroup label="Entrega">
-                    <option value="entregados">ENTREGADOS</option>
-                    <option value="no_entregados">NO ENTREGADOS</option>
-                </optgroup>
-                @foreach ($estatus_equipos as $estatus)
-                    <option value="{{ $estatus->id }}" data-content="{{  $this->obtenerIconoEstatus($estatus->id) }} &nbsp; {{ $estatus->descripcion }}"></option>
-                @endforeach                    
-            </select>
+    </div>   
+   
+    @if (!$muestraDivAgregaEquipo)
+    <div class="w-100">     
+        <div class="row mb-2 d-none d-md-flex">
+            <div class="col-md-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Tipo Equipo</b>
+            </div>
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Cliente</b>
+            </div>
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Fecha de Entrada</b>
+            </div>
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Estatus</b>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-2 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Tipo Equipo</label>
+                <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
+                    @foreach ($tipos_equipos as $tipo_equipo)
+                        <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 col-md-3 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Cliente</label>
+                <input type="text" wire:model.live="busquedaEquipos.nombreCliente" class="col-md-10 input-height form-control" style="font-size:11pt">
+            </div>
+            <div class="col-12 col-md-4 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Fecha de Entrada</label>
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-6 mb-2 mb-md-0 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">Del</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaEntradaInicio" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">&nbsp;&nbsp;Al</label>
+                        <input type="date" wire:model.live="busquedaEquipos.fechaEntradaFin" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 mb-3">
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Estatus</label>
+                <select wire:model.live="busquedaEquipos.entregados" id="selectEntregados" title="--TODOS--" class="selectpicker select-picker w-100" multiple>
+                    <optgroup label="Entrega">
+                        <option value="entregados">ENTREGADOS</option>
+                        <option value="no_entregados">NO ENTREGADOS</option>
+                    </optgroup>
+                    @foreach ($estatus_equipos as $estatus)
+                        <option value="{{ $estatus->id }}" data-content="{{  $this->obtenerIconoEstatus($estatus->id) }} &nbsp; {{ $estatus->descripcion }}"></option>
+                    @endforeach                    
+                </select>
+            </div>
         </div>
     </div>
+    @endif
     
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
@@ -100,8 +122,8 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
             </thead>
-            {{-- <tbody wire:poll> --}}
-            <tbody>
+            <tbody wire:poll>
+            {{-- <tbody> --}}
                 @php
                     $equipos = 0;
                 @endphp
@@ -109,6 +131,7 @@
                     @php
                         $taller->fecha_entrada = Carbon::parse($taller->fecha_entrada);
                         $equipos++;
+                        $itemDisponible = true;
                     @endphp
                     <tr style="font-size: 10pt;" class="custom-status-color-{{ $taller->estatus->id }}" data-toggle="tooltip" data-title="">
                         @if($taller->equipo->tipo_equipo->disponible)
@@ -120,6 +143,7 @@
                         <span style="display: inline;">{!! $taller->equipo->tipo_equipo->icono !!}</span><span>*</span>
                         @php
                             $hayNoDisponibles = true;
+                            $itemDisponible = false;
                         @endphp
                         </td>
                         @endif
@@ -157,49 +181,68 @@
                         @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             @foreach ($taller->fallas as $key => $equipo)
-                                {{ $equipo->falla->descripcion }}
+                            @if($equipo->falla->id_tipo_equipo === $taller->equipo->id_tipo)
+                                @if($equipo->falla->disponible)
+                                    {{ $equipo->falla->descripcion }}
+                                @else
+                                    {{ $equipo->falla->descripcion . "*" }}
+                                    @php
+                                        $hayNoDisponibles = true;
+                                    @endphp
+                                @endif
                                 @if (!$loop->last) <!-- Verifica si no es el último elemento -->
                                     |
                                 @endif
+                            @else
+                                @php
+                                    $hayInexistentes = true;
+                                @endphp
+                                *****
+                            @endif
                             @endforeach
                         </td>
+                        @if($taller->equipo->cliente->disponible)
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre }}</td>
+                        @else
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre . '*' }}</td>
+                        @php
+                            $hayNoDisponibles = true;
+                        @endphp
+                        @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
-                        <span></span>
+                        {{-- <span>{{ $taller->id_estatus }}</span> --}}
+                        <span wire:loading.remove wire:target="anteriorEstatus, siguienteEstatus">
                         @if ($taller->id_estatus >= 2 && $taller->id_estatus <= 4)
                             <i wire:loading.remove class="fa-solid fa-caret-left" wire:click="anteriorEstatus({{ $taller->num_orden }} , {{ $taller->id_estatus }})" style="cursor:pointer" title="{!! $this->toolTipAnteriorEstatus($taller->id_estatus) !!}"></i>
-                            {{-- <span wire:loading><i class="fa fa-spinner fa-spin"></i>
-                            </span> --}}
                         @else
                             @if ($taller->id_estatus == 6)
                             <i wire:loading.remove class="fa-solid fa-caret-left" wire:click="anteriorEstatus({{ $taller->num_orden }} , {{ $taller->id_estatus }})" style="cursor:pointer" title="{!! $this->toolTipAnteriorEstatus($taller->id_estatus) !!}"></i>
-                            {{-- <span wire:loading><i class="fa fa-spinner fa-spin"></i>
-                            </span> --}}
                             @endif
                         @endif
-                        <span wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </span>
+                        <span wire:loading wire:target="anteriorEstatus, siguienteEstatus" class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
+                        <span wire:loading.remove wire:target="anteriorEstatus, siguienteEstatus">
                         @if ($taller->id_estatus <= 3)
                             <i wire:loading.remove class="fa-solid fa-caret-right" wire:click="siguienteEstatus({{ $taller->num_orden }} , {{ $taller->id_estatus }})" style="cursor:pointer" title="{!! $this->toolTipSiguienteEstatus($taller->id_estatus) !!}"></i>
-                            {{-- <span wire:loading><i class="fa fa-spinner fa-spin"></i>
-                            </span> --}}
                         @else
                             @if ($taller->id_estatus == 5)
                             <i wire:loading.remove class="fa-solid fa-caret-right" wire:click="siguienteEstatus({{ $taller->num_orden }} , {{ $taller->id_estatus }})" style="cursor:pointer" title="{!! $this->toolTipSiguienteEstatus($taller->id_estatus) !!}"></i>
-                            {{-- <span wire:loading><i class="fa fa-spinner fa-spin"></i>
-                            </span> --}}
                             @endif
                         @endif
-                        <span wire:loading class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </span>
+                        <span wire:loading wire:target="anteriorEstatus, siguienteEstatus" class="ml-2 spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         </td>                                         
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             @if (!$taller->cobroTaller)  {{-- Si no hay cobro que muestre el botón para editar y cobrar --}}
                             @if(!$muestraDivAgregaEquipo)
-                            <a id="botonEditaEquipo" class="botonEditaEquipo" data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseEditaEquipoTaller" wire:click="editaEquipoTaller({{ $taller->num_orden }})" title="Editar equipo en taller" wire:loading.attr="disabled" wire:target="editaEquipoTaller" style="color: dimgrey;" onclick="ocultarBoton()">
-                                <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
-                            </a>
-                            <span wire:loading wire:target="editaEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                @if($itemDisponible)
+                                    <a id="botonEditaEquipo" class="botonEditaEquipo" data-toggle="collapse" href="#collapseAgregaEquipoTaller" aria-controls="collapseEditaEquipoTaller" wire:click="editaEquipoTaller({{ $taller->num_orden }})" title="Editar equipo en taller" wire:loading.attr="disabled" wire:target="editaEquipoTaller" style="color: dimgrey;" onclick="ocultarBoton()">
+                                        <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
+                                    </a>
+                                    <span wire:loading wire:target="editaEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                @endif
                             @endif
                             {{-- Este botón abre la ventana modal mediante Javascript y no por bootstrap --}}
                             <button wire:click="cobroFinalEquipoTaller({{ $taller->num_orden }})" wire:loading.remove wire:target="cobroFinalEquipoTaller" class="label-button"

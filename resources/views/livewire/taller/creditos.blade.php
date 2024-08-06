@@ -97,6 +97,16 @@
                         }
                         $modeloAux = $credito->equipoTaller->equipo->marca->modelos->where('id_marca',$credito->equipoTaller->equipo->id_marca)->first();
 
+                        if($credito->equipoTaller->equipo->tipo_equipo->disponible)
+                        {
+                            $tipoEquipo = $credito->equipoTaller->equipo->tipo_equipo->icono;
+                        }
+                        else 
+                        {
+                            $tipoEquipo = $credito->equipoTaller->equipo->tipo_equipo->icono . "*";
+                            $hayNoDisponibles = true;
+                        }
+
                         if($credito->equipoTaller->equipo->marca->id_tipo_equipo === $credito->equipoTaller->equipo->id_tipo)
                         {                        
                             if($credito->equipoTaller->equipo->marca->disponible)
@@ -132,14 +142,23 @@
                             $nombreModelo = "*****";
                             $hayInexistentes = true;
                         }
+                        if($credito->equipoTaller->equipo->cliente->disponible)
+                            {
+                                $nombreCliente = $credito->equipoTaller->equipo->cliente->nombre;
+                            }
+                            else 
+                            {
+                                $nombreCliente = $credito->equipoTaller->equipo->cliente->nombre . "*";
+                                $hayNoDisponibles = true;
+                            }
                     @endphp
                     <tr style="font-size: 10pt;" data-toggle="tooltip" data-title="">
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align:middle" width="8%">
                             {{ $credito->num_orden }}  
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $fecha_salida }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {!! $credito->equipoTaller->equipo->tipo_equipo->icono !!}   {{ '  ' . $nombreMarca . ' :: ' .  $nombreModelo }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $credito->equipoTaller->equipo->cliente->nombre }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {!! $tipoEquipo !!}   {{ '  ' . $nombreMarca . ' :: ' .  $nombreModelo }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $nombreCliente }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             $ {{ $credito->cobroTaller ? $credito->cobroTaller->cobro_realizado : 0 }}
                         </td>
