@@ -1097,7 +1097,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
     {
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
-        if ($idEstatus >= 2)
+        if ($idEstatus >= 2) 
         {
             $idEstatus--;
             $equipoTaller->id_estatus = $idEstatus;
