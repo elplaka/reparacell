@@ -30,44 +30,49 @@
         </div>
         @endif
     @endif
-    <div class="row mb-2">
-        <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <b> Fecha de Salida del Equipo </b>
-        </div>
-        <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-             <b> Cliente </b>
-        </div>        
-       <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-            <b> Estatus</b>
-        </div>
-        {{--
-       <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
-           <b> Modelo(s) </b>
-        </div> --}}
-    </div>
-    <div class="row">
-        <div class="col-md-4 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <div class="row align-items-center">
-                &nbsp; &nbsp;  Del &nbsp;
-                <input type="date" wire:model.live="busquedaCreditos.fechaVentaInicio" class="col-md-4 input-height form-control" style="font-size:11pt">
-                &nbsp; al &nbsp;
-                <input type="date" wire:model.live="busquedaCreditos.fechaVentaFin" class="col-md-4 input-height form-control" style="font-size:11pt">
+    <div class="w-100">
+        <div class="row mb-2 d-none d-md-flex">
+            <div class="col-md-4 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+                <b>Fecha de Salida del Equipo</b>
             </div>
-        </div>        
-        <div class="col-md-3 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <input type="text" wire:model.live="busquedaCreditos.nombreCliente" class="input-height form-control" style="font-size:11pt">
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Cliente</b>
+            </div>
+            <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
+                <b>Estatus</b>
+            </div>
         </div>
-        <div class="col-md-3 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
-            <select wire:model.live="busquedaCreditos.idEstatus" class="selectpicker select-picker w-100" style="font-size:11pt;">
-                <option value="0"> -- TODOS -- </option>
-                @foreach ($estatus as $est)
-                    <option value="{{ $est->id }}"> {{ $est->descripcion }}</option>
-                @endforeach
-            </select>
+        <div class="row">
+            <div class="col-12 col-md-4 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Fecha de Salida del Equipo</label>
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-6 mb-2 mb-md-0 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">Del</label>
+                        <input type="date" wire:model.live="busquedaCreditos.fechaVentaInicio" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-center">
+                        <label class="font-bold text-gray-700 mr-2 mb-0" style="font-size: 11pt;">&nbsp;&nbsp;Al</label>
+                        <input type="date" wire:model.live="busquedaCreditos.fechaVentaFin" class="input-height form-control" style="font-size:11pt;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Cliente</label>
+                <input type="text" wire:model.live="busquedaCreditos.nombreCliente" class="input-height form-control" style="font-size:11pt;">
+            </div>
+            <div class="col-12 col-md-3 mb-2 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;" wire:ignore>
+                <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Estatus</label>
+                <select wire:model.live="busquedaCreditos.idEstatus" class="selectpicker select-picker w-100" style="font-size:11pt;">
+                    <option value="0">-- TODOS --</option>
+                    @foreach ($estatus as $est)
+                        <option value="{{ $est->id }}">{{ $est->descripcion }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
     <br>
-    <div class="table-responsive">
+    <div class="table-responsive"> 
         <table class="w-full table table-bordered table-hover">
             <thead>
                 <tr>

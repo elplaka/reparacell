@@ -7,42 +7,49 @@
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-cash-register"></i> Caja</b></h4>
     </div>
-    <div class="row">
-        <div class="col-md-3 mb-3">
-            <label class="col-md-12 text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> CÓDIGO DEL PRODUCTO </strong> </label>
-            <div class="d-flex  align-items-center">
-                <div class="col-md-8" style="margin-right: -12px;">
-                    <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; padding-right: 0; margin-right: 0;" wire:keydown.enter="agregaProducto">
-                    <span wire:loading wire:target="agregaProducto" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span wire:loading wire:target="agregaProducto">Cargando...</span>
-                </div>
-                <div class="col-md-4" style="padding-left: -5px;">                              
-                    <button class="btn btn-secondary" 
-                            data-toggle="modal" 
-                            data-target="#buscarProductoModal" 
-                            style="font-size: 10pt"
-                            title="Buscar producto">
-                            <i class="fa-solid fa-kitchen-set"></i>&thinsp;<i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
+
+    <div class="container-fluid px-0">
+        <div class="row mx-0">
+            <div class="col-12 col-md-3 mb-3 px-0">
+                <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
+                <div class="d-flex align-items-center">
+                    <div class="col-9 col-md-9 pr-1 pl-0">
+                        <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto">
+                        <span wire:loading wire:target="agregaProducto" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span wire:loading wire:target="agregaProducto">Cargando...</span>
+                    </div>
+                    <div class="col-3 col-md-3 pl-1">
+                        <button class="btn btn-secondary"
+                                data-toggle="modal" 
+                                data-target="#buscarProductoModal" 
+                                style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;"
+                                title="Buscar producto">
+                                <i class="fa-solid fa-kitchen-set" style="margin-right: 2px;"></i><i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <label class="text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;"> <strong> CLIENTE </strong> </label>
-            <div class="d-flex align-items-center">
-                <input wire:model="cliente.nombre" type="text" class="input-height form-control mr-2" id="cliente.nombre" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" readonly>
-                <button class="btn btn-secondary" data-toggle="modal" data-target="#buscarClienteModal" style="font-size: 10pt; display: flex; align-items: center;">
-                    <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-magnifying-glass"></i>
-                </button>
+            <div class="col-12 col-md-3 mb-3 px-0">
+                <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Cliente </strong> </label>
+                <div class="d-flex align-items-center">
+                    <div class="col-9 col-md-9 pr-1 pl-0">
+                        <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" readonly>
+                    </div>
+                    <div class="col-3 col-md-3 pl-1">
+                        <button class="btn btn-secondary" data-toggle="modal" data-target="#buscarClienteModal" style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;">
+                            <i class="fa-solid fa-user"></i><i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-5 d-flex align-items-center justify-content-end">
-            <x-button wire:click="abrirCaja" class="ml-md-4 align-self-center">
-                <i class="fa-solid fa-coins"></i> &nbsp; Abrir Caja [F9]
-            </x-button>
-            <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
-                <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
-            </x-button>
+            <div class="col-12 col-md-6 d-flex align-items-center justify-content-end flex-column flex-md-row px-0">
+                <x-button wire:click="abrirCaja" class="ml-md-4 align-self-center mb-2 mb-md-0" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
+                    <i class="fa-solid fa-coins" style="width: 20px;"></i> &nbsp; Abrir Caja [F9]
+                </x-button>
+                <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="width: 20px;"></i> &nbsp; Corte de Caja [F10]
+                </x-button>
+            </div>
         </div>
     </div>
     <br>
@@ -97,11 +104,6 @@
                     <b> $ <input type="number" step="0.5" wire:model.live="totalCarritoDescuento" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($totalCarritoDescuento), 2, '.', ',') }}">
                     </b>
                 </div>
-                {{-- <div class="col-md-3 px-2 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 11pt;">
-                    Anticipo:
-                <div class="col-md-2 px-3 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
-                   <b> $ <input type="number" step="0.5" wire:model.live="cobroFinal.anticipo" style="background-color: #e9ebf3; border: none; height: 25px; width: 50%" value="{{ number_format(floatval($cobroFinal['anticipo']), 2, '.', ',') }}"> </b>
-                </div> --}}
                 @endif
             @else
                 <div class="col-md-6 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">

@@ -9,9 +9,9 @@ use Spatie\Permission\Models\Role;
 
 ?>
 @section('content')
-<div class="row justify-content-center align-items-start min-vh-100 mt-5">
+<div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     <x-guest-layout>
-        <div class="w-full sm:max-w-md mt-36 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+        {{-- <div class="col-12 sm:max-w-md mt-36 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg"> --}}
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-2xl font-bold"><b>Usuarios</b></h1>
                 <x-button style="padding: 6px 8px !important;"> <!-- Aplica el estilo directamente dentro del botón -->
@@ -21,8 +21,8 @@ use Spatie\Permission\Models\Role;
                 </x-button>
             </div>
              <x-validation-errors class="mb-4" />
-             <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-100 align-items-start">
+             <div class="table-responsive">
+                <table class="w-full table table-bordered table-hover">
                      <thead>
                          <tr>
                              <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider">Nombre</th>
@@ -54,7 +54,7 @@ use Spatie\Permission\Models\Role;
                      </tbody>
                  </table>
              </div>
-        </div>
+        {{-- </div> --}}
      </x-guest-layout>
  </div> 
 @endsection

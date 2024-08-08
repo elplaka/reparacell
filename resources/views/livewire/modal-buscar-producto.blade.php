@@ -100,11 +100,10 @@
                     </div> 
                     @endif
                 </div>
-
-                <div class="modal-footer d-flex justify-content-center">
-                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarBuscarProductoModal" wire:click="cierraBuscarProductoModal">Cerrar</button>
-                </div>
            </div>
+           <div class="modal-footer d-flex justify-content-center">
+            <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarBuscarProductoModal" wire:click="cierraBuscarProductoModal">Cerrar</button>
+            </div>
        </div>
    </div>
 </div>
