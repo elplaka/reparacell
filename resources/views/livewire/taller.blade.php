@@ -27,7 +27,7 @@
             </button>
             {{ session('success') }}
         </div>
-        @endif
+        @endif 
     @endif
     @livewire('agrega-equipo-taller')
      <div class="w-100">
@@ -122,8 +122,11 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
             </thead>
+            @if ($muestraDivAgregaEquipo)
+            <tbody>
+            @else
             <tbody wire:poll>
-            {{-- <tbody> --}}
+            @endif
                 @php
                     $equipos = 0;
                 @endphp
