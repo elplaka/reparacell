@@ -70,14 +70,6 @@
                                 {{ $clientesModal->links('livewire.paginame') }}
                             </label>
                         </div> 
-                    @else
-                        <div>
-                            @if (is_null($clientesModal))
-                                NO HAY NADA
-                            @else
-                                @dump($clientesModal->total())
-                            @endif
-                        </div>
                     @endif
                 </div>
             </div>
