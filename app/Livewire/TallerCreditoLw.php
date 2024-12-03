@@ -46,7 +46,7 @@ class TallerCreditoLw extends Component
         'idEstatus' => null,
         'estatus' => null,
         'monto' => null,
-        'abono' => null,
+        'abono' => 0,
         'idAbonoSeleccionado' => null
     ];
 
@@ -279,7 +279,7 @@ class TallerCreditoLw extends Component
         {
             $creditosQuery->where('id_estatus', $this->busquedaCreditos['idEstatus']);
         }
-        
+
         $creditos = $creditosQuery->paginate(10);
 
         $estatus = EstatusCobroTallerCredito::all();

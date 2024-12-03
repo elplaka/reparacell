@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\EquipoTaller;
 use App\Models\CobroTallerCredito;
+use App\Models\User;
 
 class CobroTaller extends Model
 {
@@ -20,7 +21,8 @@ class CobroTaller extends Model
         'fecha',
         'cobro_estimado',
         'cobro_realizado',
-        'cancelado'
+        'cancelado',
+        'id_usuario_cobro'
     ];
 
     public function equipoTaller()
@@ -31,5 +33,10 @@ class CobroTaller extends Model
     public function credito()
     {
         return $this->hasOne(CobroTallerCredito::class, 'num_orden');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'id_usuario_cobro');
     }
 }

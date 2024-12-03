@@ -2,10 +2,18 @@
     @include('livewire.modal-buscar-producto')
     @include('livewire.modal-buscar-cliente')
     @include('livewire.modal-corte-caja')
+    @include('livewire.ventas.modal-agregar-producto-comun')
     @include('livewire.creditos.modal-venta')
 
-    <div class="w-100 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-cash-register"></i> Caja</b></h4>
+    <div class="w-100 mb-4 d-flex align-items-center">
+        <h4 class="text-2xl font-bold mb-0">
+            <b><i class="fa-solid fa-cash-register"></i> Caja</b>
+        </h4>
+        &nbsp;
+        <div class="ml-2">
+            <span wire:loading wire:target="agregaProducto" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span wire:loading wire:target="agregaProducto">Cargando...</span>
+        </div>
     </div>
 
     <div class="container-fluid px-0">
@@ -14,9 +22,7 @@
                 <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
                 <div class="d-flex align-items-center">
                     <div class="col-9 col-md-9 pr-1 pl-0">
-                        <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto">
-                        <span wire:loading wire:target="agregaProducto" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span wire:loading wire:target="agregaProducto">Cargando...</span>
+                        <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
                     </div>
                     <div class="col-3 col-md-3 pl-1">
                         <button class="btn btn-secondary"
@@ -59,6 +65,7 @@
                 <thead>
                     <tr>
                         <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider col-md-1">CANT.</th>
+                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CÓDIGO</th>
                         <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">DESCRIPCIÓN</th>
                         <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">PRECIO</th>
                         <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">IMPORTE</th>
@@ -69,10 +76,31 @@
                     @foreach ($carrito as $index => $item)
                     <tr style="font-size: 10pt;">
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            <input wire:model.live="carrito.{{ $index }}.cantidad" type="number" style="background: #f8f8f8; border: none; height: 22px; width: 100%; font-size: 10pt">
+                            <input wire:model.live="carrito.{{ $index }}.cantidad" 
+                            @if ($carrito[$index]['esProductoComun'])
+                                disabled
+                                style="background-color: transparent; border: none; height: 22px; width: 100%; font-size: 10pt"
+                            @else 
+                                type="number"
+                                style="background: #f8f8f8; border: none; height: 22px; width: 100%; font-size: 10pt" 
+                            @endif
+                            >
                         </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $item['producto']->descripcion }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; {{ $item['producto']->precio_venta }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $item['producto']->codigo }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            @if ($carrito[$index]['esProductoComun'])
+                                {{ $carrito[$index]['descripcionProductoComun'] }}
+                            @else
+                                {{ $item['producto']->descripcion }}
+                            @endif
+                        </td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; 
+                            @if ($carrito[$index]['esProductoComun'])
+                                {{ number_format($carrito[$index]['precioProductoComun'], 2, '.', ',') }}
+                            @else
+                                {{ $item['producto']->precio_venta }}
+                            @endif
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; {{ $carrito[$index]['subTotal'] }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                             <button wire:click="eliminaDelCarrito({{ $index }})" wire:loading.remove wire:target="eliminaDelCarrito" class="label-button">
@@ -194,4 +222,23 @@
                 });
             });
 
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('abrirModalProductoComun', () => {
+            $('#productoComunModal').modal('show');
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalProductoComun', () => {
+            $('#productoComunModal').modal('hide');
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        $('#productoComunModal').on('shown.bs.modal', function () {
+            $('#descripcionProducto').trigger('focus');
+        });
+    });
+
+    
 </script>

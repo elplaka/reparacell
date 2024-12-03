@@ -69,20 +69,20 @@
                                     </thead>
                                     <tbody>
                                         @foreach($productosModal as $productoModal)
-                                        <tr style="font-size: 9pt; cursor: pointer; @if ($productoModal->inventario == 0) color:red @endif" wire:click="gotoPageAndCapture('{{ $productoModal->codigo }}', {{ $productosModal->currentPage() }})" >
-                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                        <tr style="font-size: 9pt; cursor: pointer; @if ($productoModal->inventario == 0) color:red; @endif" wire:click="gotoPageAndCapture('{{ $productoModal->codigo }}', {{ $productosModal->currentPage() }})">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: blue; font-weight: bold;">
                                                 {{ $productoModal->codigo }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: green; font-weight: bold;">
                                                 {{ $productoModal->descripcion }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: orange; font-weight: bold;">
                                                 {{ $productoModal->precio_venta }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: purple; font-weight: bold;">
                                                 {{ $productoModal->departamento->nombre }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: teal; font-weight: bold;">
                                                 {{ $productoModal->inventario }}
                                             </td>
                                         </tr>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Cliente;
 use App\Models\CobroEstimadoTaller;
 use App\Models\EquipoTaller;
 use App\Models\CobroTaller;
@@ -24,6 +25,11 @@ class CobroTallerCredito extends Model
         'id_cliente',
         'id_estatus',
     ];
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'id_cliente');
+    }
 
     public function detalles()
     {

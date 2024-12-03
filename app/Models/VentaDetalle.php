@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Venta;
+use App\Models\VentaProductoComun;
 use App\Models\Producto;
 
 class VentaDetalle extends Model
@@ -30,4 +31,12 @@ class VentaDetalle extends Model
     {
         return $this->belongsTo(Producto::class, 'codigo_producto');
     }
+
+    public function productoComun()
+    {
+        return $this->hasOne(VentaProductoComun::class, 'id_venta', 'id_venta')
+                    ->where('codigo_producto', $this->codigo_producto);
+    }
+
+
 }

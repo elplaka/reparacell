@@ -8,7 +8,7 @@
     @include('livewire.modal-equipos-cliente')
     @include('livewire.modal-equipo-cliente-historial')
     @include('livewire.modal-cliente-historial')
-    @include('livewire.modal-advertencia-equipo-taller') 
+    @include('livewire.modal-advertencia-equipo-taller')  
 
      <!-- Ventana modal de confirmación -->
     <div wire:ignore.self class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
@@ -320,13 +320,25 @@
                             </div>
                             <label for="equipoTaller.totalEstimado" class="col-md-2 block font-medium text-sm-center text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: center; text-align: center;"> {{ __('Total Estimado $ ') }} {{ number_format($equipoTaller['totalEstimado'], 2, '.', ',') }} </label>
                             @if (!$cliente['publicoGeneral'])
-                            @if ($equipoTaller['estatus'] == 0)
+                            @if ($equipoTaller['estatus'] == 0 || $equipoTaller['agregaAbono'])
                             <label for="equipoTaller.anticipo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $') }} </label>
                             <div class="col-md-2 ml-0 pl-1">
                                 <input wire:model="equipoTaller.anticipo" type="number" step="0.5" class="input-height form-control" style="font-size:11pt;" autofocus>
                             </div>
                             @else
                             <label for="equipoTaller.anticipo" class="col-md-3 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $ ') }} {{ $equipoTaller['anticipo'] }} </label>
+                                @if ($equipoTaller['anticipo'] == 0)
+                                &nbsp;&nbsp;
+                                <button
+                                    wire:click="agregaAbono"
+                                    class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                    style="padding: 0; height: 24px; width: 24px;"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title="Agregar abono">
+                                    <i class="fa fa-plus" style="margin: 0; font-size: 14px;"></i>
+                                </button>
+                                @endif
                             @endif
                             @endif                  
                         </div>

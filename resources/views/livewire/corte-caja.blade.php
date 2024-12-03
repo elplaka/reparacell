@@ -20,34 +20,6 @@
         font-weight: 900;
     }
 
-    /* table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-bottom: 1rem;
-        background-color: #fff; 
-        color: #333;
-    }
-
-    table th, table td {
-        border: 1px solid #dee2e6;
-        padding: .75rem;
-        vertical-align: top;
-        border-top: 1px solid #dee2e6;
-        background-color: #fff; 
-        height: 8px; 
-    }
-
-    table th {
-        font-weight: 500;
-        border-bottom: 2px solid #dee2e6;
-        background-color: #e9ecef;
-        text-align: inherit;
-    }
-
-    table tbody tr:nth-of-type(odd) {
-        background-color: rgba(0,0,0,.05); 
-    } */
-
     table th, table td {
         border: 0.75px solid #dee2e6;
         vertical-align: middle;
@@ -113,42 +85,94 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Num. Venta</th>
+                    <th>ID</th>
                     <th>Fecha</th>
                     <th>Cliente</th>
                     {{-- <th>Detalles</th> --}}
                     <th>Importe</th>
                     <th>Cajero</th>
+                    {{-- <th></th> --}}
                 </tr>
             </thead>
             @php
                 $i = 1;
                 $total = 0;
+                $totalTaller = 0;
+                $totalVentas = 0;
+                $numTaller = 0;
+                $numVentas = 0;
             @endphp
             <tbody>
-                @foreach ($ventas as $venta)
+                @foreach ($registros as $registro)
                 <tr>
                     <td> {{ $i++ }}</td>
-                    <td>{{ $venta->id }}</td>
-                    <td> {{ Carbon::parse($venta->created_at)->format('d/m/Y H:i:s') }}</td>
-                    <td>{{ $venta->cliente->nombre }} </td>
-                    {{-- <td style="font-size:8pt"> 
-                        @foreach ($venta->detalles as $detalle)
-                            {{ $detalle->producto->descripcion . ' - ' }}
-                        @endforeach
-                    </td> --}}
-                    <td> $ {{ number_format($venta->total, 2, '.', ',') }}</td>
-                    <td> {{ $venta->usuario->name }}</td>
+                    <td>
+                        @if ($registro->tipo == "TALLER")
+                            {{'T' . $registro->id }}
+                        @elseif($registro->tipo == "ABONO_TALLER")
+                            {{'TA' . $registro->id }}
+                        @elseif($registro->tipo == "VENTA")
+                            {{'V' . $registro->id }}
+                        @else
+                            {{'VA' . $registro->id }}
+                        @endif
+                    </td>
+                    <td> {{ Carbon::parse($registro->created_at)->format('d/m/Y H:i:s') }}</td>
+                    <td>{{ $registro->nombre_cliente }} </td>
+                    <td style="text-align:right"> $ {{ number_format($registro->monto, 2, '.', ',') }} &nbsp;</td>
+                    <td> {{ $registro->cajero }} </td>
                     @php
-                        $total += $venta->total
+                        if ($registro->tipo == "TALLER" || $registro->tipo == "ABONO_TALLER")
+                        {
+                            $totalTaller += $registro->monto;
+                            $numTaller++;
+                        }
+                        else 
+                        {
+                            $totalVentas += $registro->monto;
+                            $numVentas++;
+                        }
                     @endphp
                 </tr>
                 @endforeach
             </tbody>
         </table>
         <br>
-        TOTAL DE VENTAS: $ {{ number_format($total, 2, '.', ',') }}
+        @php
+            $total += $totalTaller + $totalVentas;
+        @endphp
+        <table style="page-break-inside: avoid; width: 50%; margin-left: auto; margin-right: 0; border-collapse: collapse; border: none; border-spacing: 0;">
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>                        
+                        &nbsp; SUBTOTAL DE VENTAS [ {{ $numVentas }} ] :
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalVentas, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @if ($corteCaja['chkCobrosTaller'])
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>
+                        &nbsp; SUBTOTAL DE TALLER [ {{ $numTaller }} ] :
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalTaller, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @endif
+            <tr>
+                <td style="font-size:12pt; width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>TOTAL :</strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($total, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+        </table>
     </p>
-  
 </body>
 </html>

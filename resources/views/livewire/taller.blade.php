@@ -67,7 +67,7 @@
         <div class="row">
             <div class="col-12 col-md-2 mb-3">
                 <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Tipo Equipo</label>
-                <select wire:model.live="busquedaEquipos.idTipo" class="selectpicker select-picker w-100" title='--TODOS--' multiple>
+                <select wire:model.live="busquedaEquipos.idTipo" id="selectTipoEquipo"  class="selectpicker select-picker w-100" title='--TODOS--' multiple>
                     @foreach ($tipos_equipos as $tipo_equipo)
                         <option value="{{ $tipo_equipo->id }}" data-content="{{  $tipo_equipo->icono }} &nbsp; {{ $tipo_equipo->nombre }}"></option>
                     @endforeach
@@ -125,7 +125,7 @@
             @if ($muestraDivAgregaEquipo)
             <tbody>
             @else
-            <tbody wire:poll>
+            <tbody wire:poll.5s>
             @endif
                 @php
                     $equipos = 0;
@@ -396,7 +396,7 @@ document.addEventListener('livewire:initialized', function () {
 
 </script>
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
     // Hook para manejar el commit de Livewire
     Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
@@ -416,7 +416,81 @@ document.addEventListener('livewire:initialized', function () {
         });
     });
 });
-</script> 
+</script>  --}}
+
+{{-- Este script hace que después que se refresque la página con el wire:poll no se cierren los selectpickers ni tampoco desaparezcan --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let isSelectTipoEquipoOpen = false;
+        let isSelectEntregadosOpen = false;
+
+        function setupSelectpickers() {
+            $('.selectpicker').off('shown.bs.select hidden.bs.select');
+    
+            // Detectar si el selectTipoEquipo está abierto
+            $('#selectTipoEquipo').on('shown.bs.select', function () {
+                isSelectTipoEquipoOpen = true;
+                console.log("selectTipoEquipo abierto");
+            });
+    
+            $('#selectTipoEquipo').on('hidden.bs.select', function () {
+                isSelectTipoEquipoOpen = false;
+                console.log("selectTipoEquipo cerrado");
+            });
+    
+            // Detectar si el selectEntregados está abierto
+            $('#selectEntregados').on('shown.bs.select', function () {
+                isSelectEntregadosOpen = true;
+                console.log("selectEntregados abierto");
+            });
+    
+            $('#selectEntregados').on('hidden.bs.select', function () {
+                isSelectEntregadosOpen = false;
+                console.log("selectEntregados cerrado");
+            });
+        }
+    
+        // Configurar selectpickers al cargar el documento
+        setupSelectpickers();
+    
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+            succeed(({ snapshot, effect }) => {
+                $('select').selectpicker('destroy');
+                queueMicrotask(() => {
+                    // Refrescar los selectpickers
+                    $('.selectpicker').selectpicker('refresh');
+                    setupSelectpickers();
+    
+                    // Verificar el estado después del refresh
+                    if (isSelectTipoEquipoOpen) {
+                        $('#selectTipoEquipo').selectpicker('toggle'); // Forzar reapertura si estaba abierto
+                        console.log("Manteniendo selectTipoEquipo abierto después del refresh");
+                    }
+    
+                    if (isSelectEntregadosOpen) {
+                        $('#selectEntregados').selectpicker('toggle'); // Forzar reapertura si estaba abierto
+                        console.log("Manteniendo selectEntregados abierto después del refresh");
+                    }
+                });
+            });
+    
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
+    </script>
+    
+
+    
+
+    
+    
+
+
+
+
 
 
 

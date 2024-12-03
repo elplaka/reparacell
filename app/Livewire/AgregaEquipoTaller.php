@@ -61,7 +61,8 @@ class AgregaEquipoTaller extends Component
         'observaciones',
         'anticipo',
         'totalEstimado',
-        'estatus'  //0: AGREGAR EQUIPO, 1: EDITAR
+        'estatus',  //0: AGREGAR EQUIPO, 1: EDITAR
+        'agregaAbono'  //true: SE AGREGA ABONO AL EDITAR EL EQUIPO EN TALLER, false: NO SE AGREGA ABONO
     ];
 
     public $fallas = [];
@@ -71,7 +72,6 @@ class AgregaEquipoTaller extends Component
     public $showMainErrors, $showModalErrors;
     public $muestraDivAgregaEquipo;
     public $nombreClienteModal;
-    public $clientesModal;
     public $tieneEquiposCliente;
     public $equiposClienteModal;
     public $equipoSeleccionadoModal;
@@ -148,7 +148,8 @@ class AgregaEquipoTaller extends Component
             'estatus'       => 1,
             'observaciones' => null,
             'anticipo'      => 0,
-            'totalEstimado' => 0
+            'totalEstimado' => 0,
+            'agregaAbono'   => false
         ];
 
         $this->marcaMod = [
@@ -176,7 +177,6 @@ class AgregaEquipoTaller extends Component
         ];
 
         $this->fallas = [];
-        // $this->fallasE = [];
         $this->imagenes = [];
         $this->numImagenes = 1;
         $this->showModalErrors = false;
@@ -184,7 +184,6 @@ class AgregaEquipoTaller extends Component
         $this->muestraDivAgregaEquipo = false;
         $this->nombreClienteModal = '';
         $this->clientesModal = null;
-        $this->mostrarModalBuscarCliente = false;
         $this->tieneEquiposCliente = false;
         $this->equipoSeleccionadoModal = true;
 
@@ -225,7 +224,19 @@ class AgregaEquipoTaller extends Component
             $historialClienteTaller = null;
         }
 
-        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 'historialClienteTaller'));
+        $clientesModal = null;
+  
+        if (strlen($this->nombreClienteModal) > 0)
+        {
+            $clientesModal = Cliente::where('nombre', 'like', '%' . $this->nombreClienteModal . '%')
+                ->where('telefono', '!=', '0000000000')
+                ->where('disponible', 1)
+                ->paginate(10);
+
+            $this->setPage(1);
+        }
+
+        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 'historialClienteTaller', 'clientesModal'));
     }
 
     public function regresaEquipoCliente($idCliente, $idTipoEquipo, $idMarcaEquipo, $idModeloEquipo)
@@ -375,36 +386,7 @@ class AgregaEquipoTaller extends Component
                     $falla->save();
                     $k++;
                 }
-
-                /// ATENCIÓN:: Quitar que se agreguen mas COBROS ESTIMADOS en un NUM_ORDEN
-                // if (!$this->cobroRepetido($numOrden, $cobroEstimado))
-                // {
-                //     $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
-
-                //     if ($ultimoRegistro) {
-                //         // Si se encontró un registro previo, incrementa el valor 'id' en 1.
-                //         $maxId = $ultimoRegistro->id + 1;
-                //     } else {
-                //         // Si no se encontraron registros previos, establece el valor de 'id' en 1.
-                //         $maxId = 1;
-                //     }
-
-                //     $cobroEstimadoTaller = new CobroEstimadoTaller();
-                //     $cobroEstimadoTaller->id = $maxId;
-                //     $cobroEstimadoTaller->num_orden = $numOrden;
-                //     $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
-                //     $cobroEstimadoTaller->save();
-
-                //     $actualizaEquipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
-                //     $actualizaEquipoTaller->id_cobro_estimado = $maxId;
-                //     $actualizaEquipoTaller->save();
-                // }
-
-               
-                // $cobroEstimadoTaller = CobroEstimadoTaller::where('num_orden', $numOrden)->first();
-                // $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
-                // $cobroEstimadoTaller->save();
-
+      
                 CobroEstimadoTaller::where('num_orden', $numOrden)->update(['cobro_estimado' => $cobroEstimado]);
 
                 $imagenesEquipo = ImagenEquipo::where('num_orden', $this->equipoTaller['numOrden'])->delete();
@@ -434,6 +416,23 @@ class AgregaEquipoTaller extends Component
                     }
                 }
 
+                if ($this->equipoTaller['anticipo'] > 0 && $this->equipoTaller['agregaAbono'])
+                {
+                    $cobroTallerCredito = new CobroTallerCredito();
+                    $cobroTallerCredito->num_orden = $numOrden;
+                    $cobroTallerCredito->id_cliente = $this->cliente['id'];
+                    $cobroTallerCredito->id_estatus = 1;
+                    $cobroTallerCredito->save();
+
+                    $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
+                    $cobroTallerCreditoDetalle->num_orden = $numOrden;
+                    $cobroTallerCreditoDetalle->abono = $this->equipoTaller['anticipo'];
+                    $cobroTallerCreditoDetalle->id_usuario_cobro = Auth::id();
+                    $cobroTallerCreditoDetalle->save();
+
+                    $this->equipoTaller['agregaAbono'] = false;
+                }
+
                 $this->muestraDivAgregaEquipo = false;
                 $this->dispatch('mostrarToast', 'Equipo actualizado con éxito!!!');
                 $this->dispatch('ocultaDivAgregaEquipo');
@@ -446,6 +445,11 @@ class AgregaEquipoTaller extends Component
             // Puedes agregar logs o notificaciones aquí
             dd($e);
         }
+    }
+
+    public function agregaAbono()  //ESTOY AGREGANDO UN ABONO AL DAR CLICK AL BOTÓN DE + PERO ESTE CÓDIGO ES AL GUARDAR
+    {
+        $this->equipoTaller['agregaAbono'] = true;        
     }
 
     public function agregaEquipoTaller()
@@ -1274,19 +1278,20 @@ class AgregaEquipoTaller extends Component
         }
     }
 
-    public function updatedNombreClienteModal($value)
-    {
-        if (strlen($value) == 0) $this->clientesModal = null;
-        else $this->clientesModal = Cliente::where('nombre', 'like', '%' . $value . '%')
-        ->where('telefono', '!=', '0000000000')
-        ->where('disponible', 1)
-        ->get();
+    // public function updatedNombreClienteModal($value)
+    // {
+    //     if (strlen($value) == 0) {
+    //         $this->clientesModal = null;
+    //     } else {
+    //         $clientesPaginados = Cliente::where('nombre', 'like', '%' . $value . '%')
+    //             ->where('telefono', '!=', '0000000000')
+    //             ->where('disponible', 1)
+    //             ->paginate(10);
+    
+    //         $this->clientesModal = $clientesPaginados; // Mantenemos la paginación
+    //     }
+    // }
 
-        if (!is_null($this->clientesModal) && $this->clientesModal->count() == 0) 
-        {
-            $this->clientesModal = null;
-        }
-    }
 
     public function capturarFila($clienteId)   //Selecciona un cliente de la tabla de buscar clientes
     {
@@ -1377,8 +1382,6 @@ class AgregaEquipoTaller extends Component
         $this->equipo['estatus'] = 2;
 
         $this->dispatch('cerrarModalEquiposCliente');
-
-        $this->modalEquiposClienteAbierta = false;
     }
 
     public function abreEquipoClienteHistorial()

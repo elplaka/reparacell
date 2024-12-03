@@ -131,17 +131,51 @@ class ProductoLw extends Component
 
     public function render()
     {
+        // if ($this->filtrosProductos['codigo'] == '' && $this->filtrosProductos['descripcion'] == '' && $this->filtrosProductos['idDepartamento'] == [] && $this->filtrosProductos['disponible'] == -1)
+        // {
+        //     $productos = Producto::orderBy('descripcion')->paginate(10);
+
+        //     $this->gotoPage($productos->currentPage());
+        // }
+        // else
+        // {
+        //     $productosQuery = Producto::query();
+
+        //     if ($this->filtrosProductos['codigo'] != '') {
+        //         $productosQuery->where('codigo', 'like', '%'.  $this->filtrosProductos['codigo'] . '%');
+        //     }
+
+        //     if ($this->filtrosProductos['descripcion'] != '') {
+        //         $productosQuery->where('descripcion', 'like', '%'.  $this->filtrosProductos['descripcion'] . '%');
+        //     }
+
+        //     if ($this->filtrosProductos['idDepartamento'] != []) {
+        //         $productosQuery->whereIn('id_departamento', $this->filtrosProductos['idDepartamento']);
+        //     }
+
+        //     if ($this->filtrosProductos['disponible'] != -1) {
+        //         $productosQuery->where('disponible', $this->filtrosProductos['disponible']);
+        //     }
+
+        //     $productos = $productosQuery->orderBy('descripcion')->paginate(10);
+        //     $this->goToPage(1);
+        // }
+
         $productos = collect();
 
         if ($this->filtrosProductos['codigo'] == '' && $this->filtrosProductos['descripcion'] == '' && $this->filtrosProductos['idDepartamento'] == [] && $this->filtrosProductos['disponible'] == -1)
         {
-            $productos = Producto::orderBy('descripcion')->paginate(10);
+            $productos = Producto::whereNotIn('codigo', ['COM01', 'COM02', 'COM03', 'COM04', 'COM05', 'COM06', 'COM07', 'COM08', 'COM09'])
+                                ->orderBy('descripcion')
+                                ->paginate(10);
 
             $this->gotoPage($productos->currentPage());
         }
         else
         {
             $productosQuery = Producto::query();
+
+            $productosQuery->whereNotIn('codigo', ['COM01', 'COM02', 'COM03', 'COM04', 'COM05', 'COM06', 'COM07', 'COM08', 'COM09']);
 
             if ($this->filtrosProductos['codigo'] != '') {
                 $productosQuery->where('codigo', 'like', '%'.  $this->filtrosProductos['codigo'] . '%');
@@ -205,6 +239,15 @@ class ProductoLw extends Component
         }
     }
 
+    public function esCodigoReservado($codigoProducto)
+    {
+        // Lista de códigos reservados
+        $codigosReservados = array("0", "COM01", "COM02", "COM03", "COM04", "COM05", "COM06", "COM07", "COM08", "COM09");
+    
+        // Verificar si el código está en la lista de códigos reservados
+        return in_array($codigoProducto, $codigosReservados);
+    }
+
     public function guardaProducto()
     {
         $this->showModalErrors = true;
@@ -225,6 +268,12 @@ class ProductoLw extends Component
         if ($this->yaExisteCodigoProducto($this->productoMod['codigo']))
         {
             $this->addError('productoMod.codigo', 'El Código del producto ya existe. Intenta con otro.');
+            return;
+        }
+
+        if ($this->esCodigoReservado($this->productoMod['codigo']))
+        {
+            $this->addError('productoMod.codigo', 'El Código del producto está reservado para el sistema. Intenta con otro.');
             return;
         }
 
@@ -472,9 +521,15 @@ class ProductoLw extends Component
             'precioVenta' => 0,
             'precioMayoreo' => 0,
             'idDepartamento' => 1,
-            'inventario' => 0,
-            'inventarioMinimo' => 0
+            'inventario' => 1,
+            'inventarioMinimo' => 1
         ];
+
+        if (!$this->productoConInventario)
+        {
+            $this->inventarioMod['existencia'] = 10256;
+            $this->inventarioMod['existenciaMinima'] = 10256;
+        } 
 
         $this->validate();
 

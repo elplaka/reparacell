@@ -150,7 +150,7 @@
                             <td style="text-align:right"> $ {{ number_format($credito->abono, 2, '.', ',') }} &nbsp; &nbsp;</td>
                             <td style="text-align:right"> {{ Carbon::parse($credito->created_at)->format('d/m/Y H:i:s') }} &nbsp; &nbsp;</td>
                             <td style="text-align:right">
-                                {{ $credito->usuario->name }}  &nbsp; &nbsp;
+                                {{ isset($credito->usuario->name) ? $credito->usuario->name : "-" }}  &nbsp; &nbsp;
                             </td>
                             @php
                                 $total += $credito->abono

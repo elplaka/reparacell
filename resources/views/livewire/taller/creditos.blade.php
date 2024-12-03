@@ -97,8 +97,9 @@
                         $suma_abonos = CobroTallerCreditoDetalle::where('num_orden', $credito->num_orden)->sum('abono');
                         if ($credito->cobroTaller) {
                             $restante = $credito->cobroTaller->cobro_realizado - $suma_abonos;
-                        } else {
-                            $restante = 0; // O cualquier valor apropiado por defecto
+                        } else 
+                        {
+                            $restante = $credito->cobroEstimado->cobro_estimado - $suma_abonos; // Cobro estimado por defecto
                         }
                         $modeloAux = $credito->equipoTaller->equipo->marca->modelos->where('id_marca',$credito->equipoTaller->equipo->id_marca)->first();
 
@@ -165,16 +166,24 @@
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {!! $tipoEquipo !!}   {{ '  ' . $nombreMarca . ' :: ' .  $nombreModelo }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $nombreCliente }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            $ {{ $credito->cobroTaller ? $credito->cobroTaller->cobro_realizado : 0 }}
+                            $ {{ $credito->cobroTaller ? $credito->cobroTaller->cobro_realizado : $credito->cobroEstimado->cobro_estimado }}
                         </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">$ {{ number_format($restante, 2) }}</td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            $ {{ number_format($restante, 2) }}
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {{ $credito->equipoTaller->usuario->name }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> {{ $credito->estatus->descripcion }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> 
+                            {{ $credito->cobroTaller ?  $credito->estatus->descripcion : 'SIN COBRAR' }}
+                        </td>
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            @if ($credito->cobroTaller)
                             <button wire:click="abreTallerCredito({{ $credito->num_orden }})" wire:loading.remove wire:target="abreTallerCredito" class="label-button">
                                 <i class="fa-solid fa-eye" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Ver crédito" data-toggle="modal" 
                                 data-target="#cobroCreditoTallerModal" ></i>
-                            </button>
+                            </button>                                
+                            @else
+                                -
+                            @endif
                         </td>
                     </tr>
                 @endforeach

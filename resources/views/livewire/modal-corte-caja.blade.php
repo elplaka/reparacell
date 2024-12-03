@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-md" role="dialog" >
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Corte de Caja</b></h1>
+               <h1 class="text-xl font-bold"><b> Corte de Caja de Ventas</b></h1>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraCorteCajaModal">
                    <span aria-hidden="true">&times;</span>
                </button> 
@@ -35,6 +35,22 @@
                     </select>
                 </div>
                 @endrole
+
+                <div class="mb-3 row">
+                    <div class="col-md-6">
+                        <label for="chkCobrosTaller" class="form-label">
+                            <input type="checkbox" id="chkCobrosTaller" wire:model="corteCaja.chkCobrosTaller" checked>
+                            Incluir Cobros de Taller
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="chkAbonos" class="form-label">
+                            <input type="checkbox" id="chkAbonos" wire:model="corteCaja.chkAbonos" checked>
+                            Incluir Abonos
+                        </label>
+                    </div>
+                </div>
+                               
 
                 <!-- Modal Footer con Botón de Cierre -->
                 <div class="modal-footer d-flex justify-content-center">

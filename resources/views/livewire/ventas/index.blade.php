@@ -115,7 +115,10 @@
                         @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                       $ {{ $venta->total }}
+                       $ {{ $venta->total }} 
+                       @if ($venta->ventaCredito)
+                       [C]
+                       @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         @if ($venta->usuario->disponible)
@@ -132,7 +135,7 @@
                     </td>
                     <td colspan="2" class="px-3 py-1 whitespace-no-wrap" style="vertical-align: middle">
                         <div class="row ml-1">
-                            <a wire:click="invertirEstatusVenta('{{ $venta->id }}')" wire:loading.attr="disabled" wire:target="invertirEstatusVenta" style="color: dimgrey;cursor:pointer">
+                            <a wire:click="invertirEstatusVenta('{{ $venta->id }}')" wire:loading.attr="disabled" wire:target="invertirEstatusVenta" style="color: dimgrey;cursor:pointer; display: flex; align-items: center;">
                                 @if ($venta->cancelada)
                                 <i class='fa-solid fa-square-check' style="color: dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar"></i>
                                 @else
@@ -140,14 +143,26 @@
                                  @endif
                             </a>
                             &nbsp; &nbsp;
-                            <button class="btn col-md-1" data-toggle="collapse" data-target="#collapseDetalle{{ $venta->id }}" aria-expanded="false" aria-controls="collapseDetalle{{ $venta->id }}" wire:click="verDetalles('{{ $venta->id }}')" style="margin: 0; padding: 0; line-height: 1; outline: none;"  onclick="this.blur();" style="color:dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'">
-                                @if (isset($collapsed[$venta->id]))
+                            <button class="btn col-md-1" 
+                                data-toggle="collapse" 
+                                data-target="#collapseDetalle{{ $venta->id }}" 
+                                aria-expanded="{{ $collapsed[$venta->id] ?? false ? 'true' : 'false' }}" 
+                                aria-controls="collapseDetalle{{ $venta->id }}" 
+                                wire:click="verDetalles('{{ $venta->id }}')" 
+                                style="margin: 0; padding: 0; line-height: 1; outline: none;" 
+                                onclick="this.blur();" 
+                                style="color:dimgrey;" 
+                                onmouseover="this.style.color='blue'" 
+                                onmouseout="this.style.color='dimgrey'">
+
+                                @if (!empty($collapsed[$venta->id]) && $collapsed[$venta->id] === true)
                                     <i class="fa-solid fa-angles-left" title="Ocultar detalles"></i>
                                 @else
                                     <i class="fa-solid fa-angles-right" title="Mostrar detalles"></i>
                                 @endif
-                            </button> &nbsp; &nbsp;
-                            <div wire:ignore class="collapse col-md-10" style="margin:0; padding:0" id="collapseDetalle{{ $venta->id }}">
+                            </button>
+                            &nbsp; &nbsp;
+                            <div wire:ignore class="collapse col-md-10 show" style="margin:0; padding:0" id="collapseDetalle{{ $venta->id }}">
                                 <table class="w-full mb-0">
                                     <thead>
                                         <tr class="no-hover">
@@ -162,18 +177,24 @@
                                             </th>
                                         </tr>
                                     </thead>
-                                    @php
+                                    {{-- @php
                                         $ventas_detalles = VentaDetalle::where('id_venta', $venta->id)->get();
-                                    @endphp
+                                    @endphp --}}
                                     <tbody>
-                                        @foreach ($ventas_detalles as $detalle)
+                                        @foreach ($venta->detalles as $detalle)
                                             <tr class="no-hover">
                                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; font-size: 8pt" >
                                                     {{ $detalle->cantidad }}
                                                 </td>
+                                                @if ($detalle->productoComun)
+                                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; font-size: 8pt">
+                                                    {{ $detalle->productoComun->descripcion_producto }}
+                                                </td>
+                                                @else 
                                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; font-size: 8pt">
                                                     {{ $detalle->producto->descripcion }}
                                                 </td>
+                                                @endif
                                                 <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; font-size: 8pt">
                                                 $ {{ $detalle->importe }}
                                                 </td>

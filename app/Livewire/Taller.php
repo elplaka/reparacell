@@ -36,7 +36,20 @@ class Taller extends Component
         'f10-pressed' => 'abrirCorteCaja', 
         'lisLiquidarCobroCredito' => 'liquidarCobroCredito',
         'lisBorraAbono' => 'borraAbono',
+        // 'updateSelectedValues' => 'updateSelectedValues'
     ]; 
+
+    // public function updateSelectedValues($type, $values) 
+    // { 
+    //     if ($type === 'tipoEquipo') 
+    //     { 
+    //         $this->busquedaEquipos['idTipo'] = $values; 
+    //     } 
+    //     elseif ($type === 'entregados') 
+    //     { 
+    //         $this->busquedaEquipos['entregados'] = $values; 
+    //     } 
+    // }
 
     public $muestraDivAgregaEquipo;
     public $numberOfPaginatorsRendered = [];
@@ -63,7 +76,7 @@ class Taller extends Component
         'fechaEntradaFin' => null,
         'idEstatus' => null,
         'idTipo' => null,
-        'entregados' => null,
+        'entregados' => [],
         'nombreCliente' => null
     ];
 
@@ -90,7 +103,7 @@ class Taller extends Component
         'marcaEquipo' => null,
         'modeloEquipo' => null,
         'cobroEstimado' => null,
-        'cobroRealizado' => null,
+        'cobroRealizado' => 0,
         'fallasEquipo' => [],
         'idEstatusEquipo' => null,
         'anticipo' => null,
@@ -108,7 +121,7 @@ class Taller extends Component
         'idEstatus' => null,
         'estatus' => null,
         'monto' => null,
-        'abono' => null,
+        'abono' => 0,
         'idAbonoSeleccionado' => null
     ];
 
@@ -118,7 +131,7 @@ class Taller extends Component
         'marcaEquipo' => null,
         'modeloEquipo' => null,
         'clienteEquipo' => null,
-        'contenido' => null,
+        'contenido' => '',
         'estatusEquipo' => null,
     ];
 
@@ -129,6 +142,7 @@ class Taller extends Component
         'idUsuario',
         'incluyeCredito'
     ];
+
 
     public function abrirWhatsApp($numeroTelefono)
     {
@@ -654,6 +668,7 @@ class Taller extends Component
                         $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $abono = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
                         $cobroTallerCreditoDetalles->abono = $abono;
+                        $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
                         $cobroTallerCreditoDetalles->save();
 
                         $cobroTallerCredito = CobroTallerCredito::where('num_orden', $numOrden)->first();
@@ -740,6 +755,7 @@ class Taller extends Component
                             'fecha' => now(),
                             'cobro_estimado' => $this->cobroFinal['cobroEstimado'],
                             'cobro_realizado' => $this->cobroFinal['cobroRealizado'],
+                            'id_usuario_cobro' => Auth::id()
                         ]);
 
                         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
@@ -974,7 +990,7 @@ class Taller extends Component
     {
         $this->muestraDivAgregaEquipo = false;
         $this->numberOfPaginatorsRendered = [];
-        $this->paginaActual = 1;
+        // $this->paginaActual = 1;
         $this->datosCobroCargados = false;
         $this->muestraDivAbono = false;
 

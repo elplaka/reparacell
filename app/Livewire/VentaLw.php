@@ -66,6 +66,13 @@ class VentaLw extends Component
 
         $ventas = $ventasQuery->paginate(10);
 
+        // Inicializar collapsed si no está configurado para una venta
+        foreach ($ventas as $venta) {
+            if (!isset($this->collapsed[$venta->id])) {
+                $this->collapsed[$venta->id] = true; // Mostrar los detalles por defecto
+            }
+        }
+
         return view('livewire.ventas.index', compact('ventas'));
     }
 
@@ -92,13 +99,11 @@ class VentaLw extends Component
 
     public function verDetalles($ventaId)
     {
-        if (isset($this->collapsed[$ventaId]))
-        {
-            unset($this->collapsed[$ventaId]);
-        } 
-        else 
-        {
-            $this->collapsed[$ventaId] = true;
+        if ($this->collapsed[$ventaId] == true) {
+            $this->collapsed[$ventaId] = false;
+        } else {
+            $this->collapsed[$ventaId] = true; // Muestra los detalles.
         }
     }
+
 }

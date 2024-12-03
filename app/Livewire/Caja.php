@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\Producto;
 use App\Models\Cliente;
 use App\Models\Venta;
+use App\Models\CobroTaller;
+use App\Models\CobroTallerCredito;
 use App\Models\VentaDetalle;
 use App\Models\EstatusEquipo;
 use App\Models\VentaCredito;
@@ -17,6 +19,7 @@ use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class Caja extends Component
 {
@@ -31,12 +34,15 @@ class Caja extends Component
     public $descripcionProductoModal;
     public $muestraDivAbono, $detallesCredito, $datosCargados;
     public $sumaAbonos, $montoLiquidar;
+    public $consecutivoComun, $cantidadProductoComun, $descripcionProductoComun, $precioProductoComun, $montoProductoComun;
 
     public $corteCaja = [
         'fechaInicial',
         'fechaFinal',
         'cajero',
-        'idUsuario'
+        'idUsuario',
+        'chkCobrosTaller',
+        'chkAbonos'
     ];
 
     protected $listeners = [
@@ -61,7 +67,6 @@ class Caja extends Component
         'departamento'
     ];
 
-
     public $ventaCredito = 
     [
         'nombreCliente' => null,
@@ -69,8 +74,28 @@ class Caja extends Component
         'idEstatus' => null,
         'estatus' => null,
         'monto' => null,
-        'abono' => null,
+        'abono' => 0,
         'idAbonoSeleccionado' => null
+    ];
+
+    // Reglas de validación
+    protected $rules = [
+        'cantidadProductoComun' => 'required|integer|min:1',
+        'descripcionProductoComun' => 'required|string|min:1',
+        'montoProductoComun' => 'required|numeric|min:0.01',
+        // Agrega más reglas aquí para otros campos de la ventana principal
+    ];
+
+    // Mensajes de error personalizados
+    protected $messages = [
+        'cantidadProductoComun.required' => 'La CANTIDAD es obligatoria.',
+        'cantidadProductoComun.integer' => 'La CANTIDAD debe ser un número entero.',
+        'cantidadProductoComun.min' => 'La CANTIDAD debe ser al menos 1.',
+        'descripcionProductoComun.required' => 'La DESCRIPCIÓN es obligatoria.',
+        'descripcionProductoComun.min' => 'La DESCRIPCIÓN no puede estar vacía.',
+        'montoProductoComun.required' => 'El IMPORTE es obligatorio.',
+        'montoProductoComun.numeric' => 'El IMPORTE debe ser un número.',
+        'montoProductoComun.min' => 'El IMPORTE debe ser mayor que 0.',
     ];
 
     public function abrirCorteCaja()
@@ -106,13 +131,9 @@ class Caja extends Component
     public function generaCorteCajaPDF()
     {
         $this->corteCaja = Session::get('corteCaja');
-        $cajeroSeleccionado = false;
 
-        if ($this->corteCaja['idUsuario'] != 0)
-        {
-            $this->corteCaja['cajero'] = User::findOrFail($this->corteCaja['idUsuario']);
-            $cajeroSeleccionado = true;
-        }
+        $fechaInicial = Carbon::parse($this->corteCaja['fechaInicial'])->startOfDay();
+        $fechaFinal = Carbon::parse($this->corteCaja['fechaFinal'])->endOfDay();
 
         if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
         {
@@ -123,45 +144,204 @@ class Caja extends Component
             $tituloCorteCaja = 'CORTE DE CAJA DEL ' .  $this->formatearFecha($this->corteCaja['fechaInicial']) . ' AL ' . $this->formatearFecha($this->corteCaja['fechaFinal']);
         }
 
-        if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
+        $cajeroSeleccionado = $this->corteCaja['idUsuario'] != 0 ? true : false ;
+
+
+        if ($this->corteCaja['chkAbonos'])
         {
-            if ($cajeroSeleccionado)
-            {
-                $ventasCorteCaja = Venta::whereDate('created_at', '=', $this->corteCaja['fechaInicial'])->where('id_usuario', $this->corteCaja['idUsuario'])
-                ->get();
-            }
-            else
-            {
-                $ventasCorteCaja = Venta::whereDate('created_at', '=', $this->corteCaja['fechaInicial'])
-                ->get();
-            }
+            $ventas = Venta::with([
+                'cliente',
+                'usuario',
+                'ventaCredito.ventaCreditoDetalles' => function ($query) use ($fechaInicial, $fechaFinal) {
+                    $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                          ->where('abono', '>', 0);
+                },
+            ])
+            ->when($cajeroSeleccionado, function ($query) {
+                return $query->where('id_usuario', $this->corteCaja['idUsuario']);
+            })
+            ->where('cancelada', 0)
+            ->where(function($query) use ($fechaInicial, $fechaFinal) {
+                // Condición para ventas sin VentaCredito
+                $query->whereDoesntHave('ventaCredito')
+                      ->whereBetween('created_at', [$fechaInicial, $fechaFinal])            
+                      // Condición para ventas con VentaCredito que tienen detalles válidos
+                      ->orWhereHas('ventaCredito.ventaCreditoDetalles', function ($query) use ($fechaInicial, $fechaFinal) {
+                          $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                                ->where('abono', '>', 0);
+                      });
+            })
+            ->orderBy('created_at')
+            ->get()
+            ->flatMap(function ($venta) {
+                $resultado = collect();
+            
+                // Si no hay VentaCredito, incluir la venta
+                if (!$venta->ventaCredito) {
+                    $resultado->push([
+                        'id' => $venta->id,
+                        'created_at' => $venta->created_at,
+                        'nombre_cliente' => $venta->cliente->nombre,
+                        'monto' => $venta->total,
+                        'cajero' => $venta->usuario->name,
+                        'tipo' => 'VENTA',
+                    ]);
+                }
+            
+                // Si hay VentaCredito, incluir únicamente los detalles válidos
+                if ($venta->ventaCredito) {
+                    $venta->ventaCredito->ventaCreditoDetalles
+                        ->each(function ($detalle) use ($resultado, $venta) {
+                            $resultado->push([
+                                'id' => $detalle->id,
+                                'created_at' => $detalle->created_at,
+                                'nombre_cliente' => $venta->cliente->nombre,
+                                'monto' => $detalle->abono,
+                                'cajero' => $detalle->usuario->name ?? 'N/A',
+                                'tipo' => 'ABONO_VENTA',
+                            ]);
+                        });
+                }
+                return $resultado;
+            });
         }
         else
         {
-            if ($cajeroSeleccionado)
-            {
-                 $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
-                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])->where('id_usuario', $this->corteCaja['idUsuario'])
-                ->get();
+            $ventas = Venta::with('cliente')
+                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->when($cajeroSeleccionado, function ($query) {
+                    return $query->where('id_usuario', $this->corteCaja['idUsuario']);
+                })
+                ->where('cancelada', 0)
+                ->where(function($query) {
+                    $query->whereDoesntHave('ventaCredito')
+                          ->orWhereHas('ventaCredito', function ($query) {
+                              $query->where('id_estatus', 2);
+                          });
+                })
+                ->get()
+                ->map(function($venta) {
+                    return [
+                        'id' => $venta->id,
+                        'created_at' => $venta->created_at,
+                        'nombre_cliente' => $venta->cliente->nombre,
+                        'monto' => $venta->total,
+                        'cajero' => $venta->usuario->name,
+                        'tipo' => 'VENTA'
+                    ];
+                });
+        }
+
+        // Inicializar $cobrosTaller como una colección vacía 
+        $cobrosTaller = collect();
+
+        if ($this->corteCaja['chkCobrosTaller'])
+        { 
+            if ($this->corteCaja['chkAbonos'])
+            {                
+                // 1. Obtener los detalles de CobroTallerCredito
+                $cobrosTallerCredito = CobroTallerCredito::with([
+                    'detalles' => function ($query) use ($fechaInicial, $fechaFinal) {
+                        $query->where('abono', '>', 0)
+                            ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                    }
+                ])
+                ->whereHas('detalles', function ($query) use ($fechaInicial, $fechaFinal, $cajeroSeleccionado) {
+                    $query->where('abono', '>', 0)
+                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                    if ($cajeroSeleccionado) 
+                    { 
+                        $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']); 
+                    }
+                })
+                ->get()
+                ->flatMap(function ($credito) {
+                    // Transformar los detalles válidos
+                    return $credito->detalles->map(function ($detalle) use ($credito) {
+                        return [
+                            'id' => $detalle->num_orden,
+                            'created_at' => $detalle->created_at,
+                            'monto' => $detalle->abono,
+                            'nombre_cliente' => $detalle->cobroCredito->cliente->nombre ?? "N/A",
+                            'cajero' => $detalle->usuario->name ?? "N/A",
+                            'credito_id' => $credito->num_orden,
+                            'tipo' => 'ABONO_TALLER',
+                        ];
+                    });
+                });
+
+                // 2. Obtener los registros de CobroTaller que no tienen CobroTallerCredito
+                $cobrosTallerAux = CobroTaller::with([
+                    'equipoTaller.equipo.cliente',
+                    'equipoTaller.usuario',
+                ])
+                ->whereDoesntHave('credito') // Filtra los que no tienen CobroTallerCredito
+                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->when($cajeroSeleccionado, function ($query) {
+                    $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
+                })
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($cobro) {
+                    // Transformar los registros de CobroTaller
+                    return [
+                        'id' => $cobro->num_orden,
+                        'created_at' => $cobro->created_at,
+                        'monto' => $cobro->cobro_realizado,
+                        'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre ?? "N/A",
+                        'cajero' => $cobro->usuario->name ?? "N/A",
+                        'tipo' => 'TALLER',
+                    ];
+                });
+
+                // 3. Combinar los resultados
+                $cobrosTaller = $cobrosTallerAux->merge($cobrosTallerCredito);
             }
             else
             {
-                $ventasCorteCaja = Venta::whereDate('created_at', '>=', $this->corteCaja['fechaInicial'])
-                ->whereDate('created_at', '<=', $this->corteCaja['fechaFinal'])
-                ->get();
+                $cobrosTaller = CobroTaller::with(['equipoTaller.equipo.cliente', 'equipoTaller.usuario'])
+                ->whereDoesntHave('credito')
+                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->where('cobro_realizado', '>', 0)
+                ->when($cajeroSeleccionado, function ($query) {
+                    return $query->whereHas('equipoTaller', function ($query) {
+                        $query->where('id_usuario_recibio', $this->corteCaja['idUsuario']);
+                    });
+                })
+                ->orderBy('created_at')
+                ->get()
+                ->map(function($cobro) {
+                    return [
+                        'id' => $cobro->num_orden,
+                        'created_at' => $cobro->created_at,
+                        'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre,
+                        'monto' => $cobro->cobro_realizado,
+                        'cajero' => $cobro->equipoTaller->usuario->name,
+                        'tipo' => 'TALLER'
+                    ];
+                });
             }
         }
 
-        $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'ventas' => $ventasCorteCaja])
+        $ventas = collect($ventas); 
+        $cobrosTaller = collect($cobrosTaller); 
+
+        // Unión de ambas colecciones
+        $registros = $ventas->merge($cobrosTaller);
+
+        // Conversión de resultado a colección de objetos
+        $registros = $registros->map(function($item) { return (object) $item; });
+
+
+        $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'registros' => $registros])
         ->setOption('page-size', 'Letter')
         ->setOption('margin-top', 30)
         ->setOption('header-html', view('livewire.pdf.encabezado', compact('tituloCorteCaja'))->render())
         ->setOption('header-spacing', 5)
         ->setOption('footer-center', 'Página [page] de [topage]')
-        // ->setOption('footer-right', $this->corteCaja['cajero'])
         ->setOption('footer-font-size', '8')
-        ->setOption('footer-font-name', 'Montserrat');
-
+        ->setOption('footer-font-name', 'Montserrat')
+        ->setOption('enable-local-file-access', true); // Esta opción es crucial
 
         return $pdf->stream('test.pdf');
     }
@@ -300,8 +480,12 @@ class Caja extends Component
             'fechaInicial' => now()->toDateString(),
             'fechaFinal' => now()->toDateString(),
             'cajero' => Auth::user()->name,
-            'idUsuario' => 0
+            'idUsuario' => 0,
+            'chkCobrosTaller' => true,
+            'chkAbonos' => true
         ];
+
+        $this->consecutivoComun = 1;
 
         $this->showModalErrors = false;
         $this->showMainErrors = !$this->showModalErrors;
@@ -393,11 +577,16 @@ class Caja extends Component
                 {
                     {
                         $this->totalCarrito = $this->totalCarritoDescuento;
-                        $venta = Venta::create([
-                            'id_cliente' => $this->cliente['id'],
-                            'total' => $this->totalCarrito,
-                            'id_usuario' => Auth::id()
-                        ]);
+                        // Crear una nueva instancia del modelo Venta
+                        $venta = new Venta();
+
+                        // Asignar valores a las propiedades del modelo
+                        $venta->id_cliente = $this->cliente['id'];
+                        $venta->total = $this->totalCarrito;
+                        $venta->id_usuario = Auth::id();
+
+                        // Guardar la instancia del modelo en la base de datos
+                        $venta->save();
 
                         $idVenta = $venta->id;
 
@@ -484,9 +673,44 @@ class Caja extends Component
         return view('livewire.caja', compact('productosModal'));
     }
 
+    public function agregaProductoComun()
+    {
+        $this->validate();
+
+        $this->cantidadProductoCapturado = $this->cantidadProductoComun;
+        $producto = Producto::where('codigo', 'COM0' . $this->consecutivoComun)->first();
+        $this->agregaAlCarrito($producto);
+    }
+
     //QUIERO QUE CUANDO EL INVENTARIO SEA -1 NO RESTE INVENTARIO NI VALIDE SI HAY EN EXISTENCIA
     public function agregaProducto()
     {
+        if ($this->codigoProductoCapturado == 0)
+        {
+            $this->cantidadProductoComun = 1;
+            $this->descripcionProductoComun = '';
+            $this->montoProductoComun = 0;
+
+            $this->dispatch('abrirModalProductoComun');
+
+            return 0;
+        }
+
+        if ($this->codigoProductoCapturado == 'COM01'
+        || $this->codigoProductoCapturado == 'COM02'
+        || $this->codigoProductoCapturado == 'COM03'
+        || $this->codigoProductoCapturado == 'COM04'
+        || $this->codigoProductoCapturado == 'COM05'
+        || $this->codigoProductoCapturado == 'COM06'
+        || $this->codigoProductoCapturado == 'COM07'
+        || $this->codigoProductoCapturado == 'COM08'
+        || $this->codigoProductoCapturado == 'COM09')
+        {
+            $this->dispatch('mostrarToastError', 'Código RESERVADO del sistema. Intenta con otro!!!');
+
+            return 0;
+        }
+
         $this->cantidadProductoCapturado = 1;
         $producto = Producto::whereRaw("TRIM(codigo) = ?", trim($this->codigoProductoCapturado))->first();
 
@@ -596,12 +820,19 @@ class Caja extends Component
             }
         }
     }
-
+    
     public function eliminaDelCarrito($index)
     {
+        if ($this->carrito[$index]['esProductoComun'])
+        {
+            if ($this->consecutivoComun > 1) $this->consecutivoComun--;
+        }
+
         $this->carrito->forget($index);
         $this->carrito = $this->carrito->values();
         $this->cuentaCantidadProductosCarrito();
+
+  
     }
 
     public function agregaAlCarrito($producto)
@@ -614,16 +845,40 @@ class Caja extends Component
 
             // Si el producto no está en el carrito, agrégalo
             if (!$productoEnCarrito) {
-                $subTotal = $producto->precio_venta * $this->cantidadProductoCapturado;
+                $comunCodigos = [
+                    'COM01', 'COM02', 'COM03', 'COM04', 
+                    'COM05', 'COM06', 'COM07', 'COM08', 'COM09'
+                ];
+                
+                if (in_array($producto->codigo, $comunCodigos)) {
+                    $subTotal = $this->montoProductoComun;
+                    $item = [
+                        'esProductoComun' => true,
+                        'descripcionProductoComun' => trim(mb_strtoupper($this->descripcionProductoComun)),
+                        'precioProductoComun' => $this->montoProductoComun / $this->cantidadProductoComun,
+                    ];
+                    $this->consecutivoComun++;
+                } else {
+                    $subTotal = $producto->precio_venta * $this->cantidadProductoCapturado;
+                    $item = [
+                        'esProductoComun' => false,
+                    ];
+                }
 
-                $item = [
+                // Agregar los elementos comunes a todos los casos al array $item
+                $item = array_merge($item, [
                     'producto' => $producto,
                     'cantidad' => $this->cantidadProductoCapturado,
                     'subTotal' => number_format($subTotal, 2, '.', ','),
                     'cantidadVieja' => $this->cantidadProductoCapturado
-                ];
+                ]);
 
-                $this->carrito->push($item);                
+                $this->carrito->push($item); 
+
+                if ($item['esProductoComun']) 
+                { 
+                    $this->dispatch('cerrarModalProductoComun');
+                }
             }
         }
         $this->cuentaCantidadProductosCarrito();
@@ -668,20 +923,31 @@ class Caja extends Component
                 DB::transaction(function ()
                 {
                     $this->totalCarrito = $this->totalCarritoDescuento;
-                    $venta = Venta::create([
-                        'id_cliente' => $this->cliente['id'],
-                        'total' => $this->totalCarrito,
-                        'id_usuario' => Auth::id()
-                    ]);
 
+                    // Crear una nueva instancia del modelo Venta
+                    $venta = new Venta();
+
+                    // Asignar valores a las propiedades del modelo
+                    $venta->id_cliente = $this->cliente['id'];
+                    $venta->total = $this->totalCarrito;
+                    $venta->id_usuario = Auth::id();
+
+                    // Guardar la instancia del modelo en la base de datos
+                    $venta->save();
+                    
                     foreach ($this->carrito as $item)
                     {
-                        $codigoProducto = $item['producto']->codigo;
                         $cantidad = $item['cantidad'];
+                        $codigoProducto = $item['producto']->codigo;
 
-                        $this->restaInventario($codigoProducto, $cantidad);
-
-                        $subTotal = $item['producto']->precio_venta * $cantidad;
+                        if ($item['esProductoComun'])
+                        { 
+                            $subTotal = $item['precioProductoComun'] * $cantidad;
+                        }
+                        else
+                        {
+                            $subTotal = $item['producto']->precio_venta * $cantidad;
+                        }
 
                         $venta->detalles()->createMany([
                             [
@@ -690,6 +956,20 @@ class Caja extends Component
                             'importe' => $subTotal
                             ],
                         ]);
+                        
+                        if ($item['esProductoComun'])  //GUARDA el producto COMUN
+                        {
+                            $venta->productosComun()->createMany([
+                                [
+                                'codigo_producto' => $item['producto']->codigo,
+                                'descripcion_producto' => $item['descripcionProductoComun'],
+                                ],
+                            ]);
+                        }
+                        else
+                        {
+                            $this->restaInventario($codigoProducto, $cantidad);
+                        }
                     }
 
                     $this->carrito = collect(); // Inicializa $carrito como una colección vacía
