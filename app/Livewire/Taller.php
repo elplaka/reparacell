@@ -62,6 +62,7 @@ class Taller extends Component
     public $showMainErrors, $showModalErrors, $usuariosModal;
     public $sumaAbonos, $montoLiquidar;
     public $datosCargados;
+    public $abreModalAnotaciones;
 
     public function rules()
     {
@@ -824,6 +825,8 @@ class Taller extends Component
         if (isset($this->busquedaEquipos['idEstatus']) && $this->busquedaEquipos['idEstatus'] != [])
         {
             $equipos_taller->whereIn('id_estatus', $this->busquedaEquipos['idEstatus']);
+
+            // dd($this->busquedaEquipos['idEstatus']);
          }
 
         if (isset($this->busquedaEquipos['idTipo']) && $this->busquedaEquipos['idTipo'] != [])
@@ -989,6 +992,7 @@ class Taller extends Component
     public function mount()
     {
         $this->muestraDivAgregaEquipo = false;
+        $this->abreModalAnotaciones = false;
         $this->numberOfPaginatorsRendered = [];
         // $this->paginaActual = 1;
         $this->datosCobroCargados = false;
@@ -1214,6 +1218,8 @@ public function obtenerIconoSegunEstatus($id_estatus)
         {
             $this->anotacionesMod['contenido'] = $anotaciones->contenido;
         }
+
+        $this->abreModalAnotaciones = true;
     }
 
     public function guardaAnotaciones()
@@ -1248,6 +1254,13 @@ public function obtenerIconoSegunEstatus($id_estatus)
                 session()->flash('success', 'Las ANOTACIONES se han agregado correctamente.');
             }
         }
+
+        $this->abreModalAnotaciones = false;
+    }
+
+    public function cierraModalAnotaciones()
+    {
+        $this->abreModalAnotaciones = false;
     }
 
     public function regresaAnotaciones($numOrden)

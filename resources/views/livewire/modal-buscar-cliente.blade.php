@@ -34,15 +34,22 @@
            <div class="modal-body">
             <div class="container mt-3 font-sans text-gray-900 antialiased">
                 <div class="row mb-2">
-                    <label for="nombreClienteModal" class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Nombre') }}</label>
-                    <div class="col-md-5">
-                        <input wire:model.live="nombreClienteModal" type="text" class="select-height form-control" id="nombreClienteModal" style="font-size:11pt;" autofocus>
+                    <label for="nombreClienteModal" wire:ignore class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Nombre') }}</label>
+                    <div class="col-md-5" wire:ignore>
+                        <div class="input-group">
+                            <input wire:model="nombreClienteModal" wire:keydown.enter="executeRender" wire:key="nombreClienteModal" type="text" class="select-height form-control" id="nombreClienteModal" style="font-size:11pt;" key="nombreClienteInput">
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row mb-3">
                     @if ($clientesModal && $clientesModal->count())
-                        <div class="table-responsive" wire:loading.remove>
-                            <table class="table table-sm table-hover table-bordered">
+                        <div class="table-responsive">
+                            <table id="clientesTable" class="table table-sm table-hover table-bordered" autofocus>
                                 <thead>
                                     <tr>
                                         <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider">Id</th>
@@ -74,7 +81,7 @@
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-center">
-                <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarBuscarClienteModal" wire:click="cierraModalBuscarCliente">Cerrar</button>
+                <button wire:ignore class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarBuscarClienteModal" wire:click="cierraModalBuscarCliente">Cerrar</button>
             </div>
         </div>
        </div>

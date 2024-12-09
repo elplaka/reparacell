@@ -25,13 +25,13 @@
                         <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
                     </div>
                     <div class="col-3 col-md-3 pl-1">
-                        <button class="btn btn-secondary"
+                        <button id="buscarProductoBtn" class="btn btn-secondary"
                                 data-toggle="modal" 
                                 data-target="#buscarProductoModal" 
                                 style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;"
                                 title="Buscar producto">
                                 <i class="fa-solid fa-kitchen-set" style="margin-right: 2px;"></i><i class="fa-solid fa-magnifying-glass"></i>
-                        </button>
+                        </button> 
                     </div>
                 </div>
             </div>
@@ -203,6 +203,19 @@
 </script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Livewire.on('abrirModalBuscarProducto', () => {
+            let button = document.getElementById('buscarProductoBtn');
+            if (button) {
+                button.click();
+                // console.log('Botón "Buscar producto" clicado automáticamente.');
+            } 
+            // else {
+            //     console.log('El botón con id "buscarProductoBtn" no existe.');
+            // }
+        });
+    });
+
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('cerrarModalBuscarProducto', () => {
         document.getElementById('btnCerrarBuscarProductoModal').click();
@@ -240,5 +253,17 @@
         });
     });
 
-    
+    document.addEventListener('DOMContentLoaded', function () {
+    $('#buscarProductoModal').on('shown.bs.modal', function () {
+        let descripcionProductoInput = document.getElementById('descripcionProductoModal');
+        if (descripcionProductoInput) {
+            descripcionProductoInput.focus();
+            // console.log('Foco puesto en el input "descripcionProductoModal".');
+        } 
+        // else {
+        //     console.log('El input con id "descripcionProductoModal" no existe.');
+        // }
+    });
+});
+
 </script>

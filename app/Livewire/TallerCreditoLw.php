@@ -275,9 +275,17 @@ class TallerCreditoLw extends Component
             });
         }
 
-        if ($this->busquedaCreditos['idEstatus'] != 0)
-        {
-            $creditosQuery->where('id_estatus', $this->busquedaCreditos['idEstatus']);
+        if ($this->busquedaCreditos['idEstatus'] > 0)
+        { 
+            if ($this->busquedaCreditos['idEstatus'] <= 2)
+            {
+                $creditosQuery->where('id_estatus', $this->busquedaCreditos['idEstatus'])
+                ->has('cobroTaller');
+            }
+            else
+            {
+                $creditosQuery->doesntHave('cobroTaller');
+            }
         }
 
         $creditos = $creditosQuery->paginate(10);

@@ -386,9 +386,28 @@
 </div>
 
 <script>
-    function eliminarMarca(id) {
-// Aquí se puede agregar la lógica para eliminar la marca utilizando Livewire
-console.log('puro Livewire', id);
-Livewire.dispatch('eliminarMarca', id);
-}
+        function eliminarMarca(id) {
+    // Aquí se puede agregar la lógica para eliminar la marca utilizando Livewire
+    Livewire.dispatch('eliminarMarca', id);
+    }
+
+        document.addEventListener('DOMContentLoaded', function () {
+        // Hook para manejar el commit de Livewire
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            // Re-inicializar los selectpickers después de la actualización
+            $('.selectpicker').selectpicker();
+
+            succeed(({ snapshot, effect }) => {
+                // Destruir y volver a inicializar los selectpickers
+                $('select').selectpicker('destroy');
+                queueMicrotask(() => {
+                    $('.selectpicker').selectpicker('refresh');
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
 </script>

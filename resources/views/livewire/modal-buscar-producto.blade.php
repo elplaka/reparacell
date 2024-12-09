@@ -2,7 +2,10 @@
     <div class="modal-dialog modal-lg" role="dialog" >
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Buscar producto</b></h1>
+               <h1 class="text-xl font-bold"><b> Buscar producto</b></h1> &nbsp;
+               <div wire:loading class="text-center">
+                    <i class="fa fa-spinner fa-spin"></i> Cargando...
+                </div>
                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraBuscarProductoModal">
                    <span aria-hidden="true">&times;</span>
                </button> 
@@ -35,16 +38,18 @@
            @endif
            <div class="modal-body">
                <div class="container mt-3 font-sans text-gray-900 antialiased">
-                    <div class="row mb-2">
-                        <label for="descripcionProductoModal" class="col-md-4 block text-sm-right text-gray-700 pr-0" style="font-size: 11pt;">{{ __('Descripción') }}</label>
-                        <div class="col-md-5">
-                            <input wire:model.live="descripcionProductoModal" type="text" class="select-height form-control" id="descripcionProductoModal" style="font-size:11pt;" autofocus>
-                        </div>
-                        <div wire:loading class="text-center">
-                            <i class="fa fa-spinner fa-spin"></i> 
-                            <br><br>
-                        </div>
+                <div class="row mb-3 justify-content-center">
+                    <div class="col-md-6"> <!-- Ajusta este valor para ocupar la mitad del ancho -->
+                        <div class="input-group">
+                            <input placeholder="Descripción del producto" wire:keydown.enter="executeRender" wire:model="descripcionProductoModal" type="text" class="select-height form-control" id="descripcionProductoModal" style="font-size:11pt;" autofocus>
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>                   
                     </div>
+                </div>
                     <div class="row mb-3">
                         @if (isset($productosModal))
                             <div class="table-responsive" wire:loading.remove>
@@ -83,7 +88,7 @@
                                                 {{ $productoModal->departamento->nombre }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-no-wrap" style="color: teal; font-weight: bold;">
-                                                {{ $productoModal->inventario }}
+                                                {{ $productoModal->inventario == -1 ? 'N/A' : $productoModal->inventario }}
                                             </td>
                                         </tr>
                                         @endforeach

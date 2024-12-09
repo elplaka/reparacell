@@ -183,7 +183,6 @@ class AgregaEquipoTaller extends Component
         $this->showMainErrors = true;
         $this->muestraDivAgregaEquipo = false;
         $this->nombreClienteModal = '';
-        $this->clientesModal = null;
         $this->tieneEquiposCliente = false;
         $this->equipoSeleccionadoModal = true;
 
@@ -197,48 +196,74 @@ class AgregaEquipoTaller extends Component
         $this->marcasEquiposMod = collect();
     }
 
-    public function render()
-    {
-        $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
-        $marcas_equipos = MarcaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])
-        ->where('disponible', 1)
-        ->orderBy('nombre', 'asc') // Ordenar por nombre de manera ascendente (A-Z)
-        ->get();
-
-        $modelos_equipos = ModeloEquipo::where('id_marca', $this->equipo['idMarca'])
-        ->where('disponible', 1)->where('disponible', 1)->orderBy('nombre', 'asc')->get();
-        $fallas_equipos = FallaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])->where('disponible', 1)->get();
-        $estatus_equipos = EstatusEquipo::all();
-
-        if ($this->muestraHistorialClienteModal) 
-        {
-            $historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
-            ->where('equipos.id_cliente', $this->cliente['id'])
-            ->orderBy('equipos_taller.fecha_salida')
-            ->orderBy('equipos_taller.num_orden')
-            ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones') 
-            ->paginate(5);
-        }
-        else
-        {
-            $historialClienteTaller = null;
-        }
-
-        $clientesModal = null;
-  
-        if (strlen($this->nombreClienteModal) > 0)
-        {
-            $clientesModal = Cliente::where('nombre', 'like', '%' . $this->nombreClienteModal . '%')
-                ->where('telefono', '!=', '0000000000')
-                ->where('disponible', 1)
-                ->paginate(10);
-
-            $this->setPage(1);
-        }
-
-        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 'historialClienteTaller', 'clientesModal'));
+    public function executeRender() 
+    { 
+        $this->render(); 
     }
 
+    public function render()
+    {
+        $clientesModal = null;
+        $tipos_equipos = collect();
+        $marcas_equipos = null;
+        $modelos_equipos = null;
+        $fallas_equipos = null;
+        $estatus_equipos = null;
+        $historialClienteTaller = null;
+
+        if ($this->modalBuscarClienteAbierta)
+        {  
+            if (strlen($this->nombreClienteModal) > 0)
+            {
+                $clientesModal = Cliente::where('nombre', 'like', '%' . $this->nombreClienteModal . '%')
+                    ->where('telefono', '!=', '0000000000')
+                    ->where('disponible', 1)
+                    ->take(10) 
+                    ->paginate(10);
+            }
+
+            $this->dispatch('focusTable');
+        }
+        else
+        { 
+            $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
+            $marcas_equipos = MarcaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])
+            ->where('disponible', 1)
+            ->orderBy('nombre', 'asc') // Ordenar por nombre de manera ascendente (A-Z)
+            ->get();
+
+            $modelos_equipos = ModeloEquipo::where('id_marca', $this->equipo['idMarca'])
+            ->where('disponible', 1)->where('disponible', 1)->orderBy('nombre', 'asc')->get();
+            $fallas_equipos = FallaEquipo::where('id_tipo_equipo', $this->equipo['idTipo'])->where('disponible', 1)->get();
+            $estatus_equipos = EstatusEquipo::all();
+
+            if ($this->muestraHistorialClienteModal) 
+            {
+                $historialClienteTaller = Equipo::join('equipos_taller', 'equipos_taller.id_equipo', '=', 'equipos.id')
+                ->where('equipos.id_cliente', $this->cliente['id'])
+                ->orderBy('equipos_taller.fecha_salida')
+                ->orderBy('equipos_taller.num_orden')
+                ->select('equipos.*', 'equipos_taller.num_orden','equipos_taller.id_estatus', 'equipos_taller.fecha_salida', 'equipos_taller.observaciones') 
+                ->paginate(5);
+            }
+            else
+            {
+                $historialClienteTaller = null;
+            }
+        }
+
+        return view('livewire.agrega-equipo-taller', compact('tipos_equipos', 
+        'marcas_equipos', 'modelos_equipos', 'fallas_equipos', 'estatus_equipos', 
+        'historialClienteTaller', 'clientesModal'));
+    }
+
+    public function updatedNombreClienteModal() 
+    { // Actualiza la paginación cuando el nombre del cliente cambia 
+        $this->resetPage(); 
+
+        $this->dispatch('focusInput');
+    }
+ 
     public function regresaEquipoCliente($idCliente, $idTipoEquipo, $idMarcaEquipo, $idModeloEquipo)
     {
         $equipo = Equipo::where('id_tipo', $idTipoEquipo)->where('id_marca', $idMarcaEquipo)->where('id_modelo', $idModeloEquipo)->where('id_cliente', $idCliente)->first();
@@ -286,6 +311,18 @@ class AgregaEquipoTaller extends Component
             $this->actualizaEquipoTaller();
         }
     }
+
+    public function obtenerCostoFalla($idFalla)
+    {
+        $falla = FallaEquipo::find($idFalla);
+    
+        if ($falla) {
+            return $falla->costo;
+        } else {
+            return null;
+        }
+    }
+    
 
     public function actualizaEquipoTaller()
     {
@@ -381,6 +418,7 @@ class AgregaEquipoTaller extends Component
                     $falla = new FallaEquipoTaller();
                     $falla->num_orden = $numOrden;
                     $falla->id_falla = $fallaId;
+                    $falla->costo = $this->obtenerCostoFalla($fallaId);
                     $catFallas = FallaEquipo::find($fallaId);
                     $cobroEstimado += $catFallas->costo;
                     $falla->save();
@@ -594,6 +632,7 @@ class AgregaEquipoTaller extends Component
                     $falla->num_orden = $numOrden;
                     $falla->id_falla = $fallaId;
                     $catFallas = FallaEquipo::find($fallaId);
+                    $falla->costo = $catFallas->costo;
                     if ($catFallas) {
                         $cobroEstimado += $catFallas->costo;
                     }
@@ -817,6 +856,13 @@ class AgregaEquipoTaller extends Component
 
     public function updatedClienteTelefono($value)
     {
+        if(strlen($value) == 10)
+        {
+            $todosDigitos = $this->validarNumeros();
+
+            if (!$todosDigitos) return false;
+        }
+
         if (!$this->modalBuscarClienteAbierta)
         {
             if ($this->cliente['estatus'] != 3)   //Si el cliente no es editable entonces que busque clientes
@@ -868,9 +914,6 @@ class AgregaEquipoTaller extends Component
                         $this->equipo['estatus'] = 1;
                         $this->equipo['idMarca'] = null;
                         $this->equipo['idModelo']  = null;
-                        // 'nombreTipo'        => null,
-                        // 'nombreMarca'       => null,
-                        // 'nombreModelo'      => null
 
                         $this->equipoTaller['estatus'] = 0;
                     }
@@ -897,13 +940,11 @@ class AgregaEquipoTaller extends Component
                     }
                     else  
                     {
-                        // $this->cliente['estatus'] = 2;
                         if (strlen($value) <= 10) 
                         {
                             $this->cliente['publicoGeneral'] = false;
                             $this->cliente['estatus'] = 0;
                             $this->equipoTaller['estatus'] = 0;
-                            // $this->equipo['estatus'] = 2;
                         }
                     }
                 }
@@ -1309,6 +1350,8 @@ class AgregaEquipoTaller extends Component
 
         $this->dispatch('cerrarModalBuscarCliente');
 
+        $this->modalBuscarClienteAbierta = false;
+
         if ($this->tieneEquiposCliente)
         {
             $this->hayItemsNoDisponibles = false;
@@ -1394,14 +1437,16 @@ class AgregaEquipoTaller extends Component
     public function abreModalBuscarCliente()
     {
         $this->nombreClienteModal = '';
-        $this->clientesModal = null;
 
         $this->modalBuscarClienteAbierta = true;
+
+        $this->dispatch('focusInput');
+
     }
 
     public function cierraModalBuscarCliente()
     {
-
+        $this->modalBuscarClienteAbierta = false;
     }
 
     public function abreDivAgregaEquipo()
@@ -1415,15 +1460,15 @@ class AgregaEquipoTaller extends Component
         $valor = $this->cliente['telefono'];
 
         // Usar una expresión regular para eliminar cualquier caracter no numérico
-        $valor = preg_replace("/[^0-9]/", "", $valor);
+        $valorR = preg_replace("/[^0-9]/", "", $valor);
 
         if (strlen($valor) > 10) {
-            $valor = substr($valor, 0, 10);
+            $valorR = substr($valor, 0, 10);
         }
         // Actualizar el valor del campo de entrada
-        $this->cliente['telefono'] = $valor;
+        $this->cliente['telefono'] = $valorR;
 
-        // if (strlen($this->cliente['telefono']) < 10)  $this->cliente['estatus'] = 2;
+        return ctype_digit($valor);
     }
 
     public function nuevoTipoEquipoModal()

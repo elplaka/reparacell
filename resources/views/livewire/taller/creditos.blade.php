@@ -64,9 +64,16 @@
                 <label class="d-block d-md-none font-bold text-gray-700" style="font-size: 11pt;">Estatus</label>
                 <select wire:model.live="busquedaCreditos.idEstatus" class="selectpicker select-picker w-100" style="font-size:11pt;">
                     <option value="0">-- TODOS --</option>
+                    @php
+                        $ixEstatus = 1;
+                    @endphp
                     @foreach ($estatus as $est)
                         <option value="{{ $est->id }}">{{ $est->descripcion }}</option>
+                        @php
+                            $ixEstatus++;
+                        @endphp
                     @endforeach
+                    <option value="{{ $ixEstatus }}">SIN COBRAR</option>
                 </select>
             </div>
         </div>

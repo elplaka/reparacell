@@ -60,7 +60,7 @@
         </span>
     </div>
     @endif
-    <div style="display: @if(!$muestraDivAgregaEquipo) none @endif">
+    <div id="divPrincipal" name="divPrincipal" style="display: @if(!$muestraDivAgregaEquipo) none @endif">
     <div wire:ignore.self class="collapse" id="collapseAgregaEquipoTaller">
     <div class="modal-header">
         <span>
@@ -86,19 +86,21 @@
                 <div class="col-12 col-md-3">
                     <div class="row">
                         <div class="col-8 col-md-7 pr-0">
-                            <input wire:model.live="cliente.telefono" type="text" class="input-height form-control"
-                                   wire:input="validarNumeros"
+                            <input wire:model.live="cliente.telefono" id="telefonoCliente" name="telefonoCliente" type="text" class="input-height form-control"
+                                   {{-- @if (strlen($cliente['telefono']) >= 9) wire:input="validarNumeros" @endif --}}
                                    style="font-size: 11pt;"
                                    @if ($cliente['estatus'] == 3) readonly @endif 
-                                   autofocus>
+                                   autofocus> 
                         </div>
                         @if ($cliente['estatus'] == 0)
                         <div class="col-4 col-md-5 pl-1">
-                            <button class="btn btn-secondary btn-sm btn-md d-inline-flex align-items-center" 
+                            <button id="buscarClienteBtn" class="btn btn-secondary btn-sm btn-md d-inline-flex align-items-center" 
                                     data-toggle="modal" 
                                     data-target="#buscarClienteModal" 
                                     style="font-size: 10pt"
-                                    onclick="abreModalBuscarCliente()">
+                                    onclick="abreModalBuscarCliente()"
+                                    wire:click='abreModalBuscarCliente'
+                                    >
                                 <i class="fa-solid fa-user"></i>&thinsp;<i class="fa-solid fa-magnifying-glass"></i>
                             </button>
                         </div>
@@ -362,9 +364,151 @@
 </div>
 </div>
 
+<script>
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.hook('morph.updated', () => {
+            let divPrincipal = document.getElementById('divPrincipal');
+
+            if (divPrincipal && isElementVisible(divPrincipal)) {
+                let telefonoCliente = document.getElementById('telefonoCliente');
+                if (telefonoCliente) {
+                    if (!telefonoCliente.hasAttribute('readonly')) {
+                        telefonoCliente.focus();
+                        // console.log('Foco puesto en el input "telefonoCliente".');
+                    } else {
+                        console.log('El input "telefonoCliente" está en modo readonly. No se pone el foco.');
+                    }
+                } else {
+                    console.log('El input con id "telefonoCliente" no existe.');
+                }
+            }
+        });
 
 
+        // Función para verificar si un elemento es visible
+        function isElementVisible(el) {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+        }
+    });
 
+    document.addEventListener('DOMContentLoaded', function () {
+    // Evento para detectar el Enter en el input
+    document.getElementById('telefonoCliente').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevenir el comportamiento por defecto
+            const button = document.getElementById('buscarClienteBtn');
+            if (button && button.offsetParent !== null) { // Verificar si el botón está visible
+                button.click(); // Simular el clic del botón
+            } else {
+                console.error('Botón no encontrado o no visible');
+            }
+        }
+    });
+});
+
+//FUNCIONA PERO ES TARDADO COMO CON SETTIMEOUT
+// document.addEventListener('DOMContentLoaded', function () {
+//     const observer = new MutationObserver((mutations) => {
+//         mutations.forEach((mutation) => {
+//             if (mutation.type === 'childList') {
+//                 const input = document.getElementById('nombreClienteModal');
+//                 const modal = document.getElementById('buscarClienteModal');
+//                 if (input && modal && modal.style.display !== 'none' && document.activeElement !== input && !input.hasAttribute('readonly')) {
+//                     input.focus();
+//                     console.log('Foco restaurado manualmente.');
+//                 }
+//             }
+//         });
+//     });
+
+//     observer.observe(document.getElementById('buscarClienteModal'), {
+//         attributes: false,
+//         childList: true,
+//         subtree: true
+//     });
+
+//     // Desconectar el observer cuando el modal se cierra
+//     $('#buscarClienteModal').on('hidden.bs.modal', function () {
+//         observer.disconnect();
+//     });
+// });
+
+
+//FUNCIONA PERO USA SETTIMEOUT
+document.addEventListener('DOMContentLoaded', function () {
+    Livewire.on('focusInput', () => {
+        const input = document.getElementById('nombreClienteModal');
+        const modal = document.getElementById('buscarClienteModal');
+        
+        if (input && modal) {
+            // Introducimos un pequeño retraso
+            setTimeout(() => {
+                // input.blur(); // Desenfocamos primero
+                input.focus(); // Luego, enfocamos de nuevo
+            }, 1); // Ajusta el tiempo de espera según sea necesario
+        }
+    });
+});
+
+//     document.addEventListener('livewire:initialized', () => {
+//     Livewire.on('focusInput', () => {
+//         const input = document.getElementById('nombreClienteModal');
+//         if (input) {
+//             input.focus();
+//             console.log('Foco restaurado manualmente.');
+//         }
+//     });
+// });
+
+//FUNCIONA MANTENIENDO EL FOCUS PERO RALENTIZA EL RENDER
+// document.addEventListener('livewire:initialized', () => {
+//     Livewire.hook('morph.updated', ({ el }) => {
+//         const input = document.getElementById('nombreClienteModal');
+//         if (input && document.activeElement !== input) {
+//             input.focus();
+//             console.log('Foco restaurado solo si es necesario.');
+//         }
+//     });
+// });
+
+
+// document.addEventListener('livewire:initialized', () => {
+//     Livewire.hook('morph.updated', ({ el }) => {
+//         const input = document.getElementById('nombreClienteModal');
+//         if (input && document.activeElement !== input) {
+//             input.focus();
+//             console.log('Foco restaurado después del render');
+//         }
+//     });
+// });
+
+document.addEventListener('DOMContentLoaded', function () {
+    let shouldFocus = false;
+
+    Livewire.on('focusInput', () => {
+        shouldFocus = true;
+        const input = document.getElementById('nombreClienteModal');
+        if (input && document.activeElement !== input) {
+            input.focus();
+            console.log('Foco restaurado solo si es necesario.');
+        }
+    });
+
+    Livewire.hook('morph.updated', ({ el }) => {
+        if (shouldFocus) {
+            const input = document.getElementById('nombreClienteModal');
+            if (input && document.activeElement !== input) {
+                input.focus();
+                console.log('Foco restaurado solo si es necesario.');
+            }
+            shouldFocus = false; // Resetear el flag después de enfocar
+        }
+    });
+});
+
+
+</script>
 
 {{-- <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -192,26 +192,18 @@ input[type="date"]:hover {
 
             <!-- Divider -->
             <hr class="sidebar-divider">
-            <!-- Nav Item - Dashboard -->
-            {{-- <li class="nav-item">
-                <a class="nav-link" href="{{ route('taller.index') }}">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-                    <span> Taller</span></a>
-            </li> --}}
-
+ 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReparaciones"
-                    aria-expanded="true" aria-controls="collapseReparaciones">
+                    aria-expanded="true" aria-controls="collapseReparaciones" data-key="1">
                     <i class="fa-solid fa-toolbox"></i>
-                    <span> Reparaciones</span>
+                    <span> Reparaciones </span>
                 </a>
                 <div id="collapseReparaciones" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('taller.index') }}"> <i class="fa-solid fa-screwdriver-wrench"></i> Taller</a>
-                    {{-- </div> --}}
-                    {{-- <div class="bg-white py-2 collapse-inner rounded"> --}}
-                        <a class="collapse-item" href="{{ route('reparaciones.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
-                        <a class="collapse-item" href="{{ route('taller.creditos') }}"> <i class="fa-solid fa-credit-card"></i> Créditos </a>
+                        <a class="collapse-item" href="{{ route('taller.index') }}" data-key="T"> <i class="fa-solid fa-screwdriver-wrench"></i> Taller <small>[ T ]</small></a>
+                        <a class="collapse-item" href="{{ route('reparaciones.reportes') }}" data-key="S"> <i class="fa-solid fa-file-invoice"></i> Reportes <small>[ S ]</small> </a>
+                        <a class="collapse-item" href="{{ route('taller.creditos') }}" data-key="O"> <i class="fa-solid fa-credit-card"></i> Créditos <small>[ O ]</small> </a>
                     </div>                    
                 </div>
             </li>
@@ -219,15 +211,15 @@ input[type="date"]:hover {
             <hr class="sidebar-divider">
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
-                    aria-expanded="true" aria-controls="collapseVentas">
+                    aria-expanded="true" aria-controls="collapseVentas" data-key="2">
                     <i class="fa-solid fa-dollar-sign"> </i>
-                    <span> Ventas</span>
+                    <span> Ventas </span>
                 </a>
                 <div id="collapseVentas" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('caja.index') }}"> <i class="fa-solid fa-cash-register"></i> Caja</a>
-                        <a class="collapse-item" href="{{ route('ventas.index') }}"> <i class="fa-solid fa-table"></i> Registros</a>
-                        <a class="collapse-item" href="{{ route('ventas.creditos') }}"> <i class="fa-solid fa-credit-card"></i> Créditos </a>
+                        <a class="collapse-item" href="{{ route('caja.index') }}" data-key="C"> <i class="fa-solid fa-cash-register"></i> Caja <small>[ C ]</small></a>
+                        <a class="collapse-item" href="{{ route('ventas.index') }}" data-key="G"> <i class="fa-solid fa-table"></i> Registros <small>[ G ]</small> </a>
+                        <a class="collapse-item" href="{{ route('ventas.creditos') }}" data-key="D"> <i class="fa-solid fa-credit-card"></i> Créditos <small>[ D ]</small> </a>
                     </div>
                 </div>
             </li>
@@ -235,40 +227,36 @@ input[type="date"]:hover {
             <hr class="sidebar-divider">
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEquipos"
-                    aria-expanded="true" aria-controls="collapseEquipos">
+                    aria-expanded="true" aria-controls="collapseEquipos" data-key="3">
                     <i class="fa-solid fa-mobile-retro"></i>
-                    <span> Equipos</span>
+                    <span> Equipos </small></span>
                 </a>
                 <div id="collapseEquipos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('equipos.index') }}">                     <i class="fa-solid fa-rectangle-list"></i> Catálogo </a>
-                        <a class="collapse-item" href="{{ route('equipos.tipos') }}">                     <i class="fa-solid fa-microchip"></i> Tipos </a>
-                        <a class="collapse-item" href="{{ route('equipos.marcas') }}">                     <i class="fa-solid fa-splotch"></i> Marcas </a>
-                        <a class="collapse-item" href="{{ route('equipos.modelos') }}">                     <i class="fa-solid fa-bookmark"></i> Modelos </a>
-                       <a class="collapse-item" href="{{ route('equipos.fallas') }}">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas</a>
+                        <a class="collapse-item" href="{{ route('equipos.index') }}" data-key="E">                     <i class="fa-solid fa-rectangle-list"></i> Catálogo <small>[ E ]</small></a>
+                        <a class="collapse-item" href="{{ route('equipos.tipos') }}" data-key="I">                     <i class="fa-solid fa-microchip"></i> Tipos <small>[ I ]</small></a>
+                        <a class="collapse-item" href="{{ route('equipos.marcas') }}" data-key="M">                     <i class="fa-solid fa-splotch"></i> Marcas <small>[ M ]</small> </a>
+                        <a class="collapse-item" href="{{ route('equipos.modelos') }}" data-key="L">                     <i class="fa-solid fa-bookmark"></i> Modelos <small>[ L ]</small> </a>
+                       <a class="collapse-item" href="{{ route('equipos.fallas') }}" data-key="F">                     <i class="fa-solid fa-plug-circle-exclamation"></i> Fallas <small>[ F ]</small></a>
                     </div>
                 </div>
             </li>
             <hr class="sidebar-divider">
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-                {{-- <a class="nav-link" href="{{ route('productos.index') }}">
-                    <i class="fa-solid fa-kitchen-set"></i>
-                    <span> Productos </span></a> --}}
-                
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProductos"
-                    aria-expanded="true" aria-controls="collapseProductos">
+                    aria-expanded="true" aria-controls="collapseProductos" data-key="4">
                     <i class="fa-solid fa-kitchen-set"></i>
                     <span> Productos</span>
                 </a>
                 <div id="collapseProductos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('productos.index') }}">                     
+                        <a class="collapse-item" href="{{ route('productos.index') }}" data-key="P">                     
                             {{-- <i class="fa-solid fa-rectangle-list"></i> Catálogo  --}}
-                        <i class="fa-solid fa-boxes-stacked"></i> Inventario </a>
-                        <a class="collapse-item" href="{{ route('productos.reportes') }}"> <i class="fa-solid fa-file-invoice"></i> Reportes </a>
+                        <i class="fa-solid fa-boxes-stacked"></i> Inventario <small>[ P ]</small> </a>
+                        <a class="collapse-item" href="{{ route('productos.reportes') }}" data-key="R"> <i class="fa-solid fa-file-invoice"></i> Reportes <small>[ R ]</small></a>
                         </a> 
-                        <a class="collapse-item" href="{{ route('productos.departamentos') }}">                     <i class="fa-solid fa-layer-group"></i> Departamentos </a>
+                        <a class="collapse-item" href="{{ route('productos.departamentos') }}" data-key="A">                     <i class="fa-solid fa-layer-group"></i> Departamentos <small>[ A ]</small></a>
                     </div>
                 </div>
             </li>
@@ -276,14 +264,14 @@ input[type="date"]:hover {
             <hr class="sidebar-divider">
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseClientes"
-                    aria-expanded="true" aria-controls="collapseClientes">
+                    aria-expanded="true" aria-controls="collapseClientes" data-key="5">
                     <i class="fa-solid fa-address-book"></i>
                     <span> Clientes</span>
                 </a>
                 <div id="collapseClientes" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('clientes.index') }}">                     <i class="fa-solid fa-elevator"></i> Índice </a>
-                        <a class="collapse-item" href="{{ route('clientes.historial') }}">                     <i class="fa-solid fa-clock-rotate-left"></i> Historial </a>
+                        <a class="collapse-item" href="{{ route('clientes.index') }}" data-key="K">                     <i class="fa-solid fa-elevator"></i> Índice <small>[ K ]</small></a>
+                        <a class="collapse-item" href="{{ route('clientes.historial') }}" data-key="H">                     <i class="fa-solid fa-clock-rotate-left"></i> Historial <small>[ H ]</small></a>
                     </div>
                 </div>
             </li>
@@ -295,14 +283,13 @@ input[type="date"]:hover {
             @can('configurar-usuarios')
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUser"
-                    aria-expanded="true" aria-controls="collapseUser">
+                    aria-expanded="true" aria-controls="collapseUser" data-key="6">
                     <i class="fas fa-fw fa-cog"></i>
                     <span> Configuración</span>
                 </a>
                 <div id="collapseUser" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ route('usuarios.index') }}"> <i class="fas fa-fw fa-user"></i> Usuarios</a>
-                        {{-- <a class="collapse-item" href="cards.html">Editar</a> --}}
+                        <a class="collapse-item" href="{{ route('usuarios.index') }}" data-key="U"> <i class="fas fa-fw fa-user"></i> Usuarios <small>[ U ]</small></a>
                     </div>
                 </div>
             </li>
@@ -616,9 +603,21 @@ input[type="date"]:hover {
             });
         });
     });
-
-
 </script>
+
+<script>
+    document.addEventListener('keydown', function(event) {
+        if (event.altKey) {
+            const key = event.key.toUpperCase();
+            const link = document.querySelector(`a[data-key="${key}"]`);
+            if (link) {
+                event.preventDefault();
+                link.click();
+            }
+        }
+    });
+</script>
+
 
 </body>
 </html>

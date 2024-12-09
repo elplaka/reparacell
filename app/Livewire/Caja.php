@@ -656,6 +656,11 @@ class Caja extends Component
             
     }
 
+    public function executeRender()
+    {
+        $this->render();
+    }
+
     public function render()
     {
         $productosModal = null;
@@ -664,10 +669,11 @@ class Caja extends Component
         {
             $productosModal = Producto::where('descripcion', 'like', '%' . $this->descripcionProductoModal . '%')
             ->where('disponible', '=', 1)
+            ->whereNotIn('codigo', ['COM01', 'COM02', 'COM03', 'COM04', 'COM05', 'COM06', 'COM07', 'COM08', 'COM09'])
             ->orderBy('descripcion')
             ->paginate(10);
 
-            $this->setPage(1);
+            $this->resetPage();
         }
 
         return view('livewire.caja', compact('productosModal'));
@@ -685,13 +691,20 @@ class Caja extends Component
     //QUIERO QUE CUANDO EL INVENTARIO SEA -1 NO RESTE INVENTARIO NI VALIDE SI HAY EN EXISTENCIA
     public function agregaProducto()
     {
-        if ($this->codigoProductoCapturado == 0)
+        if (strlen($this->codigoProductoCapturado) > 0 and $this->codigoProductoCapturado == '0')
         {
             $this->cantidadProductoComun = 1;
             $this->descripcionProductoComun = '';
             $this->montoProductoComun = 0;
 
             $this->dispatch('abrirModalProductoComun');
+
+            return 0;
+        }
+
+        if (strlen($this->codigoProductoCapturado) == 0)
+        {
+            $this->dispatch('abrirModalBuscarProducto');
 
             return 0;
         }
@@ -823,10 +836,10 @@ class Caja extends Component
     
     public function eliminaDelCarrito($index)
     {
-        if ($this->carrito[$index]['esProductoComun'])
-        {
-            if ($this->consecutivoComun > 1) $this->consecutivoComun--;
-        }
+        // if ($this->carrito[$index]['esProductoComun'])
+        // {
+        //     if ($this->consecutivoComun > 1) $this->consecutivoComun--;
+        // }
 
         $this->carrito->forget($index);
         $this->carrito = $this->carrito->values();
