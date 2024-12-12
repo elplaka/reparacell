@@ -10,6 +10,7 @@
     @include('livewire.modal-anotaciones')
     @include('livewire.creditos.modal-taller')
     @include('livewire.taller.modal-corte-caja')
+    @include('livewire.taller.modal-cambia-estatus-equipo-taller')
 
     @if ($showMainErrors)
         @if (session('error'))
@@ -124,7 +125,12 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
             </thead>
-            @if ($muestraDivAgregaEquipo || $abreModalAnotaciones)
+            @if ($muestraDivAgregaEquipo || 
+                 $modalCobroFinalAbierta || 
+                 $abreModalAnotaciones || 
+                 $modalCambiarEstatusEquipoAbierta ||
+                 $modalCorteCajaAbierta ||
+                 $modalCobroCreditoTallerAbierta)
             <tbody>
             @else
             <tbody wire:poll.5s>
@@ -263,6 +269,10 @@
                                 @else
                                 <i class="fa-solid fa-sack-xmark" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar cobro"></i>
                                 @endif
+                                @role('admin')
+                                <a href="#" wire:click='abreModalCambiaEstatusEquipo({{ $taller->num_orden }})'> <i class="fa-solid fa-arrow-rotate-left" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Regresar a NO ENTREGADOS"></i></a>
+                                @endrole
+                                <!-- Enlace o Botón para Abrir el Modal -->
                             @endif
                             </button> <span wire:loading wire:target="invierteCobroEquipoTaller" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             @endif
@@ -298,8 +308,8 @@
             </div>
         @endif
         {{-- </div> --}}
-        <div class="w-100 d-flex justify-content-end align-items-center mb-4">
-        <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
+        <div class="w-100 d-flex justify-content-end align-items-center mb-0">
+        <x-button id="botonCorteCaja" wire:click='abreModalCorteCaja' data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
             <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
         </x-button>
         </div>
@@ -312,6 +322,18 @@
 </div>
 
 <script>
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('abreModalCambiaEstatusEquipoTaller', () => {
+            $('#cambiaEstatusEquipoModal').modal('show');
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('cierraModalCambiaEstatusEquipoTaller', () => {
+            $('#cambiaEstatusEquipoModal').modal('hide');
+        });
+    });
+
     $(document).ready(function () {
         $('#cobroTallerModal').on('shown.bs.modal', function () {
             $('.selectpicker').selectpicker('refresh');            
@@ -415,209 +437,53 @@ document.addEventListener('livewire:initialized', function () {
         }
     });
 });
-
-
 </script>
 
-{{-- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    // Hook para manejar el commit de Livewire
-    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-        // Re-inicializar los selectpickers después de la actualización
-        $('.selectpicker').selectpicker();
-
-        succeed(({ snapshot, effect }) => {
-            // Destruir y volver a inicializar los selectpickers
-            $('select').selectpicker('destroy');
-            queueMicrotask(() => {
-                $('.selectpicker').selectpicker('refresh');
-            });
-        });
-
-        fail(() => {
-            console.error('Livewire commit failed');
-        });
-    });
-});
-</script>  --}}
-
-{{-- Este script hace que después que se refresque la página con el wire:poll no se cierren los selectpickers ni tampoco desaparezcan
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let isSelectTipoEquipoOpen = false;
-        let isSelectEntregadosOpen = false;
-
-        function setupSelectpickers() {
-            $('.selectpicker').off('shown.bs.select hidden.bs.select');
-    
-            // Detectar si el selectTipoEquipo está abierto
-            $('#selectTipoEquipo').on('shown.bs.select', function () {
-                isSelectTipoEquipoOpen = true;
-                console.log("selectTipoEquipo abierto");
-            });
-    
-            $('#selectTipoEquipo').on('hidden.bs.select', function () {
-                isSelectTipoEquipoOpen = false;
-                console.log("selectTipoEquipo cerrado");
-            });
-    
-            // Detectar si el selectEntregados está abierto
-            $('#selectEntregados').on('shown.bs.select', function () {
-                isSelectEntregadosOpen = true;
-                console.log("selectEntregados abierto");
-            });
-    
-            $('#selectEntregados').on('hidden.bs.select', function () {
-                isSelectEntregadosOpen = false;
-                console.log("selectEntregados cerrado");
-            });
-        }
-    
-        // Configurar selectpickers al cargar el documento
-        setupSelectpickers();
-    
-        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-            $('.selectpicker').selectpicker();
-            succeed(({ snapshot, effect }) => {
-                $('select').selectpicker('destroy');
-                queueMicrotask(() => {
-                    // Refrescar los selectpickers
-                    $('.selectpicker').selectpicker('refresh');
-                    setupSelectpickers();
-    
-                    // Verificar el estado después del refresh
-                    if (isSelectTipoEquipoOpen) {
-                        $('#selectTipoEquipo').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                        console.log("Manteniendo selectTipoEquipo abierto después del refresh");
-                    }
-    
-                    if (isSelectEntregadosOpen) {
-                        $('#selectEntregados').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                        console.log("Manteniendo selectEntregados abierto después del refresh");
-                    }
-                });
-            });
-    
-            fail(() => {
-                console.error('Livewire commit failed');
-            });
-        });
-    });
-    </script> --}}
-    
-
-    
-{{-- <script>
 document.addEventListener('DOMContentLoaded', function () {
     let isSelectTipoEquipoOpen = false;
     let isSelectEntregadosOpen = false;
-    let selectedTipoEquipo = [];
-    let selectedEntregados = [];
 
     function setupSelectpickers() {
-        $('.selectpicker').off('shown.bs.select hidden.bs.select');
+        $('.selectpicker').off('shown.bs.select hidden.bs.select changed.bs.select');
 
         // Detectar si el selectTipoEquipo está abierto
         $('#selectTipoEquipo').on('shown.bs.select', function () {
             isSelectTipoEquipoOpen = true;
-            console.log("selectTipoEquipo abierto");
+            // console.log("selectTipoEquipo abierto");
         });
 
         $('#selectTipoEquipo').on('hidden.bs.select', function () {
             isSelectTipoEquipoOpen = false;
-            console.log("selectTipoEquipo cerrado");
+            // console.log("selectTipoEquipo cerrado");
         });
 
         // Detectar si el selectEntregados está abierto
         $('#selectEntregados').on('shown.bs.select', function () {
             isSelectEntregadosOpen = true;
-            console.log("selectEntregados abierto");
+            // console.log("selectEntregados abierto");
         });
 
         $('#selectEntregados').on('hidden.bs.select', function () {
             isSelectEntregadosOpen = false;
-            console.log("selectEntregados cerrado");
-        });
-    }
-
-    // Configurar selectpickers al cargar el documento
-    setupSelectpickers();
-
-    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-        // Guardar valores seleccionados antes del refresco
-        selectedTipoEquipo = $('#selectTipoEquipo').val();
-        selectedEntregados = $('#selectEntregados').val();
-
-        $('.selectpicker').selectpicker();
-        succeed(({ snapshot, effect }) => {
-            $('select').selectpicker('destroy');
-            queueMicrotask(() => {
-                // Refrescar los selectpickers
-                $('.selectpicker').selectpicker('refresh');
-                setupSelectpickers();
-
-                // Restablecer valores seleccionados después del refresco
-                $('#selectTipoEquipo').selectpicker('val', selectedTipoEquipo);
-                $('#selectEntregados').selectpicker('val', selectedEntregados);
-
-                // Verificar el estado después del refresh
-                if (isSelectTipoEquipoOpen) {
-                    $('#selectTipoEquipo').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    console.log("Manteniendo selectTipoEquipo abierto después del refresh");
-                }
-
-                if (isSelectEntregadosOpen) {
-                    $('#selectEntregados').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    console.log("Manteniendo selectEntregados abierto después del refresh");
-                }
-
-                // Reconfigurar eventos Livewire en los selectpickers
-                $('#selectTipoEquipo').change(function () {
-                    @this.set('busquedaEquipos.idTipo', $(this).val());
-                });
-
-                $('#selectEntregados').change(function () {
-                    @this.set('busquedaEquipos.entregados', $(this).val());
-                });
-            });
+            // console.log("selectEntregados cerrado");
         });
 
-        fail(() => {
-            console.error('Livewire commit failed');
-        });
-    });
-});
-
-</script> --}}
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-    let isSelectTipoEquipoOpen = false;
-    let isSelectEntregadosOpen = false;
-
-    function setupSelectpickers() {
-        $('.selectpicker').off('shown.bs.select hidden.bs.select');
-
-        // Detectar si el selectTipoEquipo está abierto
-        $('#selectTipoEquipo').on('shown.bs.select', function () {
-            isSelectTipoEquipoOpen = true;
-            console.log("selectTipoEquipo abierto");
+        // Cerrar el selectpicker al seleccionar un elemento
+        $('#selectTipoEquipo').on('changed.bs.select', function () {
+            if (isSelectTipoEquipoOpen) {
+                $('#selectTipoEquipo').selectpicker('toggle');
+                isSelectTipoEquipoOpen = false;
+                // console.log("selectTipoEquipo cerrado al seleccionar un elemento");
+            }
         });
 
-        $('#selectTipoEquipo').on('hidden.bs.select', function () {
-            isSelectTipoEquipoOpen = false;
-            console.log("selectTipoEquipo cerrado");
-        });
-
-        // Detectar si el selectEntregados está abierto
-        $('#selectEntregados').on('shown.bs.select', function () {
-            isSelectEntregadosOpen = true;
-            console.log("selectEntregados abierto");
-        });
-
-        $('#selectEntregados').on('hidden.bs.select', function () {
-            isSelectEntregadosOpen = false;
-            console.log("selectEntregados cerrado");
+        $('#selectEntregados').on('changed.bs.select', function () {
+            if (isSelectEntregadosOpen) {
+                $('#selectEntregados').selectpicker('toggle');
+                isSelectEntregadosOpen = false;
+                // console.log("selectEntregados cerrado al seleccionar un elemento");
+            }
         });
     }
 
@@ -645,12 +511,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Verificar el estado después del refresh
                 if (isSelectTipoEquipoOpen) {
                     $('#selectTipoEquipo').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    console.log("Manteniendo selectTipoEquipo abierto después del refresh");
+                    // console.log("Manteniendo selectTipoEquipo abierto después del refresh");
                 }
 
                 if (isSelectEntregadosOpen) {
                     $('#selectEntregados').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    console.log("Manteniendo selectEntregados abierto después del refresh");
+                    // console.log("Manteniendo selectEntregados abierto después del refresh");
                 }
 
                 // Reconfigurar eventos Livewire en los selectpickers
@@ -669,6 +535,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+</script>
+
+<script>
+// 'success' ✔️
+// 'error' ❌
+// 'warning' ⚠️
+// 'info' ℹ️
+// 'question' ❓
+document.addEventListener('livewire:initialized', function () {
+    Livewire.on('mostrarToastSiNo', (attr) => {
+        Swal.fire({
+            title: attr[0],
+            icon: attr[1], // Usar el ícono proporcionado por Livewire
+            showCancelButton: true,
+            confirmButtonText: 'Sí',
+            cancelButtonText: 'No',
+            confirmButtonColor: '#3085d6', // Color del botón de confirmación (azul)
+            cancelButtonColor: '#d33', // Color del botón de cancelación (rojo)
+            customClass: {
+                title: 'swal2-title-custom', // Clase CSS personalizada para el título
+                content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
+                icon: 'fa-xs'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Emitir evento a Livewire para ejecutar la función GuardaDatos
+                Livewire.dispatch('guardaCambioEstatusEquipo');
+            }
+        });
+    });
+});
+
 
 </script>
     

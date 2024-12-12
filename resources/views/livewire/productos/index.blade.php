@@ -6,7 +6,10 @@
     @include('livewire.productos.modal-editar')
     @include('livewire.productos.modal-modificar-inventario')
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-kitchen-set"></i> Inventario de Productos</b></h4>
+        <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-kitchen-set"></i> Inventario de Productos</b> &nbsp;   <a wire:click='exportarCsv' class="btn btn-success" title='Exportar a CSV'>
+            <i class="fas fa-file-export"></i>
+        </a></h4>
+     
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
         <a wire:ignore.self id="botonAgregar" class="btn btn-primary" wire:click="abreAgregaProducto" title="Agregar producto" wire:loading.attr="disabled" wire:target="abreAgregaProducto" data-toggle="modal" data-target="#nuevoProductoModal">
             <i class="fas fa-plus"></i>

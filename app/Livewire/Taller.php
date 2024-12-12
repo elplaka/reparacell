@@ -36,20 +36,8 @@ class Taller extends Component
         'f10-pressed' => 'abrirCorteCaja', 
         'lisLiquidarCobroCredito' => 'liquidarCobroCredito',
         'lisBorraAbono' => 'borraAbono',
-        // 'updateSelectedValues' => 'updateSelectedValues'
+        'guardaCambioEstatusEquipo'
     ]; 
-
-    // public function updateSelectedValues($type, $values) 
-    // { 
-    //     if ($type === 'tipoEquipo') 
-    //     { 
-    //         $this->busquedaEquipos['idTipo'] = $values; 
-    //     } 
-    //     elseif ($type === 'entregados') 
-    //     { 
-    //         $this->busquedaEquipos['entregados'] = $values; 
-    //     } 
-    // }
 
     public $muestraDivAgregaEquipo;
     public $numberOfPaginatorsRendered = [];
@@ -62,7 +50,8 @@ class Taller extends Component
     public $showMainErrors, $showModalErrors, $usuariosModal;
     public $sumaAbonos, $montoLiquidar;
     public $datosCargados;
-    public $abreModalAnotaciones;
+    public $abreModalAnotaciones, $equipoTallerModal, $modalCorteCajaAbierta;
+    public $estatusModalCambiaEstatus, $modalCambiarEstatusEquipoAbierta;
 
     public function rules()
     {
@@ -144,7 +133,6 @@ class Taller extends Component
         'incluyeCredito'
     ];
 
-
     public function abrirWhatsApp($numeroTelefono)
     {
         // Genera la URL de WhatsApp para abrir en el navegador
@@ -156,28 +144,37 @@ class Taller extends Component
 
     public function updated($propertyName, $value)
     {
-        list($property, $index) = explode('.', $propertyName);
-
-        if ($property === 'busquedaEquipos' && $index === 'entregados') 
+        if ($this->modalCambiarEstatusEquipoAbierta)
         {
-            $this->busquedaEquipos['idEstatus'] = [];
-
-            if (in_array('entregados', $this->busquedaEquipos['entregados'])) {
-                $this->busquedaEquipos['idEstatus'] = [5, 6];
-            }
-    
-            // Verificar las opciones seleccionadas en "no_entregados" y asignar valores correspondientes a "idEstatus"
-            if (in_array('no_entregados', $this->busquedaEquipos['entregados'])) {
-                $this->busquedaEquipos['idEstatus'] = array_merge($this->busquedaEquipos['idEstatus'], [1, 2, 3, 4]);
-            }
-
-            for ($i = 1; $i <= 6; $i++) {
-                if (in_array((string)$i, $this->busquedaEquipos['entregados'])) {
-                    $this->busquedaEquipos['idEstatus'] = array_merge($this->busquedaEquipos['idEstatus'], [$i]);
-                }
-            }
+            $this->resetErrorBag('estatusModalCambiaEstatus');
         }
+        else
+        {
+            list($property, $index) = explode('.', $propertyName);
+
+            if ($property === 'busquedaEquipos' && $index === 'entregados') 
+            {
+                $this->busquedaEquipos['idEstatus'] = [];
+
+                if (in_array('entregados', $this->busquedaEquipos['entregados'])) {
+                    $this->busquedaEquipos['idEstatus'] = [5, 6];
+                }
+
+                if (in_array('no_entregados', $this->busquedaEquipos['entregados'])) {
+                    $this->busquedaEquipos['idEstatus'] = array_merge($this->busquedaEquipos['idEstatus'], [1, 2, 3, 4]);
+                }
+
+                foreach (range(1, 6) as $i) {
+                    if (in_array((string)$i, $this->busquedaEquipos['entregados'])) {
+                        $this->busquedaEquipos['idEstatus'][] = $i;
+                    }
+                }
+
+                $this->busquedaEquipos['idEstatus'] = array_unique($this->busquedaEquipos['idEstatus']);
+            } 
+        }       
     }
+
 
     public function updatedCobroFinalCobroRealizado($value)
     {
@@ -321,6 +318,7 @@ class Taller extends Component
                             'fecha' => now(),
                             'cobro_estimado' => $this->cobroFinal['cobroEstimado'],
                             'cobro_realizado' => $this->cobroFinal['cobroRealizado'],
+                            'id_usuario_cobro' => Auth::id()
                         ]);
 
                         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
@@ -441,6 +439,7 @@ class Taller extends Component
                         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
                 
                         $this->modalCobroCreditoTallerAbierta = true;
+                        $this->modalCobroFinalAbierta = false;
                 
                         $this->muestraDivAbono = false;
                 
@@ -488,6 +487,16 @@ class Taller extends Component
         {
             dd('OPERACIÓN INVÁLIDA');
         }
+    }
+
+    public function abreModalCorteCaja()
+    {
+        $this->modalCorteCajaAbierta = true;
+    }
+
+    public function cierraModalCorteCaja()
+    {
+        $this->modalCorteCajaAbierta = false;
     }
 
     public function agregaAbono()
@@ -655,6 +664,7 @@ class Taller extends Component
                             'fecha' => now(),
                             'cobro_estimado' => $this->cobroFinal['cobroEstimado'],
                             'cobro_realizado' => $this->cobroFinal['cobroRealizado'],
+                            'id_usuario_cobro' => Auth::id()
                         ]);
 
                         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
@@ -676,6 +686,7 @@ class Taller extends Component
                         $cobroTallerCredito->id_estatus = 2;
                         $cobroTallerCredito->save();
 
+                        $this->modalCobroFinalAbierta = false;
                         $this->dispatch('cierraCobroModal');
                         $this->dispatch('mostrarToast', 'Cobro liquidado con éxito!!!');
 
@@ -773,6 +784,7 @@ class Taller extends Component
                             $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                             $abono = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
                             $cobroTallerCreditoDetalles->abono = $abono;
+                            $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
                             $cobroTallerCreditoDetalles->save();
 
                             if ($abono < 0)  //Está liquidado el cobro
@@ -782,6 +794,8 @@ class Taller extends Component
                                 $cobroTallerCredito->save();
                             }
                         }
+
+                        $this->modalCobroFinalAbierta = false;
 
                         $this->dispatch('cierraCobroModal');
                         $this->dispatch('mostrarToast', 'Cobro realizado con éxito!!!');
@@ -850,8 +864,6 @@ class Taller extends Component
 
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
-
-        // $this->dispatch('contentChanged');
 
         return view('livewire.taller', compact('equipos_taller', 'estatus_equipos', 'tipos_equipos'));
     }
@@ -977,11 +989,6 @@ class Taller extends Component
         return $fechaFormateada;
     }
 
-    public function cierraCorteCajaModal()
-    {
-
-    }
-
     public function irCorteCaja()
     {
         Session::put('corteCaja', $this->corteCaja);
@@ -1072,6 +1079,9 @@ class Taller extends Component
         $this->showMainErrors = true;
         $this->showModalErrors = false;
 
+        $this->equipoTallerModal = null;
+        $this->modalCambiarEstatusEquipoAbierta = false;
+
         $this->datosCargados = true;
     }
 
@@ -1079,6 +1089,87 @@ class Taller extends Component
     public function refrescaTabla()
     {
     }
+
+public function cambiarEstatusEquipo()
+{
+    if ($this->estatusModalCambiaEstatus == 0) {
+        $this->addError('estatusModalCambiaEstatus', 'Debes seleccionar un estatus.');
+        return;
+    }
+    else
+    {
+        if ($this->equipoTallerModal->cobroTaller)
+        {
+            if ($this->equipoTallerModal->cobroTaller->credito)
+            {            
+                $this->dispatch('mostrarToastSiNo', 
+                'El equipo seleccionado ya ha sido COBRADO previamente con CRÉDITO. Si cambias el estatus se BORRARÁ este cobro y el crédito. ¿Deseas continuar de todas formas?',
+                'warning'
+                );
+            }
+            else
+            {
+                $this->dispatch('mostrarToastSiNo', 
+                'El equipo seleccionado ya ha sido COBRADO previamente. Si cambias el estatus se BORRARÁ este cobro. ¿Deseas continuar de todas formas?',
+                'warning'
+                );
+            }          
+        }
+    }
+}
+
+public function guardaCambioEstatusEquipo()
+{
+    DB::beginTransaction();
+
+    try {
+        $this->equipoTallerModal->id_estatus = $this->estatusModalCambiaEstatus;
+        $this->equipoTallerModal->update();
+
+        // Verificar y eliminar los detalles del crédito si existen
+        if ($this->equipoTallerModal->cobroTaller && $this->equipoTallerModal->cobroTaller->credito) {
+            $this->equipoTallerModal->cobroTaller->credito->detalles()->delete();
+
+            // Eliminar el crédito
+            $this->equipoTallerModal->cobroTaller->credito()->delete();
+        }
+
+        // Eliminar el cobroTaller si existe
+        if ($this->equipoTallerModal->cobroTaller) {
+            $this->equipoTallerModal->cobroTaller()->delete();
+        }
+
+        DB::commit();
+
+        $this->dispatch('cierraModalCambiaEstatusEquipoTaller');
+        $this->modalCambiarEstatusEquipoAbierta = false;
+        $this->dispatch('mostrarToast', 'Equipo actualizado con éxito!!!');
+    } catch (\Exception $e) {
+        DB::rollBack();  
+        
+        dd($e);
+    }
+}
+
+
+public function cierraCambiaEstatusEquipoModal()
+{
+    $this->modalCambiarEstatusEquipoAbierta = false;
+}
+
+public function abreModalCambiaEstatusEquipo($numOrden)
+{
+    $this->dispatch('abreModalCambiaEstatusEquipoTaller');
+
+    $this->modalCambiarEstatusEquipoAbierta = true;
+    $this->estatusModalCambiaEstatus = 0;
+
+    $this->resetErrorBag('estatusModalCambiaEstatus');
+
+    $this->equipoTallerModal = EquipoTaller::find($numOrden);
+
+}
+
 
 public function obtenerIconoSegunEstatus($id_estatus)
 {

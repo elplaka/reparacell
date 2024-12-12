@@ -3,7 +3,7 @@
        <div class="modal-content">
            <div class="modal-header">
                <h1 class="text-xl font-bold"><b> Corte de Caja de Taller</b></h1>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraCorteCajaModal">
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraModalCorteCaja">
                    <span aria-hidden="true">&times;</span>
                </button> 
            </div>
@@ -47,7 +47,7 @@
                 <!-- Modal Footer con Botón de Cierre -->
                 <div class="modal-footer d-flex justify-content-center">
                     <button class="btn btn-primary uppercase tracking-widest font-semibold text-xs" wire:click="irCorteCaja" target="_blank">Generar</button>
-                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarCorteCajaModal" wire:click="cierraCorteCajaModal">Cerrar</button>
+                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" data-dismiss="modal" id="btnCerrarCorteCajaModal" wire:click="cierraModalCorteCaja">Cerrar</button>
                 </div>
             </div>
        </div>

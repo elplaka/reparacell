@@ -12,6 +12,8 @@ use App\Models\MovimientoInventario;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse; 
+use Illuminate\Support\Facades\Schema;
 
 class ProductoLw extends Component
 {
@@ -583,4 +585,41 @@ class ProductoLw extends Component
     {
         $this->resetModal();
     }
+
+    public function exportarCsv()
+{
+    $productos = Producto::all();
+    $nombreArchivo = 'productos.csv';
+
+    // Obtener nombres de columnas dinámicamente
+    $columnas = Schema::getColumnListing((new Producto)->getTable());
+
+    $callback = function() use ($productos, $columnas) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columnas);
+
+        foreach ($productos as $producto) {
+            $fila = [];
+            foreach ($columnas as $columna) {
+                $valor = $producto->{$columna};
+
+                // Convertir los valores numéricos largos a texto
+                if (is_numeric($valor) && strlen($valor) > 10) {
+                    $valor = "\t" . $valor;
+                }
+
+                $fila[] = $valor;
+            }
+            fputcsv($file, $fila);
+        }
+
+        fclose($file);
+    };
+
+    return new StreamedResponse($callback, 200, [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="' . $nombreArchivo . '"',
+    ]);
+}
+
 }
