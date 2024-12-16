@@ -5,7 +5,10 @@
     <div class="modal-dialog modal-lg" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}">
        <div class="modal-content">
            <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Crédito de Taller por ${{ $cobroACredito['monto'] }} </b> &nbsp;&nbsp; 
+               <h1 class="text-xl font-bold"><b> Crédito de Taller por ${{ $cobroACredito['monto'] }} </b>
+                @if ($cobroACredito['conCobroEstimado']) 
+                        <span class="badge badge-warning">CON COBRO ESTIMADO</span>
+                @endif 
                @if ($cobroACredito['idEstatus'] == 1) 
                <span class="badge badge-danger">{{ $cobroACredito['estatus'] }}</span></h1>
                @else
@@ -50,20 +53,31 @@
                     </div>
                 </div>
                 <br>
-                <div class="row mb-2">
-                    <div class="col-md-4 block text-sm-left text-gray-700" style="font-size:12pt">
-                        <b> HISTORIAL DE PAGOS </b>
+                <div class="row mb-2 align-items-center">
+                    <div class="col-md-3 text-sm-left text-gray-700" style="font-size:12pt;">
+                        <b>HISTORIAL DE PAGOS</b> 
+                        {{-- @if ($cobroACredito['conCobroEstimado'])
+                            <small> ***CON COBRO ESTIMADO</small>
+                        @endif --}}
                     </div>
                     @if ($muestraDivAbono)
-                    <button class="btn btn-success md-2 uppercase tracking-widest font-semibold text-xs" wire:click="liquidaCredito" id="btn-liquidar" wire:ignore>LIQUIDAR</button>
-                    <label for="cobroACredito.abono" class="col-md-2 block text-sm-right text-gray-700 pr-0" style="font-size:11pt;" id="label-abono" wire:ignore>{{ __('Abono $') }}</label>
-                    <div class="col-md-2 ml-0" id="div-abono" wire:ignore>
-                        <input wire:model="cobroACredito.abono" step="any" type="number" class="input-height form-control" style="font-size:11pt;">
-                    </div>
-                    <button class="btn btn-primary md-2 uppercase tracking-widest font-semibold text-xs" wire:click="agregaAbono" id="btn-agregar" wire:ignore.self wire:loading.attr="disabled"  onclick="hideDivAbono()">AGREGAR</button>
+                        <div class="col-md-9 d-flex justify-content-end align-items-center">
+                            <button class="btn btn-success text-xs font-medium uppercase tracking-wider ml-2 col-md-2" wire:click="liquidaCredito" id="btn-liquidar" wire:ignore style="letter-spacing: 1px;">
+                                LIQUIDAR
+                            </button>
+                            <label for="cobroACredito.abono" class="text-gray-700 col-md-2 text-right" style="font-size:11pt; padding: 0; margin: 0;" id="label-abono" wire:ignore>
+                                {{ __('Abono $') }}
+                            </label>
+                            <div class="col-md-3" id="div-abono" wire:ignore>
+                                <input wire:model="cobroACredito.abono" step="any" type="number" class="input-height form-control" style="font-size:11pt;">
+                            </div>
+                            <button class="btn btn-primary text-xs font-medium uppercase tracking-wider ml-2 col-md-2" wire:click="agregaAbono" id="btn-agregar" wire:ignore.self wire:loading.attr="disabled" onclick="hideDivAbono()" style="letter-spacing: 1px;">
+                                AGREGAR
+                            </button>
+                        </div>
                     @else
                         @if ($cobroACredito['idEstatus'] == 1)
-                        <div class="col-md-8 d-flex justify-content-end"> 
+                        <div class="col-md-9 d-flex justify-content-end"> 
                             <a wire:ignore.self id="botonAgregarPago" class="btn btn-primary" title="Agregar abono" wire:loading.attr="disabled" wire:click="muestraDivAgregaAbono" onclick="ocultarBotonAgregarPago()">
                                 <i class="fas fa-plus"></i> 
                             </a>
@@ -89,51 +103,53 @@
                     {{-- <tbody @if($modalCobroCreditoTallerAbierta) wire:poll @endif> --}}
                         @if($detallesCredito !== null)
                             @if($detallesCredito->count())
-                            @foreach ($detallesCredito as $detalles)
-                            @php
-                                $fechaOriginal = $detalles->created_at;
-                                // Convertir a objeto Carbon
-                                $fechaCarbon = Carbon::parse($fechaOriginal);
-                                // Formatear la fecha
-                                $fechaFormateada = $fechaCarbon->format('d/m/Y H:i:s');
-                            @endphp
-                            <tr style="font-size: 10pt;">
-                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    @if ($detalles->id_abono == 0)
-                                    ANTICIPO
-                                    @else
-                                        @if ($detalles->abono < 0)
-                                        DEVOLUCIÓN
-                                        @else
-                                            @if ($detalles == $detallesCredito->last() && $cobroACredito['idEstatus'] == 2)
-                                            LIQUIDACIÓN
+                                @foreach ($detallesCredito as $detalles)
+                                    @php
+                                        $fechaOriginal = $detalles->created_at;
+                                        // Convertir a objeto Carbon
+                                        $fechaCarbon = Carbon::parse($fechaOriginal);
+                                        // Formatear la fecha
+                                        $fechaFormateada = $fechaCarbon->format('d/m/Y H:i:s');
+                                    @endphp
+                                    @if ($detalles->abono != 0)
+                                    <tr style="font-size: 10pt;">
+                                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                            @if ($detalles->id_abono == 0)
+                                            ANTICIPO
                                             @else
-                                            ABONO
+                                                @if ($detalles->abono < 0)
+                                                DEVOLUCIÓN
+                                                @else
+                                                    @if ($detalles == $detallesCredito->last() && $cobroACredito['idEstatus'] == 2)
+                                                    LIQUIDACIÓN
+                                                    @else
+                                                    ABONO
+                                                    @endif
+                                                @endif
                                             @endif
-                                        @endif
-                                    @endif 
-                                </td>
-                                <td class="px-2 py-1 whitespace-no-wrap" style="text-align: right; vertical-align: middle">
-                                    $ {{ number_format(abs($detalles->abono), 2, '.', ',')  }}
-                                </td>
-                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    {{ $fechaFormateada }}
-                                </td>
-                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    @if ($detalles->usuario)
-                                        {{ $detalles->usuario->name }}
-                                    @else
-                                        -
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-no-wrap" style="text-align: right; vertical-align: middle">
+                                            $ {{ number_format(abs($detalles->abono), 2, '.', ',')  }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                            {{ $fechaFormateada }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                            @if ($detalles->usuario)
+                                                {{ $detalles->usuario->name }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                                            @if ($detalles->abono > 0)
+                                            <button wire:click="preguntaBorraAbono('{{ $detalles->num_orden }}', '{{ $detalles->id_abono }}')" wire:loading.remove wire:target="borraAbono" class="label-button">
+                                                <i class="fa-solid fa-trash-can" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Borrar abono"></i>
+                                            @endif
+                                        </td>
+                                    </tr>
                                     @endif
-                                </td>
-                                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                                    {{-- @if ($detalles->id_abono > 0) --}}
-                                    <button wire:click="preguntaBorraAbono('{{ $detalles->num_orden }}', '{{ $detalles->id_abono }}')" wire:loading.remove wire:target="borraAbono" class="label-button">
-                                        <i class="fa-solid fa-trash-can" style="color:dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Borrar abono"></i>
-                                    {{-- @endif --}}
-                                </td>
-                            </tr>
-                            @endforeach
+                                @endforeach
                             @else
                             <tr style="font-size: 10pt;">
                                 <td class="px-2 py-1 whitespace-no-wrap" colspan="5" style="vertical-align: middle">

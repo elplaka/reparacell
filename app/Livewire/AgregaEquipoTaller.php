@@ -605,22 +605,6 @@ class AgregaEquipoTaller extends Component
                 $numOrden = $equipo_taller->num_orden;
                 $idCliente = $equipo_taller->equipo->cliente->id;
 
-                //array_filter se utiliza para filtrar los elementos con valor true, y luego array_keys se utiliza para obtener los índices correspondientes.
-                // $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
-                //     return $valor === true;
-                // }));
-
-                // $k = 0;
-                // $cobroEstimado = 0;
-                // foreach ($this->fallas as $fallaId) {
-                //     $falla = new FallaEquipoTaller();
-                //     $falla->num_orden = $numOrden;
-                //     $falla->id_falla = $idsFallas[$k];
-                //     $catFallas = FallaEquipo::find($idsFallas[$k]);
-                //     $cobroEstimado += $catFallas->costo;
-                //     $falla->save();
-                //     $k++;
-                // }
 
                 $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
                     return $valor === true;
@@ -638,27 +622,6 @@ class AgregaEquipoTaller extends Component
                     }
                     $falla->save();
                 }
-
-
-                // if (!$this->cobroRepetido($numOrden, $cobroEstimado))
-                // {
-                //     $ultimoRegistro = CobroEstimadoTaller::where('num_orden', $numOrden)->latest('id')->first();
-
-                //     if ($ultimoRegistro) {
-                //         // Si se encontró un registro previo, incrementa el valor 'id' en 1.
-                //         $maxId = $ultimoRegistro->id + 1;
-                //     } else {
-                //         // Si no se encontraron registros previos, establece el valor de 'id' en 1.
-                //         $maxId = 1;
-                //     }
-
-                //     $cobroEstimadoTaller = new CobroEstimadoTaller();
-                //     $cobroEstimadoTaller->id = $maxId;
-                //     $cobroEstimadoTaller->num_orden = $numOrden;
-                //     $cobroEstimadoTaller->cobro_estimado = $cobroEstimado;
-                //     $cobroEstimadoTaller->save();
-
-                // }
 
                 $cobroEstimadoTaller = new CobroEstimadoTaller();
                 $cobroEstimadoTaller->id = 1;
@@ -715,7 +678,7 @@ class AgregaEquipoTaller extends Component
 
                 $this->mount();
 
-                return redirect()->route('taller.print', $numOrden);
+                // return redirect()->route('taller.print', $numOrden);
             });
         } catch (\Exception $e) {
             // Manejo de errores si ocurre una excepción

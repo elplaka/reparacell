@@ -79,7 +79,7 @@
    
 </head>
 
-<body>
+{{-- <body>
     <p>
         <table>
             <thead>
@@ -88,7 +88,6 @@
                     <th>Num. Orden</th>
                     <th>Fecha</th>
                     <th>Cliente</th>
-                    {{-- <th>Detalles</th> --}}
                     <th>Importe</th>
                     <th>Cajero</th>
                 </tr>
@@ -170,5 +169,103 @@
         @endif
     </p>
   
+</body> --}}
+
+<body>
+    <p>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    {{-- <th>Detalles</th> --}}
+                    <th>Importe</th>
+                    <th>Cajero</th>
+                    {{-- <th></th> --}}
+                </tr>
+            </thead>
+            @php
+                $i = 1;
+                $total = 0;
+                $totalTaller = 0;
+                $totalVentas = 0;
+                $numTaller = 0;
+                $numVentas = 0;
+            @endphp
+            <tbody>
+                @foreach ($registros as $registro)
+                <tr>
+                    <td> {{ $i++ }}</td>
+                    <td>
+                        @if ($registro->tipo == "TALLER")
+                            {{'T' . $registro->id }}
+                        @elseif($registro->tipo == "ABONO_TALLER")
+                            {{'TA' . $registro->id }}
+                        @elseif($registro->tipo == "VENTA")
+                            {{'V' . $registro->id }}
+                        @else
+                            {{'VA' . $registro->id }}
+                        @endif
+                    </td>
+                    <td> {{ Carbon::parse($registro->created_at)->format('d/m/Y H:i:s') }}</td>
+                    <td>{{ $registro->nombre_cliente }} </td>
+                    <td style="text-align:right"> $ {{ number_format($registro->monto, 2, '.', ',') }} &nbsp;</td>
+                    <td> {{ $registro->cajero }} </td>
+                    @php
+                        if ($registro->tipo == "TALLER" || $registro->tipo == "ABONO_TALLER")
+                        {
+                            $totalTaller += $registro->monto;
+                            $numTaller++;
+                        }
+                        else 
+                        {
+                            $totalVentas += $registro->monto;
+                            $numVentas++;
+                        }
+                    @endphp
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <br>
+        @php
+            $total += $totalTaller + $totalVentas;
+        @endphp
+        <table style="page-break-inside: avoid; width: 50%; margin-left: auto; margin-right: 0; border-collapse: collapse; border: none; border-spacing: 0;">
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>
+                        &nbsp; SUBTOTAL DE TALLER [ {{ $numTaller }} ] :
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalTaller, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @if ($corteCaja['incluyeVentas'])
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>                        
+                        &nbsp; SUBTOTAL DE VENTAS [ {{ $numVentas }} ] :
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalVentas, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @endif
+            <tr>
+                <td style="font-size:12pt; width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>TOTAL :</strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($total, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+        </table>
+    </p>
 </body>
+
 </html>

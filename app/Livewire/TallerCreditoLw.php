@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\CobroTaller;
 use App\Models\CobroTallerCredito;
 use App\Models\CobroTallerCreditoDetalle;
 use App\Models\EstatusCobroTallerCredito;
@@ -47,7 +48,8 @@ class TallerCreditoLw extends Component
         'estatus' => null,
         'monto' => null,
         'abono' => 0,
-        'idAbonoSeleccionado' => null
+        'idAbonoSeleccionado' => null,
+        'conCobroEstimado' => false
     ];
 
     public function cierraCobroCreditoTallerModal()
@@ -80,17 +82,27 @@ class TallerCreditoLw extends Component
            DB::transaction(function () use ($numOrden) 
            {
                $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
-               $ultimoIdAbono = $this->detallesCredito->max('id_abono');
-               $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroTaller->cobro_realizado;
-               $this->sumaAbonos = $this->detallesCredito->sum('abono');
-               $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
-       
+
+               if ($this->detallesCredito->isEmpty())
+               {
+                    $ultimoIdAbono = 0;
+                    $this->cobroACredito['monto'] = CobroTaller::where('num_orden', $numOrden)->first()->cobro_realizado;
+               }
+               else
+               {
+                    $ultimoIdAbono = $this->detallesCredito->max('id_abono');
+                    $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroTaller->cobro_realizado;
+               }
+            
                $cobroACreditoDetalles = new CobroTallerCreditoDetalle();
                $cobroACreditoDetalles->num_orden = $numOrden;
                $cobroACreditoDetalles->id_abono = $ultimoIdAbono + 1;
                $cobroACreditoDetalles->abono = $this->montoLiquidar;
                $cobroACreditoDetalles->id_usuario_cobro = Auth::id();
                $cobroACreditoDetalles->save();
+
+               $this->sumaAbonos = $this->detallesCredito->sum('abono') + $this->montoLiquidar;
+               $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
 
                 CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
                 $this->cobroACredito['estatus'] = $cobroACreditoDetalles->first()->cobroCredito->estatus->descripcion;
@@ -126,7 +138,7 @@ class TallerCreditoLw extends Component
                 if ($detalleCredito)
                 {
                     $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)
-                                        ->where('id_abono', '>', 0)->get();
+                                        ->where('id_abono', '>=', 0)->get();
 
                     $this->sumaAbonos = $this->detallesCredito->sum('abono');
                     $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;

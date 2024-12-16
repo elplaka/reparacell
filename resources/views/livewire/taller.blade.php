@@ -289,12 +289,19 @@
                                     <i class="fa-solid fa-comment-medical" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Agregar anotaciones"></i>
                                 @endif
                             </button>
-                            @if (isset($taller->cobroTallerCredito) && $taller->id_estatus >= 5)
-                            <button wire:click="abreCobroCredito({{ $taller->num_orden }})" wire:loading.remove wire:target="abreCobroCredito" class="label-button">
-                            <i class="fa-solid fa-credit-card" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Créditos"></i>
-                            </button>
+                            @if(!$muestraDivAgregaEquipo)
+                                @if (isset($taller->cobroTallerCredito) && $taller->id_estatus >= 5) 
+                                <button wire:click="abreCobroCredito({{ $taller->num_orden }})" wire:loading.remove wire:target="abreCobroCredito" class="label-button">
+                                <i class="fa-solid fa-credit-card" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"  title="Crédito y Abonos"></i>
+                                </button>
+                                @elseif (isset($taller->cobroTallerCredito) && $taller->id_estatus <= 4)
+                                <button wire:click="abreCobroCredito({{ $taller->num_orden}}, 'true')" wire:loading.remove wire:target="abreCobroCredito" class="label-button">
+                                    <i class="fa-solid fa-credit-card" style="color: dimgrey; margin-right: 10px;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'" title="Crédito y Abonos***"></i>
+                                </button>
+                                @endif
                             @endif
                         </td>
+
                     </tr>
                 @endforeach
             </tbody>
@@ -569,12 +576,4 @@ document.addEventListener('livewire:initialized', function () {
 
 
 </script>
-    
-
-
-
-
-
-
-
 

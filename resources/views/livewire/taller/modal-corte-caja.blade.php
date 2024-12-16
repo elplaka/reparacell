@@ -36,12 +36,19 @@
                 </div>
                 @endrole
 
-                <div class="mb-3">
-                    &nbsp; &nbsp;
-                    <label class="form-check-label">
-                        <input type="checkbox" wire:model="corteCaja.incluyeCredito" class="form-check-input">
-                        Incluir crédito
-                    </label>
+                <div class="mb-3 row">
+                    <div class="col-md-6">
+                        <label for="chkCobrosTaller" class="form-label">
+                            <input type="checkbox" id="chkCobrosTaller" wire:model="corteCaja.incluyeVentas" checked>
+                            Incluir Ventas
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="chkAbonos" class="form-label">
+                            <input type="checkbox" id="chkAbonos" wire:model="corteCaja.incluyeCredito" checked>
+                            Incluir Abonos
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Modal Footer con Botón de Cierre -->

@@ -9,6 +9,7 @@ use App\Models\FallaEquipoTaller;
 use App\Models\EstatusEquipo;
 use App\Models\CobroTaller;
 use App\Models\CobroTallerCredito;
+use App\Models\CobroEstimadoTaller;
 use App\Models\User;
 use App\Models\AnotacionEquipoTaller;
 
@@ -69,4 +70,10 @@ class EquipoTaller extends Model
     {
         return $this->hasOne(AnotacionEquipoTaller::class, 'num_orden', 'num_orden');
     }
+
+    public function cobrosEstimados()
+    { 
+        return $this->hasMany(CobroEstimadoTaller::class, 'num_orden', 'num_orden');
+    }
+
 }

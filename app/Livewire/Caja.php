@@ -685,7 +685,15 @@ class Caja extends Component
 
         $this->cantidadProductoCapturado = $this->cantidadProductoComun;
         $producto = Producto::where('codigo', 'COM0' . $this->consecutivoComun)->first();
-        $this->agregaAlCarrito($producto);
+
+        if ($this->consecutivoComun < 10)
+        { 
+            $this->agregaAlCarrito($producto);
+        }
+        else
+        {
+            $this->dispatch('mostrarToastError', 'Ya NO ES POSIBLE agregar otro PRODUCTO COMÚN en esta venta.');
+        }
     }
 
     //QUIERO QUE CUANDO EL INVENTARIO SEA -1 NO RESTE INVENTARIO NI VALIDE SI HAY EN EXISTENCIA
@@ -893,6 +901,10 @@ class Caja extends Component
                     $this->dispatch('cerrarModalProductoComun');
                 }
             }
+        }
+        else
+        {
+            $this->dispatch('mostrarToastError', 'Producto INEXISTENTE. Intenta con otro!!!');
         }
         $this->cuentaCantidadProductosCarrito();
         $this->reset('codigoProductoCapturado');

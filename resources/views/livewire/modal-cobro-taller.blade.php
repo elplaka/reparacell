@@ -1,93 +1,3 @@
-{{-- <div wire:ignore.self class="modal fade" id="cobroTallerModal" name="cobroTallerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="dialog" >
-       <div class="modal-content">
-           <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Cobro</b></h1>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                   <span aria-hidden="true">&times;</span>
-               </button> 
-           </div>
-           <div wire:loading class="text-center">
-               <i class="fa fa-spinner fa-spin"></i> Cargando...
-               <br><br>
-           </div>
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{!! $error !!}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    {{ session('success') }}
-                </div>
-                @endif
-           <div class="modal-body">
-               <div class="container mt-3 font-sans text-gray-900 antialiased">
-                    <div class="row mb-2">
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Fecha Entrada </b> </label>
-                            <div>
-                                <label for="">
-                                    {{ \Carbon\Carbon::parse($cobroFinal['fecha'])->format('d/m/Y') }}
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Tipo Equipo </b> </label>
-                            <div>
-                                <label for=""> {{ $cobroFinal['tipoEquipo'] }} </label>
-                            </div>
-                        </div>
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Marca </b> </label>
-                            <div>
-                                <label for=""> {{ $cobroFinal['marcaEquipo'] }} </label>
-                            </div>
-                        </div>
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Modelo </b> </label>
-                            <div>
-                                <label for=""> {{ $cobroFinal['modeloEquipo'] }} </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Fallas </b> </label>
-                            <div>
-                                @if($cobroFinal['fallasEquipo'])
-                                @foreach ($cobroFinal['fallasEquipo'] as $fallaEquipo)
-                                    <label for=""> {{ $fallaEquipo['descripcion'] }} </label>  <br>
-                                @endforeach
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col md-2">
-                            <label class="col-form-label text-md-left" style="font-size:11pt"> <b> Total Estimado </b> </label>
-                            <div>
-                                <label for=""> {{ '$ ' . $cobroFinal['cobroEstimado'] }} </label>  <br>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-           </div>
-       </div>
-   </div>
-</div>
- --}}
-
  <div wire:ignore.self class="modal fade" id="cobroTallerModal" name="cobroTallerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg" role="dialog">
         <div class="modal-content" style="border: 1px solid #ccc;">
@@ -97,13 +7,13 @@
                 {{-- <div wire:loading class="text-center">
                     &nbsp;&nbsp; <i class="fa fa-spinner fa-spin"></i> Cargando...
                 </div> --}}
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraCobroFinalModal">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" wire:click="cierraCobroFinalModal">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                     <ul>
@@ -190,7 +100,7 @@
                         </div>
                     </div>
                     <br>
-                    @if ($cobroFinal['anticipo'])
+                    @if ($cobroFinal['anticipo'] || $cobroFinal['montoAbonado'])
                     <div class="row mb-2" style="border-bottom: 1px solid #ccc;">
                         <div class="col-md-3 p-0 d-flex flex-column align-items-start" style="border-right: 1px solid #ccc;">
                             <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt; background-color: #e9ebf3; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc;"> <b> TOTAL ESTIMADO </b> </label>
@@ -199,9 +109,21 @@
                             </div>
                         </div>
                         <div class="col-md-3 p-0 d-flex flex-column align-items-start" style="border-right: 1px solid #ccc;">
-                            <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt; background-color: #e9ebf3; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc;"> <b> ANTICIPO </b> </label>
+                            <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt; background-color: #e9ebf3; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc;"> 
+                                @if (isset($cobroFinal['anticipo']))
+                                <b> ANTICIPO </b>
+                                @else 
+                                <b> MONTO ABONADO </b>
+                                @endif
+                            </label>
                             <div class="d-flex flex-grow-1 align-items-center my-auto">
-                                <label for="" class="pl-2 my-auto w-100" style="font-size: 11pt;"> {{ '$ ' . number_format($cobroFinal['anticipo'], 2, '.', ',') }} </label>
+                                <label for="" class="pl-2 my-auto w-100" style="font-size: 11pt;"> 
+                                @if (isset($cobroFinal['anticipo']))
+                                    {{ '$ ' . number_format($cobroFinal['anticipo'], 2, '.', ',') }} 
+                                @else
+                                    {{ '$ ' . number_format($cobroFinal['montoAbonado'], 2, '.', ',') }} 
+                                @endif
+                                </label>
                             </div>
                         </div>                        
                         <div class="col-md-3 p-0" style="border-right: 1px solid #ccc;">
@@ -241,7 +163,7 @@
                             <div class="d-flex flex-grow-1 align-items-center my-auto">
                                 <label for="" class="pl-2 my-auto w-100" style="font-size: 11pt;"> {{ '$ ' . number_format($cobroFinal['cobroEstimado'], 2, '.', ',') }} </label>
                             </div>
-                        </div>                         
+                        </div>
                         <div class="col-md-6 p-0">
                             <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt; background-color: #e9ebf3; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc;"> <b> TOTAL COBRADO </b> </label>
                             <div class="d-flex align-items-center">
@@ -269,7 +191,7 @@
                                         @endif
                                     </select>
                                 </div>
-                                @if ($cobroFinal['anticipo'])
+                                @if ($cobroFinal['anticipo'] || $cobroFinal['montoAbonado'])
                                 <div class="col-md-3 text-right">
                                     <button wire:click="cobroLiquidar({{ $cobroFinal['numOrden'] }})" class="btn btn-success text-xs leading-4 font-medium text-white uppercase tracking-wider ml-8 p-2 px-4" style="letter-spacing: 1px;">
                                         {{ __('LIQUIDAR [ F2 ]') }}
@@ -283,7 +205,7 @@
                                     </button>
                                     @endif
                                 </div>
-                                @if(!$cobroFinal['anticipo'])
+                                @if(!$cobroFinal['anticipo'] && !$cobroFinal['montoAbonado'])
                                 <div class="col-md-3 text-right">
                                     <x-button wire:click="cobrar({{ $cobroFinal['numOrden'] }})" class="ml-6">
                                         {{ __('Cobrar [ F4 ]') }}

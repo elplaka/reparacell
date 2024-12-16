@@ -5,19 +5,28 @@
 <div wire:ignore.self class="modal fade" id="equiposClienteModal" name="equiposClienteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-md" role="dialog" style="display:{{ $datosCargados ? 'block' : 'none' }}">
        <div class="modal-content">
-          <div class="modal-header">
-               <h1 class="text-xl font-bold"><b> Equipos del cliente :: {{ $cliente['nombre'] }}</b></h1>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraModalEquiposCliente">
-                   <span aria-hidden="true">&times;</span>
-               </button> 
-           </div>
-           <div class="text-center spinner-container">
-                <div wire:loading>
-                    <i class="fa fa-spinner fa-spin"></i> Cargando...
+            <div class="modal-header flex-column">
+                <!-- Primer renglón: Botón de cerrar alineado a la derecha y pegado a la esquina -->
+                <div class="w-100 d-flex justify-content-end align-items-start">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="cierraModalEquiposCliente" style="position: absolute; right: 15px; top: 15px;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                {{-- <div wire:loading.remove>
-                    &nbsp; <!-- Espacio en blanco -->
-                </div> --}}
+            
+                <!-- Segundo y tercer renglón: Nombre del cliente -->
+                <div class="w-100 text-center mt-0">
+                    <h1 class="text-xl font-bold mb-0"><b>Equipos del cliente :: {{ $cliente['nombre'] }}</b></h1>
+                </div>
+            
+                <!-- Cuarto renglón: Ícono de carga -->
+                <div class="w-100 mt-0 mb-0 d-flex justify-content-center align-items-center">
+                    <div style="visibility: hidden;">
+                        <i class="fa fa-spinner fa-spin"></i> Cargando...
+                    </div>
+                    <div wire:loading style="position: absolute;">
+                        <i class="fa fa-spinner fa-spin"></i> Cargando...
+                    </div>
+                </div>
             </div>
            @if($showModalErrors)
                 @if ($errors->any())
@@ -41,7 +50,7 @@
                     </div>
                 @endif
            @endif
-           <div class="modal-body">
+           <div class="modal-body mt-0">
                <div class="container font-sans text-gray-900 antialiased">
                     <div class="row mb-3">
                         <div class="col-md-11 table-responsive">
