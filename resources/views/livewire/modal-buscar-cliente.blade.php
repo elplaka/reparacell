@@ -39,7 +39,7 @@
                         <div class="input-group">
                             <input wire:model="nombreClienteModal" wire:keydown.enter="executeRender" wire:key="nombreClienteModal" type="text" class="select-height form-control" id="nombreClienteModal" style="font-size:11pt;" key="nombreClienteInput">
                             <div class="input-group-append">
-                                <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
+                                <button wire:click="executeRender" class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
                                     <i class="fa fa-search"></i>
                                 </button>
                             </div>

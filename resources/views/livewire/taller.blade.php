@@ -11,6 +11,7 @@
     @include('livewire.creditos.modal-taller')
     @include('livewire.taller.modal-corte-caja')
     @include('livewire.taller.modal-cambia-estatus-equipo-taller')
+    @include('livewire.creditos.modal-editar-modo-pago-taller')
 
     @if ($showMainErrors)
         @if (session('error'))
@@ -301,7 +302,6 @@
                                 @endif
                             @endif
                         </td>
-
                     </tr>
                 @endforeach
             </tbody>
@@ -315,10 +315,13 @@
             </div>
         @endif
         {{-- </div> --}}
-        <div class="w-100 d-flex justify-content-end align-items-center mb-0">
-        <x-button id="botonCorteCaja" wire:click='abreModalCorteCaja' data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
-            <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
-        </x-button>
+        <div class="w-100 d-flex justify-content-end align-items-center mb-1">
+            <x-button wire:click="abrirCaja" class="ml-md-4 align-self-center mb-2 mb-md-0" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
+                <i class="fa-solid fa-coins" style="width: 20px;"></i> &nbsp; Abrir Caja [F9]
+            </x-button>
+            <x-button id="botonCorteCaja" wire:click='abreModalCorteCaja' data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
+                <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
+            </x-button> &nbsp;
         </div>
     </div>    
     <div class="col-mx">
@@ -348,13 +351,14 @@
     });
 
     function abreModalBuscarCliente() {
-    $('#buscarClienteModal').modal('show');
+        $('#buscarClienteModal').modal('show');
 
-    // Enfocar el input cuando el modal se muestra completamente
-    $('#buscarClienteModal').on('shown.bs.modal', function () {
-            $('#nombreClienteModal').focus();
-        });
-}
+        // Enfocar el input cuando el modal se muestra completamente
+        $('#buscarClienteModal').on('shown.bs.modal', function () {
+                $('#nombreClienteModal').focus();
+            });
+        }    
+
 
 document.addEventListener('livewire:initialized', function () {
         Livewire.hook('element.updated', () => {
@@ -364,15 +368,20 @@ document.addEventListener('livewire:initialized', function () {
 
     function descartarEquipo() {
         $('#collapseAgregaEquipoTaller').collapse('hide');
-        document.getElementById('botonAgregar').style.display = 'block';
+        let botonAgregar = document.getElementById('botonAgregar');
+        if (botonAgregar && botonAgregar.offsetParent !== null) {
+            botonAgregar.style.display = 'block';
+        }
     }
 
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('ocultaDivAgregaEquipo', function () {
             $('#collapseAgregaEquipoTaller').collapse('hide'); // Cierra el Collapse
-            document.getElementById('botonAgregar').style.display = 'block';
+            let botonAgregar = document.getElementById('botonAgregar');
+            if (botonAgregar && botonAgregar.offsetParent !== null) {
+                botonAgregar.style.display = 'block';
+            }
         });
-
     });
 
     window.addEventListener('keydown', function(event) {
@@ -382,10 +391,6 @@ document.addEventListener('livewire:initialized', function () {
             botonCorteCaja.click();
         }
     });
-
-    // $(document).ready(function () {
-    //     $('#selectEntregados').selectpicker('refresh');
-    // });
 
     document.addEventListener('livewire:initialized', function () {
     Livewire.on('abrirPestanaCorteCajaTaller', () => {
@@ -413,6 +418,7 @@ document.addEventListener('livewire:initialized', function () {
         document.getElementById("btn-liquidar").style.display = "none";
         document.getElementById("label-abono").style.display = "none";
         document.getElementById("div-abono").style.display = "none";
+        document.getElementById("div-selectModoPago5").style.display = "none";
     }
 
     document.addEventListener('keydown', function(event) {
@@ -457,23 +463,19 @@ document.addEventListener('DOMContentLoaded', function () {
         // Detectar si el selectTipoEquipo está abierto
         $('#selectTipoEquipo').on('shown.bs.select', function () {
             isSelectTipoEquipoOpen = true;
-            // console.log("selectTipoEquipo abierto");
         });
 
         $('#selectTipoEquipo').on('hidden.bs.select', function () {
             isSelectTipoEquipoOpen = false;
-            // console.log("selectTipoEquipo cerrado");
         });
 
         // Detectar si el selectEntregados está abierto
         $('#selectEntregados').on('shown.bs.select', function () {
             isSelectEntregadosOpen = true;
-            // console.log("selectEntregados abierto");
         });
 
         $('#selectEntregados').on('hidden.bs.select', function () {
             isSelectEntregadosOpen = false;
-            // console.log("selectEntregados cerrado");
         });
 
         // Cerrar el selectpicker al seleccionar un elemento
@@ -481,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isSelectTipoEquipoOpen) {
                 $('#selectTipoEquipo').selectpicker('toggle');
                 isSelectTipoEquipoOpen = false;
-                // console.log("selectTipoEquipo cerrado al seleccionar un elemento");
             }
         });
 
@@ -489,7 +490,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isSelectEntregadosOpen) {
                 $('#selectEntregados').selectpicker('toggle');
                 isSelectEntregadosOpen = false;
-                // console.log("selectEntregados cerrado al seleccionar un elemento");
             }
         });
     }
@@ -506,14 +506,23 @@ document.addEventListener('DOMContentLoaded', function () {
     setupSelectpickers();
 
     Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-        $('.selectpicker').selectpicker();
+        // $('.selectpicker').selectpicker();
         succeed(({ snapshot, effect }) => {
-            $('select').selectpicker('destroy');
+            // $('select').selectpicker('destroy');
             queueMicrotask(() => {
                 // Refrescar los selectpickers
-                $('.selectpicker').selectpicker('refresh');
+                // $('.selectpicker').selectpicker('refresh');
                 setupSelectpickers();
                 synchronizeSelectpickerValues();
+
+                setTimeout(() => { 
+                    $('#selectModoPago5').selectpicker(); 
+                    $('#selectModoPago6').selectpicker(); 
+                    $('#selectModoPagoCorte').selectpicker(); 
+                    $('#modoPagoSelect').selectpicker(); 
+                    $('#estatusEquiposSelect').selectpicker(); 
+                }, 30);
+
 
                 // Verificar el estado después del refresh
                 if (isSelectTipoEquipoOpen) {
@@ -534,6 +543,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 $('#selectEntregados').change(function () {
                     @this.set('busquedaEquipos.entregados', $(this).val());
                 });
+
+                // 
+
             });
         });
 
@@ -542,6 +554,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+document.addEventListener('livewire:initialized', function () {
+        @this.on('cierraModalEditaModoPagoTallerCredito', () => {
+            $('#editarModoPagoModalTallerCredito').modal('hide');
+        });
+
+        @this.on('abreModalEditaModoPagoTallerCredito', () => {
+            $('#editarModoPagoModalTallerCredito').modal('show');
+        });
+    });
+    
 </script>
 
 <script>

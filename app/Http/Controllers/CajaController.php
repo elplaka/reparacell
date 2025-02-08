@@ -12,4 +12,9 @@ class CajaController extends Controller
     {
         return view('caja.index');   
     }
+
+    public function movimientos()
+    {
+        return view('caja.movimientos');
+    }
 }

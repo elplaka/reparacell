@@ -22,7 +22,7 @@
                 <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
                 <div class="d-flex align-items-center">
                     <div class="col-9 col-md-9 pr-1 pl-0">
-                        <input type="text" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
+                        <input type="text" id="codigoProductoCapturado" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
                     </div>
                     <div class="col-3 col-md-3 pl-1">
                         <button id="buscarProductoBtn" class="btn btn-secondary"
@@ -59,7 +59,9 @@
         </div>
     </div>
     <br>
-    {{-- <div class="row"> --}}
+    {{-- <button class="btn btn-primary" wire:click='abrirModal'> 
+        Abrir Venta Crédito Modal
+    </button> --}}
         <div class="table-responsive">
             <table class="w-95 table table-bordered table-hover">
                 <thead>
@@ -94,12 +96,34 @@
                                 {{ $item['producto']->descripcion }}
                             @endif
                         </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; 
-                            @if ($carrito[$index]['esProductoComun'])
-                                {{ number_format($carrito[$index]['precioProductoComun'], 2, '.', ',') }}
-                            @else
-                                {{ $item['producto']->precio_venta }}
-                            @endif
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> 
+                            <div class="d-flex align-items-center">
+                                @if ($carrito[$index]['esProductoComun'])
+                                    <span class="fw-bold">$ {{ number_format($carrito[$index]['precioProductoComun'], 2, '.', ',') }}</span>
+                                @else
+                                <div class="d-flex align-items-center">
+                                    <span class="me-3 fw-bold">
+                                        $ {{ ($tipoPrecio[$index] ?? 1) == 1 ? $item['producto']->precio_venta : $item['producto']->precio_mayoreo }}
+                                    </span>                            
+                                    &nbsp;
+                                    &nbsp;
+                                    &nbsp;
+                                    <div class="d-flex align-items-center">
+                                        <div class="form-check me-2 d-flex align-items-center">
+                                            <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio1{{ $index }}" value="1">
+                                            <label class="form-check-label" for="tipoPrecio1{{ $index }}">MENUDEO</label>
+                                        </div>
+                                        &nbsp;
+                                        &nbsp;
+                                        &nbsp;
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio2{{ $index }}" value="2">
+                                            <label class="form-check-label" for="tipoPrecio2{{ $index }}">MAYOREO</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; {{ $carrito[$index]['subTotal'] }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
@@ -135,7 +159,7 @@
                 @endif
             @else
                 <div class="col-md-6 px-2 py-2 text-right text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
-                    <b>  Cant. Productos: </b>
+                    <b> Cant. Productos: </b>
                 </div>
                 <div class="col-md-1 px-2 py-2 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="font-size: 12pt;">
                     {{ $cantidadProductosCarrito }}
@@ -150,7 +174,7 @@
         </div>
         <br>
         <div class="row d-flex justify-content-between align-items-center">
-            <div class="col-md-7">
+            <div class="col-md-5">
                 @if (!$cliente['publicoGeneral'])
                 @role('admin')
                 <div class="row justify-content-end">
@@ -171,19 +195,28 @@
                 </button>
                 @endif
             </div>
-            <div class="col-md-2 text-right">
-                <x-button wire:click="cobrar" class="ml-md-4">
+            <div class="col-md-2">
+                <x-button wire:click="cobrar" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
                     {{ __('Cobrar [ F4 ]') }}
                 </x-button>
             </div>
+            <div class="col-md-2 d-flex justify-content-center align-items-center">
+                <div class="d-flex align-items-center w-100">
+                    <select wire:model.live="idModoPagoA" id="selectModoPagoA" class="selectpicker select-picker w-100" style="margin: 0; height: auto;">
+                        @foreach ($modosPagoModal as $modoPago)
+                            <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
-        @endif
+    @endif
 </div>
 
 <script>
     window.addEventListener('keydown', function(event) {
         if (event.key === 'F4') {
-            Livewire.dispatch('f4-pressed');
+            $('#cobrarModal').modal('show');
         }
     });
 
@@ -203,24 +236,85 @@
 </script>
 
 <script>
+     
+   document.addEventListener('DOMContentLoaded', function() {
+   // Inicializar selectpicker
+
+         $('#selectModoPagoA').selectpicker();
+
+        // Añadir evento keydown al documento solo cuando la modal esté visible
+        // $(document).on('keydown.modalEvent', function (e) {
+        //     console.log('keydown event detected'); // Mensaje para verificar que el evento se detecta
+        //     if (e.key === 'Enter') {
+        //         e.preventDefault(); // Evitar el comportamiento predeterminado del formulario
+        //         $('#btnAceptar').trigger('click'); // Simular un clic en el botón "Aceptar"
+        //     }
+        // });
+
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+            succeed(({ snapshot, effect }) => {
+                $('select').selectpicker('destroy');
+                queueMicrotask(() => {
+                    setTimeout(() => {
+                        $('.selectpicker').selectpicker('refresh');
+                    }, 10); //
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+
+    $('#corteCajaModal').on('shown.bs.modal', function () {
+        $('#selectModoPagoCorte').selectpicker();
+
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+            succeed(({ snapshot, effect }) => {
+                $('select').selectpicker('destroy');
+                queueMicrotask(() => {
+                    // Refrescar los selectpickers
+                    $('.selectpicker').selectpicker('refresh');
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
+
+    // Escuchar el evento de cierre de la ventana modal para remover el evento keydown
+    $('#cobrarModal').on('hidden.bs.modal', function () {
+        $(document).off('keydown.modalEvent');
+    });
+
+});
+
     document.addEventListener('DOMContentLoaded', function () {
         Livewire.on('abrirModalBuscarProducto', () => {
             let button = document.getElementById('buscarProductoBtn');
             if (button) {
                 button.click();
-                // console.log('Botón "Buscar producto" clicado automáticamente.');
             } 
-            // else {
-            //     console.log('El botón con id "buscarProductoBtn" no existe.');
-            // }
-        });
+        });  
     });
 
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('cerrarModalBuscarProducto', () => {
         document.getElementById('btnCerrarBuscarProductoModal').click();
-            })
+            })    
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        Livewire.on('abreInicializarCajaModal', () => {
+            $('#inicializarCajaModal').modal('show');
+            console.log('gusta');
+            })    
+    });
+
 
     document.addEventListener('livewire:initialized', function () {
         Livewire.on('cerrarModalCorteCaja', () => {
@@ -230,7 +324,6 @@
 
     document.addEventListener('livewire:initialized', function () {
     Livewire.on('abrirPestanaCorteCaja', () => {
-        console.log('entra a la pestaña');
                     window.open('{{ url('/caja/corte') }}', '_blank');
                 });
             });
@@ -258,12 +351,54 @@
         let descripcionProductoInput = document.getElementById('descripcionProductoModal');
         if (descripcionProductoInput) {
             descripcionProductoInput.focus();
-            // console.log('Foco puesto en el input "descripcionProductoModal".');
         } 
-        // else {
-        //     console.log('El input con id "descripcionProductoModal" no existe.');
-        // }
+    });
+});
+
+document.addEventListener('livewire:initialized', function () {
+    Livewire.on('cierraModalCobrar', (attr) => {
+        $('#cobrarModal').modal('hide');
+        setTimeout(() => {
+            let codigoProducto = document.getElementById('codigoProductoCapturado');
+            if (codigoProducto) {
+                codigoProducto.focus();
+            } 
+        }, 900); // Ajusta el tiempo (300ms) según sea necesario
     });
 });
 
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        Livewire.on('abreVentaCreditoModal', () => {
+            $('#ventaCreditoModal').modal('show');
+        });
+
+        $('#ventaCreditoModal').on('shown.bs.modal', function () {
+            $('#selectModoPago2').selectpicker();
+
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                $('.selectpicker').selectpicker();
+
+                succeed(({ snapshot, effect }) => {
+                    $('#selectModoPago2').selectpicker('destroy');
+
+                    queueMicrotask(() => {
+                        setTimeout(() => { 
+                            $('#selectModoPago2').selectpicker('refresh'); 
+                        }, 50);
+                    });
+                });
+
+                fail(() => {
+                    console.error('Livewire commit failed');
+                });
+            });
+        });
+    });
+</script>
+
+
+

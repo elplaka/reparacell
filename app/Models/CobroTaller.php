@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\EquipoTaller;
 use App\Models\CobroTallerCredito;
 use App\Models\User;
+use App\Models\ModoPago;
 
 class CobroTaller extends Model
 {
@@ -22,6 +23,7 @@ class CobroTaller extends Model
         'cobro_estimado',
         'cobro_realizado',
         'cancelado',
+        'id_modo_pago',
         'id_usuario_cobro'
     ];
 
@@ -38,5 +40,10 @@ class CobroTaller extends Model
     public function usuario()
     {
         return $this->belongsTo(User::class, 'id_usuario_cobro');
+    }
+
+    public function modoPago()
+    {
+        return $this->belongsTo(ModoPago::class, 'id_modo_pago');
     }
 }

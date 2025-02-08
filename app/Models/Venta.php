@@ -9,6 +9,7 @@ use App\Models\VentaCredito;
 use App\Models\VentaProductoComun;
 use App\Models\Cliente;
 use App\Models\User;
+use App\Models\ModoPago;
 
 class Venta extends Model
 {
@@ -16,7 +17,8 @@ class Venta extends Model
 
     protected $fillable = [
         'id_cliente', 
-        'fecha', 
+        'fecha',
+        'id_modo_pago',
         'total',
     ];
 
@@ -43,5 +45,10 @@ class Venta extends Model
     public function productosComun()
     {
         return $this->hasMany(VentaProductoComun::class, 'id_venta');
+    }
+
+    public function modoPago()
+    {
+        return $this->belongsTo(ModoPago::class, 'id_modo_pago');
     }
 }

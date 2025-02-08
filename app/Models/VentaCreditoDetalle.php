@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\VentaCredito;
+use App\Models\ModoPago;
 use App\Models\User;
 
 class VentaCreditoDetalle extends Model
@@ -17,6 +18,7 @@ class VentaCreditoDetalle extends Model
         'id',
         'id_abono',
         'abono',
+        'id_modo_pago',
         'id_usuario_venta'
     ];
 
@@ -28,6 +30,11 @@ class VentaCreditoDetalle extends Model
     public function usuario()
     {
         return $this->belongsTo(User::class, 'id_usuario_venta');
+    }
+
+    public function modoPago()
+    {
+        return $this->belongsTo(ModoPago::class, 'id_modo_pago');
     }
 
 }

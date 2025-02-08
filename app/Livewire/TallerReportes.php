@@ -10,6 +10,8 @@ use App\Models\EstatusEquipo;
 use App\Models\MarcaEquipo;
 use App\Models\ModeloEquipo;
 use App\Models\FallaEquipo;
+use App\Models\ModoPago;
+use App\Models\CobroTaller;
 use Livewire\WithPagination;
 
 class TallerReportes extends Component
@@ -19,6 +21,7 @@ class TallerReportes extends Component
     public $numberOfPaginatorsRendered = [];
     public $showMainErrors, $showModalErrors;
     public $marcas, $modelos, $fallas, $clientes;
+    public $cobroModal, $idModoPago, $modosPago;
     public $marcasSeleccionadas = [];
     public $marcasDiv;
     public $modelosSeleccionados = [];
@@ -44,6 +47,24 @@ class TallerReportes extends Component
         'fechaSalidaInicio' => null,
         'fechaSalidaFin' => null,
     ];
+
+    public function abrirEditarModoPagoModal($numOrden)
+    {
+        $this->cobroModal = CobroTaller::findOrFail($numOrden);
+
+        $this->idModoPago =  $this->cobroModal->id_modo_pago;
+
+        $this->dispatch('abreModalEditaModoPagoCobroTaller');
+    }
+
+    public function actualizarModoPago()
+    {
+        $this->cobroModal->id_modo_pago = $this->idModoPago;
+        $this->cobroModal->update();
+
+        $this->dispatch('cierraModalEditaModoPagoCobroTaller');
+        $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
+    }
 
     public function eliminarFalla($fallaId)
     {
@@ -456,6 +477,8 @@ class TallerReportes extends Component
         $this->nombreCliente = '';
 
         $this->chkFechaSalida = false;
+        
+        $this->modosPago = ModoPago::where('id', '>', 0)->get();
     }
 
     public function obtenerIconoSegunEstatus($id_estatus)

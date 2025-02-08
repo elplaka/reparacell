@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Venta;
 use App\Models\User;
+use App\Models\ModoPago;
 use Livewire\WithPagination;
 
 class VentaLw extends Component
@@ -12,7 +13,7 @@ class VentaLw extends Component
     use WithPagination;
 
     public $numberOfPaginatorsRendered = [];
-    public $showMainErrors, $showModalErrors;
+    public $showMainErrors, $showModalErrors, $modosPago, $ventaModal, $idModoPago;
     public $collapsed = [];
     public $usuarios;
 
@@ -24,12 +25,30 @@ class VentaLw extends Component
         'cancelada'
     ];
 
+    public function abrirEditarModoPagoModal($idVenta)
+    {
+        $this->ventaModal = Venta::findOrFail($idVenta);
+
+        $this->idModoPago =  $this->ventaModal->id_modo_pago;
+
+        $this->dispatch('abreModalEditaModoPagoVentaCredito');
+    }
+
+    public function actualizarModoPago()
+    {
+        $this->ventaModal->id_modo_pago = $this->idModoPago;
+        $this->ventaModal->update();
+
+        $this->dispatch('cierraModalEditaModoPago');
+        $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
+    }
+
     public function invertirEstatusVenta($idVenta)
     {
         $venta = Venta::findOrFail($idVenta);
 
         $venta->cancelada = !$venta->cancelada;
-        $venta->save();
+        $venta->save();     
     } 
 
 
@@ -53,9 +72,9 @@ class VentaLw extends Component
             $ventasQuery->where('id_usuario', $this->filtrosVentas['idUsuario']);
         }
 
-        if ($this->filtrosVentas['idUsuario'] != 0)
+        if ($this->filtrosVentas['idModoPago'] != 0)
         {
-            $ventasQuery->where('id_usuario', $this->filtrosVentas['idUsuario']);
+            $ventasQuery->where('id_modo_pago', $this->filtrosVentas['idModoPago']);
         }
 
         if ($this->filtrosVentas['cancelada'] > 0)
@@ -87,14 +106,17 @@ class VentaLw extends Component
         $this->collapsed = [];
 
         $this->filtrosVentas = [
-            'fechaInicial' => now()->subDays(7)->toDateString(),
+            // 'fechaInicial' => now()->subDays(7)->toDateString(),
+            'fechaInicial' => now()->toDateString(),
             'fechaFinal' => now()->toDateString(),
             'cliente' => '',
+            'idModoPago' => 0,
             'idUsuario' => 0,
             'cancelada' => 0
         ];
 
         $this->usuarios = User::all();
+        $this->modosPago = ModoPago::where('id', '>', 0)->get();
     }
 
     public function verDetalles($ventaId)

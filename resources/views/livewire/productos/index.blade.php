@@ -109,7 +109,7 @@
                         @endif
                       </td>
                       <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        <a wire:click.prevent="editaProducto('{{ $producto->codigo }}')" title="Editar producto" wire:loading.attr="disabled" wire:target="editaProducto" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarProductoModal"
+                        <a wire:click.prevent="editaProducto('{{ addslashes($producto->codigo) }}')" title="Editar producto" wire:loading.attr="disabled" wire:target="editaProducto" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#editarProductoModal"
                         >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a> &nbsp;

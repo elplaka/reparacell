@@ -43,7 +43,7 @@
                         <div class="input-group">
                             <input placeholder="Descripción del producto" wire:keydown.enter="executeRender" wire:model="descripcionProductoModal" type="text" class="select-height form-control" id="descripcionProductoModal" style="font-size:11pt;" autofocus>
                             <div class="input-group-append">
-                                <button class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
+                                <button wire:click="executeRender" class="btn btn-secondary uppercase tracking-widest font-semibold text-xs" id="button-addon2">
                                     <i class="fa fa-search"></i>
                                 </button>
                             </div>
@@ -74,20 +74,22 @@
                                     </thead>
                                     <tbody>
                                         @foreach($productosModal as $productoModal)
-                                        <tr style="font-size: 9pt; cursor: pointer; @if ($productoModal->inventario == 0) color:red; @endif" wire:click="gotoPageAndCapture('{{ $productoModal->codigo }}', {{ $productosModal->currentPage() }})">
-                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: blue; font-weight: bold;">
+                                        {{-- <tr style="font-size: 9pt; cursor: pointer; @if ($productoModal->inventario == 0) color:red; @endif" wire:click="gotoPageAndCapture('{{ $productoModal->codigo }}', {{ $productosModal->currentPage() }})"> --}}
+                                        <tr style="font-size: 9pt; @if ($productoModal->inventario == 0) color:red; cursor: default; pointer-events: none; @else cursor: pointer; @endif" 
+                                        @if ($productoModal->inventario != 0) wire:click="gotoPageAndCapture('{{ str_replace("'", "\'", $productoModal->codigo) }}', {{ $productosModal->currentPage() }})" @endif>
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: @if ($productoModal->inventario == 0) red; @else blue @endif; font-weight: bold;">
                                                 {{ $productoModal->codigo }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: green; font-weight: bold;">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: @if ($productoModal->inventario == 0) red; @else green @endif; font-weight: bold;">
                                                 {{ $productoModal->descripcion }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: orange; font-weight: bold;">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: @if ($productoModal->inventario == 0) red; @else orange @endif; font-weight: bold;">
                                                 {{ $productoModal->precio_venta }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: purple; font-weight: bold;">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: @if ($productoModal->inventario == 0) red; @else purple @endif; font-weight: bold;">
                                                 {{ $productoModal->departamento->nombre }}
                                             </td>
-                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: teal; font-weight: bold;">
+                                            <td class="px-2 py-1 whitespace-no-wrap" style="color: @if ($productoModal->inventario == 0) red; @else teal @endif; font-weight: bold;">
                                                 {{ $productoModal->inventario == -1 ? 'N/A' : $productoModal->inventario }}
                                             </td>
                                         </tr>

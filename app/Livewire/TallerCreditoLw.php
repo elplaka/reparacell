@@ -7,22 +7,26 @@ use App\Models\CobroTaller;
 use App\Models\CobroTallerCredito;
 use App\Models\CobroTallerCreditoDetalle;
 use App\Models\EstatusCobroTallerCredito;
+use App\Models\MovimientoCaja;
+use App\Models\ModoPago;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\WithPagination;
 use Livewire\Attributes\On; 
+use App\Traits\MovimientoCajaTrait;  //Funciones globales de MOVIMIENTOS EN CAJA
 
 class TallerCreditoLw extends Component
 {
+    use MovimientoCajaTrait;
     use WithPagination;
-
     public $numberOfPaginatorsRendered = [];
+
     public $datosCargados;
-    public $showModalErrors, $showMainErrors;
+    public $showModalErrors, $showMainErrors, $modosPagoModal, $numOrdenModal, $idAbonoModal, $idModoPago;
     public $muestraDivAbono;
     public $detallesCredito;
-    public $sumaAbonos, $montoLiquidar;
+    public $sumaAbonos, $montoLiquidar, $cobroModal;
 
     protected $listeners = [
         'lisLiquidarCobroTallerCredito' => 'liquidarCobroTallerCredito',
@@ -49,7 +53,8 @@ class TallerCreditoLw extends Component
         'monto' => null,
         'abono' => 0,
         'idAbonoSeleccionado' => null,
-        'conCobroEstimado' => false
+        'conCobroEstimado' => false,
+        'idModoPago' => 1
     ];
 
     public function cierraCobroCreditoTallerModal()
@@ -82,6 +87,8 @@ class TallerCreditoLw extends Component
            DB::transaction(function () use ($numOrden) 
            {
                $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
+               $this->sumaAbonos = $this->detallesCredito->sum('abono');
+               $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
 
                if ($this->detallesCredito->isEmpty())
                {
@@ -93,13 +100,28 @@ class TallerCreditoLw extends Component
                     $ultimoIdAbono = $this->detallesCredito->max('id_abono');
                     $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroTaller->cobro_realizado;
                }
-            
+
                $cobroACreditoDetalles = new CobroTallerCreditoDetalle();
                $cobroACreditoDetalles->num_orden = $numOrden;
                $cobroACreditoDetalles->id_abono = $ultimoIdAbono + 1;
                $cobroACreditoDetalles->abono = $this->montoLiquidar;
+               $cobroACreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
                $cobroACreditoDetalles->id_usuario_cobro = Auth::id();
                $cobroACreditoDetalles->save();
+
+               if ($this->cobroACredito['idModoPago'] == 1)
+               {
+                   $idRef = $numOrden % 1000;
+                   $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+   
+                   $movimiento = new MovimientoCaja();
+                   $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+                   $movimiento->id_tipo = 3;
+                   $movimiento->monto = $this->calculaMonto(3, $this->montoLiquidar);
+                   $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $this->montoLiquidar); // Asegura que el saldo_caja sea un número decimal
+                   $movimiento->id_usuario = Auth::id();
+                   $movimiento->save();
+               }
 
                $this->sumaAbonos = $this->detallesCredito->sum('abono') + $this->montoLiquidar;
                $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
@@ -131,6 +153,13 @@ class TallerCreditoLw extends Component
         {
             DB::transaction(function () use ($numOrden, $idAbono) 
             {
+                $detalleCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)
+                ->where('id_abono', $idAbono)
+                ->first();
+
+                $idModoPago = $detalleCredito->id_modo_pago;
+                $abono = $detalleCredito->abono;
+
                 $detalleCredito =  CobroTallerCreditoDetalle::where('num_orden', $numOrden)
                 ->where('id_abono', $idAbono)
                 ->delete();
@@ -147,6 +176,20 @@ class TallerCreditoLw extends Component
 
                     $this->cobroACredito['idEstatus'] = 1;
                     $this->cobroACredito['estatus'] = "SIN LIQUIDAR";
+
+                    // Registrar movimiento en caja si el modo de pago es 1
+                    if ($idModoPago == 1) {
+                        $idRef = $numOrden % 1000;
+                        $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+                        $movimiento = new MovimientoCaja();
+                        $movimiento->referencia = $this->regresaReferencia(7, $idRef);
+                        $movimiento->id_tipo = 7;
+                        $movimiento->monto = $this->calculaMonto(7, $abono);
+                        $movimiento->saldo_caja = $this->calculaSaldoCaja(7, $abono); // Asegura que el saldo_caja sea un número decimal
+                        $movimiento->id_usuario = Auth::id();
+                        $movimiento->save();
+                    }
 
                     session()->flash('success', 'El ABONO se ha ELIMINADO con éxito.');
                 }
@@ -189,10 +232,11 @@ class TallerCreditoLw extends Component
                         $cobroCreditoDetalles->num_orden = $numOrden;
                         $cobroCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $cobroCreditoDetalles->abono = $this->cobroACredito['abono'];
+                        $cobroCreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
                         $cobroCreditoDetalles->id_usuario_cobro = Auth::id();
                         $cobroCreditoDetalles->save();
 
-                        $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
+                        $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->where('id_abono', '>', 0)->get();
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
 
@@ -201,6 +245,20 @@ class TallerCreditoLw extends Component
                             CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
                             $this->cobroACredito['estatus'] = $cobroCreditoDetalles->first()->cobroCredito->estatus->descripcion;
                             $this->cobroACredito['idEstatus'] = 2;
+                        }
+
+                        if ($this->cobroACredito['idModoPago'] == 1)
+                        {
+                            $idRef = $numOrden % 1000;
+                            $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+            
+                            $movimiento = new MovimientoCaja();
+                            $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+                            $movimiento->id_tipo = 3;
+                            $movimiento->monto = $this->calculaMonto(3, $this->cobroACredito['abono']);
+                            $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $this->cobroACredito['abono']); // Asegura que el saldo_caja sea un número decimal
+                            $movimiento->id_usuario = Auth::id();
+                            $movimiento->save();
                         }
                     });
                 } catch (\Exception $e)
@@ -225,6 +283,11 @@ class TallerCreditoLw extends Component
                 $this->addError('abono', 'El abono debe ser mayor que cero.');
             }
         }
+    }
+
+    public function cierraModalActualizarModoPago()
+    {
+        
     }
 
     public function abreTallerCredito($numOrden)
@@ -258,8 +321,9 @@ class TallerCreditoLw extends Component
         $this->cobroACredito['tipoEquipo'] = $creditoTaller->equipoTaller->equipo->tipo_equipo->nombre;
         $this->cobroACredito['marcaEquipo'] = $nombreMarca;
         $this->cobroACredito['modeloEquipo'] = $nombreModelo;
+        $this->cobroACredito['idModoPago'] = 1;
 
-        $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
+        $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->where('abono', '>', 0)->get();
 
         $this->sumaAbonos = $this->detallesCredito->sum('abono');
         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
@@ -307,6 +371,65 @@ class TallerCreditoLw extends Component
         return view('livewire.taller.creditos', compact('creditos', 'estatus'));
     }
 
+    public function abrirEditarModoPagoModal($numOrden, $idAbono)
+    {
+        $this->numOrdenModal = $numOrden;
+        $this->idAbonoModal = $idAbono;
+
+        $this->cobroModal = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->where('id_abono', $idAbono)->firstOrFail();
+
+        $this->idModoPago =  $this->cobroModal->id_modo_pago;
+
+        $this->dispatch('abreModalEditaModoPagoTallerCredito');
+    }
+
+    public function actualizarModoPago()
+    {
+        $cobroTallerCreditoDetalle = CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
+        ->where('id_abono', $this->idAbonoModal)
+        ->first();
+
+        $idModoPago = $cobroTallerCreditoDetalle->id_modo_pago;
+        $abono = $cobroTallerCreditoDetalle->abono;
+
+        CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
+        ->where('id_abono', $this->idAbonoModal)
+        ->update(['id_modo_pago' => $this->idModoPago]);
+
+        if ($idModoPago == 1 && $this->idModoPago == 2)  //Si el MODO DE PAGO era EFECTIVO y se cambia a TRANSF.
+        {
+            $idRef = $this->numOrdenModal % 1000;
+            $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+            $movimiento = new MovimientoCaja();
+            $movimiento->referencia = $this->regresaReferencia(8, $idRef);
+            $movimiento->id_tipo = 8;
+            $movimiento->monto = $this->calculaMonto(8, $abono);
+            $movimiento->saldo_caja = $this->calculaSaldoCaja(8, $abono); // Asegura que el saldo_caja sea un número decimal
+            $movimiento->id_usuario = Auth::id();
+            $movimiento->save();
+        }
+        elseif ($idModoPago == 2 && $this->idModoPago == 1) //Si el MODO DE PAGO era TRANSF. y se cambia a EFECTIVO
+        {
+            $idRef = $this->numOrdenModal % 1000;
+            $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+            $movimiento = new MovimientoCaja();
+            $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+            $movimiento->id_tipo = 3;
+            $movimiento->monto = $this->calculaMonto(3, $abono);
+            $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $abono); // Asegura que el saldo_caja sea un número decimal
+            $movimiento->id_usuario = Auth::id();
+            $movimiento->save();
+        }
+
+        $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
+        ->where('abono', '>', 0)->get();
+
+        $this->dispatch('cierraModalEditaModoPagoTallerCredito');
+        $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
+    }
+
     public function mount()
     {
         $nombreCliente = session('nombreClienteCredito', '');
@@ -335,6 +458,8 @@ class TallerCreditoLw extends Component
             $this->abreTallerCredito($numOrden);
             $this->dispatch('abreCobroCreditoTallerModal2');
         }
+
+        $this->modosPagoModal = ModoPago::where('id', '>', 0)->get();
     }
 
     

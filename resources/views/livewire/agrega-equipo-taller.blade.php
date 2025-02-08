@@ -135,7 +135,7 @@
                 </div>
                 <label for="cliente.telefonoContacto" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0 mb-1" style="font-size: 11pt;">{{ __('Contacto') }}</label>
                 <div class="col-md-2 mb-2">
-                    <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control mb-3" id="cliente.telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumeros" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
+                    <input wire:model="cliente.telefonoContacto" type="text" class="input-height form-control mb-3" id="telefonoContacto" style="font-size:11pt;" wire:keydown="validarNumerosContacto" @if($cliente['estatus'] >= 2) readonly @endif autofocus>
                 </div>
                 @endif
             </div>
@@ -199,16 +199,6 @@
                             </div>
                             @if (strlen($cliente['telefono']) == 10 || $equipo['estatus'] >= 2)
                             <div class="col col-md-3 d-flex justify-content-end">
-                                {{-- @if ($equipo['estatus'] == 3)   Equipo ya existente --}}
-                                {{-- <button class="btn btn-secondary" style="font-size: 10pt" wire:click="editarEquipo" title="Editar equipo">
-                                    <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-edit"></i>
-                                </button>
-                                &nbsp; 
-                                <button class="btn btn-secondary ml-2" style="font-size: 10pt" wire:click="guardarEquipo" title="Guardar equipo">
-                                    <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-save"></i>
-                                </button>
-                                @endif
-                                &nbsp; --}}
                                 @if ($equipo['estatus'] >= 2)
                                 <button class="btn btn-secondary ml-2" style="font-size: 10pt" data-toggle="modal" data-target="#equipoClienteHistorialModal" wire:click="abreEquipoClienteHistorial" title="Ver historial del equipo">
                                     <i class="fa-solid fa-mobile-screen"></i>&thinsp;<i class="fa-solid fa-clock-rotate-left"></i>
@@ -316,33 +306,81 @@
                 <div class="rounded pb-3 border"> 
                     <div class="container mt-3">
                         <div class="row">
-                            <label for="equipoTaller.observaciones" class="block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;">{{ __('Observaciones') }}</label>
-                            <div class="col-md-5">
+                            <!-- Columna para Observaciones -->
+                            <div class="col-md-1 p-0">
+                                <label for="equipoTaller.observaciones" class="font-medium text-gray-700 text-end w-100" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;">
+                                    {{ __('Observ.') }} &nbsp;
+                                </label>
+                            </div>
+                            <div class="col-md-3 p-0">
                                 <input wire:model="equipoTaller.observaciones" type="text" class="input-height form-control" style="font-size:11pt;" autofocus>
                             </div>
-                            <label for="equipoTaller.totalEstimado" class="col-md-2 block font-medium text-sm-center text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: center; text-align: center;"> {{ __('Total Estimado $ ') }} {{ number_format($equipoTaller['totalEstimado'], 2, '.', ',') }} </label>
-                            @if (!$cliente['publicoGeneral'])
-                            @if ($equipoTaller['estatus'] == 0 || $equipoTaller['agregaAbono'])
-                            <label for="equipoTaller.anticipo" class="col-md-1 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $') }} </label>
-                            <div class="col-md-2 ml-0 pl-1">
-                                <input wire:model="equipoTaller.anticipo" type="number" step="0.5" class="input-height form-control" style="font-size:11pt;" autofocus>
+                        
+                            <div class="col-md-2">
+                                <label for="equipoTaller.totalEstimado" class="block font-medium text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end; text-align: right;"> 
+                                    {{ __('Total Estimado $ ') }} {{ number_format($equipoTaller['totalEstimado'], 2, '.', ',') }} 
+                                </label>
                             </div>
-                            @else
-                            <label for="equipoTaller.anticipo" class="col-md-3 block font-medium text-sm-right text-gray-700 pr-0" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;"> {{ __('Anticipo $ ') }} {{ $equipoTaller['anticipo'] }} </label>
-                                @if ($equipoTaller['anticipo'] == 0)
-                                &nbsp;&nbsp;
-                                <button
-                                    wire:click="agregaAbono"
-                                    class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-                                    style="padding: 0; height: 24px; width: 24px;"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title="Agregar abono">
-                                    <i class="fa fa-plus" style="margin: 0; font-size: 14px;"></i>
-                                </button>
+                        
+                            @if (!$cliente['publicoGeneral'])
+                                @if ($equipoTaller['estatus'] == 0 || $equipoTaller['agregaAbono'])
+                                    <div class="col-md-1 p-0"> <!-- p-0 elimina el padding interno -->
+                                        <label for="equipoTaller.anticipo" class="font-medium text-gray-700 text-end w-100" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;">
+                                            {{ __('Anticipo $') }} &nbsp;
+                                        </label>
+                                    </div>
+                                    <div class="col-md-2 p-0"> <!-- p-0 elimina el padding interno -->
+                                        <input wire:model.live="equipoTaller.anticipo" id="inputAnticipo" type="number" step="0.5" class="input-height form-control rounded-0" style="font-size:11pt;" autofocus>
+                                    </div>
+                                    @if ($equipoTaller['anticipo'] > 0)
+                                    <div class="col-md-3">
+                                        <select wire:model="equipoTaller.idModoPagoAnticipo" id="selectModoPagoAnticipo" class="selectpicker select-picker w-100">
+                                            @foreach ($modosPago as $modoPago)
+                                                <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @endif
+                                @else
+                                    <div class="col-md-1 p-0"> <!-- p-0 elimina el padding interno -->
+                                        <label for="equipoTaller.anticipo" class="font-medium text-gray-700 text-end w-100" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-end;">
+                                            {{ __('Anticipo $ ') }} &nbsp;
+                                        </label>
+                                    </div>
+                                    @if ($equipoTaller['anticipo'] == 0)
+                                        <div class="col-md-1">
+                                            <button wire:click="agregaAbono" class="btn btn-primary btn-sm d-flex align-items-center justify-content-center" style="padding: 0; height: 24px; width: 24px;" data-bs-toggle="tooltip" data-bs-placement="top" title="Agregar abono">
+                                                <i class="fa fa-plus" style="margin: 0; font-size: 14px;"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <div class="col-md-1 p-0">
+                                            <label for="equipoTaller.anticipo" class="font-medium text-gray-700 w-100" style="font-size: 11pt; height: 2em; display: flex; align-items: center; justify-content: flex-start;">
+                                                {{ $equipoTaller['anticipo'] }} &nbsp;
+                                            </label>
+                                        </div>
+                                    @endif
+                                    @if ($equipoTaller['agregaAbono'])
+                                    <div class="col-md-3">
+                                        <select wire:model.live="equipoTaller.idModoPagoAnticipo" id="selectModoPagoAnticipo" class="selectpicker select-picker w-100">
+                                            @foreach ($modosPago as $modoPago)
+                                                <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @else
+                                        @if ($equipoTaller['anticipo'] > 0)
+                                        <div class="col-md-3">
+                                                @foreach ($modosPago as $modoPago)
+                                                    @if ($modoPago->id == $equipoTaller['idModoPagoAnticipo'])
+                                                        <i class="{{ $modoPago->icono }}"></i> &nbsp; {{ $modoPago->nombre }}
+                                                    @endif
+                                                @endforeach
+                                        </div>
+                                        @endif
+                                    @endif
                                 @endif
                             @endif
-                            @endif                  
                         </div>
                     </div>
                 </div>
@@ -368,13 +406,21 @@
     document.addEventListener('livewire:initialized', function () {
         Livewire.hook('morph.updated', () => {
             let divPrincipal = document.getElementById('divPrincipal');
+            let telefonoContacto = document.getElementById('telefonoContacto');
+            let inputAnticipo = document.getElementById('inputAnticipo');
 
             if (divPrincipal && isElementVisible(divPrincipal)) {
                 let telefonoCliente = document.getElementById('telefonoCliente');
                 if (telefonoCliente) {
                     if (!telefonoCliente.hasAttribute('readonly')) {
-                        telefonoCliente.focus();
-                        // console.log('Foco puesto en el input "telefonoCliente".');
+                        if (document.activeElement === telefonoContacto)
+                        { 
+                            telefonoContacto.focus();
+                        }
+                        else if (document.activeElement != inputAnticipo)
+                        {
+                            telefonoCliente.focus();
+                        }
                     } else {
                         console.log('El input "telefonoCliente" está en modo readonly. No se pone el foco.');
                     }
@@ -383,7 +429,6 @@
                 }
             }
         });
-
 
         // Función para verificar si un elemento es visible
         function isElementVisible(el) {
@@ -407,34 +452,6 @@
     });
 });
 
-//FUNCIONA PERO ES TARDADO COMO CON SETTIMEOUT
-// document.addEventListener('DOMContentLoaded', function () {
-//     const observer = new MutationObserver((mutations) => {
-//         mutations.forEach((mutation) => {
-//             if (mutation.type === 'childList') {
-//                 const input = document.getElementById('nombreClienteModal');
-//                 const modal = document.getElementById('buscarClienteModal');
-//                 if (input && modal && modal.style.display !== 'none' && document.activeElement !== input && !input.hasAttribute('readonly')) {
-//                     input.focus();
-//                     console.log('Foco restaurado manualmente.');
-//                 }
-//             }
-//         });
-//     });
-
-//     observer.observe(document.getElementById('buscarClienteModal'), {
-//         attributes: false,
-//         childList: true,
-//         subtree: true
-//     });
-
-//     // Desconectar el observer cuando el modal se cierra
-//     $('#buscarClienteModal').on('hidden.bs.modal', function () {
-//         observer.disconnect();
-//     });
-// });
-
-
 //FUNCIONA PERO USA SETTIMEOUT
 document.addEventListener('DOMContentLoaded', function () {
     Livewire.on('focusInput', () => {
@@ -444,44 +461,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (input && modal) {
             // Introducimos un pequeño retraso
             setTimeout(() => {
-                // input.blur(); // Desenfocamos primero
                 input.focus(); // Luego, enfocamos de nuevo
             }, 1); // Ajusta el tiempo de espera según sea necesario
         }
     });
 });
-
-//     document.addEventListener('livewire:initialized', () => {
-//     Livewire.on('focusInput', () => {
-//         const input = document.getElementById('nombreClienteModal');
-//         if (input) {
-//             input.focus();
-//             console.log('Foco restaurado manualmente.');
-//         }
-//     });
-// });
-
-//FUNCIONA MANTENIENDO EL FOCUS PERO RALENTIZA EL RENDER
-// document.addEventListener('livewire:initialized', () => {
-//     Livewire.hook('morph.updated', ({ el }) => {
-//         const input = document.getElementById('nombreClienteModal');
-//         if (input && document.activeElement !== input) {
-//             input.focus();
-//             console.log('Foco restaurado solo si es necesario.');
-//         }
-//     });
-// });
-
-
-// document.addEventListener('livewire:initialized', () => {
-//     Livewire.hook('morph.updated', ({ el }) => {
-//         const input = document.getElementById('nombreClienteModal');
-//         if (input && document.activeElement !== input) {
-//             input.focus();
-//             console.log('Foco restaurado después del render');
-//         }
-//     });
-// });
 
 document.addEventListener('DOMContentLoaded', function () {
     let shouldFocus = false;
@@ -507,30 +491,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+        $('#selectModoPagoAnticipo').selectpicker();
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
 
-</script>
+            succeed(({ snapshot, effect }) => {
+                $('#selectModoPagoAnticipo').selectpicker('destroy');
 
-{{-- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar los selectpickers al cargar la página
-    // $('.selectpicker').selectpicker();
+                queueMicrotask(() => {
+                    setTimeout(() => { 
+                        $('#selectModoPagoAnticipo').selectpicker('refresh'); 
+                    }, 100);
+                });
+            });
 
-    // Hook para manejar el commit de Livewire
-    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-        // Re-inicializar los selectpickers después de la actualización
-        succeed(({ snapshot, effect }) => {
-            // Destruir y volver a inicializar los selectpickers
-            $('select').selectpicker('destroy');
-            queueMicrotask(() => {
-                $('.selectpicker').selectpicker('refresh');
+            fail(() => {
+                console.error('Livewire commit failed');
             });
         });
-
-        fail(() => {
-            console.error('Livewire commit failed');
-        });
     });
-});
-</script>  --}}
-
+</script>
 

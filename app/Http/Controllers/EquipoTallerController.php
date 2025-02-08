@@ -80,11 +80,11 @@ class EquipoTallerController extends Controller
             $this->cobro['marcaEquipo'] = $equipo_taller->equipo->marca->nombre;
             $this->cobro['modeloEquipo'] = $equipo_taller->equipo->modelo->nombre;
             $this->cobro['totalEstimado'] = $cobro->cobro_estimado;
-            $this->cobro2['fallasEquipo'] = null;
+            $this->cobro['fallasEquipo'] = null;
             $i = 0;
             foreach($fallas_equipo_taller as $falla)
             {
-                $this->cobro2['fallasEquipo'][$i++] = $falla->falla;
+                $this->cobro['fallasEquipo'][$i++] = $falla->falla;
             }
 
             // Título centrado
@@ -109,9 +109,9 @@ class EquipoTallerController extends Controller
             $printer->text($texto5 . "\n");
 
             // Imprimir fallas de equipo si existen
-            if (!empty($this->cobro2['fallasEquipo'])) {
+            if (!empty($this->cobro['fallasEquipo'])) {
                 $printer->text("Fallas del Equipo:\n");
-                foreach ($this->cobro2['fallasEquipo'] as $falla) {
+                foreach ($this->cobro['fallasEquipo'] as $falla) {
                     $printer->text("- " . $falla->descripcion . "\n");
                 }
             }

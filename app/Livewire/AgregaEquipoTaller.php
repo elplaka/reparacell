@@ -16,6 +16,8 @@ use App\Models\CobroEstimadoTaller;
 use App\Models\ImagenEquipo;
 use App\Models\CobroTallerCredito;
 use App\Models\CobroTallerCreditoDetalle;
+use App\Models\ModoPago;
+use App\Models\MovimientoCaja;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithFileUploads;
@@ -25,14 +27,15 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule as ValidationRule;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
+use App\Traits\MovimientoCajaTrait;  //Funciones globales de MOVIMIENTOS EN CAJA
 
 class AgregaEquipoTaller extends Component
 {
     use WithPagination;
-
     public $numberOfPaginatorsRendered = [];
     use WithFileUploads;
     use LivewireAlert;
+    use MovimientoCajaTrait;
 
     public $cliente = [
         'estatus',   //0: AGREGAR EQUIPO, 1: NUEVO, 2: SOLO LECTURA, 3: EDITABLE
@@ -60,6 +63,7 @@ class AgregaEquipoTaller extends Component
         'idEstatus',
         'observaciones',
         'anticipo',
+        'idModoPagoAnticipo',
         'totalEstimado',
         'estatus',  //0: AGREGAR EQUIPO, 1: EDITAR
         'agregaAbono'  //true: SE AGREGA ABONO AL EDITAR EL EQUIPO EN TALLER, false: NO SE AGREGA ABONO
@@ -80,7 +84,7 @@ class AgregaEquipoTaller extends Component
     public $muestraHistorialClienteModal;
     public $muestraHistorialEquipoClienteModal;
 
-    public $marcasEquiposMod, $datosCargados;
+    public $marcasEquiposMod, $datosCargados, $modosPago;
     public $modalBuscarClienteAbierta;
 
     public $imagenes = [];
@@ -149,7 +153,8 @@ class AgregaEquipoTaller extends Component
             'observaciones' => null,
             'anticipo'      => 0,
             'totalEstimado' => 0,
-            'agregaAbono'   => false
+            'agregaAbono'   => false,
+            'idModoPagoAnticipo' => 1
         ];
 
         $this->marcaMod = [
@@ -177,6 +182,7 @@ class AgregaEquipoTaller extends Component
         ];
 
         $this->fallas = [];
+        $this->fallasCostos = [];
         $this->imagenes = [];
         $this->numImagenes = 1;
         $this->showModalErrors = false;
@@ -194,6 +200,8 @@ class AgregaEquipoTaller extends Component
         $this->modalBuscarClienteAbierta = false;
 
         $this->marcasEquiposMod = collect();
+
+        $this->modosPago = ModoPago::where('id', '>', 0)->get();
     }
 
     public function executeRender() 
@@ -456,17 +464,37 @@ class AgregaEquipoTaller extends Component
 
                 if ($this->equipoTaller['anticipo'] > 0 && $this->equipoTaller['agregaAbono'])
                 {
-                    $cobroTallerCredito = new CobroTallerCredito();
-                    $cobroTallerCredito->num_orden = $numOrden;
-                    $cobroTallerCredito->id_cliente = $this->cliente['id'];
-                    $cobroTallerCredito->id_estatus = 1;
-                    $cobroTallerCredito->save();
+                    
+                    $existingRecord = CobroTallerCredito::where('num_orden', $numOrden)->first();
+
+                    if (!$existingRecord) {
+                        $cobroTallerCredito = new CobroTallerCredito();
+                        $cobroTallerCredito->num_orden = $numOrden;
+                        $cobroTallerCredito->id_cliente = $this->cliente['id'];
+                        $cobroTallerCredito->id_estatus = 1;
+                        $cobroTallerCredito->save();
+                    }
 
                     $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
                     $cobroTallerCreditoDetalle->num_orden = $numOrden;
                     $cobroTallerCreditoDetalle->abono = $this->equipoTaller['anticipo'];
+                    $cobroTallerCreditoDetalle->id_modo_pago = $this->equipoTaller['idModoPagoAnticipo'];
                     $cobroTallerCreditoDetalle->id_usuario_cobro = Auth::id();
                     $cobroTallerCreditoDetalle->save();
+
+                    if ($this->equipoTaller['idModoPagoAnticipo'] == 1) //Si es EFECTIVO se registra el MOVIMIENTO
+                    { 
+                        $idRef = $numOrden % 1000;
+                        $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+                        $movimiento = new MovimientoCaja();
+                        $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+                        $movimiento->id_tipo = 3;
+                        $movimiento->monto = $this->calculaMonto(3, $this->equipoTaller['anticipo']);
+                        $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $this->equipoTaller['anticipo']); // Asegura que el saldo_caja sea un número decimal
+                        $movimiento->id_usuario = Auth::id();
+                        $movimiento->save();
+                    }
 
                     $this->equipoTaller['agregaAbono'] = false;
                 }
@@ -488,6 +516,11 @@ class AgregaEquipoTaller extends Component
     public function agregaAbono()  //ESTOY AGREGANDO UN ABONO AL DAR CLICK AL BOTÓN DE + PERO ESTE CÓDIGO ES AL GUARDAR
     {
         $this->equipoTaller['agregaAbono'] = true;        
+    }
+
+    public function cierraModalActualizarModoPago()
+    {
+        
     }
 
     public function agregaEquipoTaller()
@@ -599,12 +632,12 @@ class AgregaEquipoTaller extends Component
                 $equipo_taller->id_equipo = $this->equipo['id'];
                 $equipo_taller->id_usuario_recibio = Auth::id();
                 $equipo_taller->id_estatus = 1;
-                $equipo_taller->observaciones = "NINGUNA";
+                $equipo_taller->observaciones = strlen(trim($this->equipoTaller['observaciones'])) == 0 ? "NINGUNA" : trim(mb_strtoupper($this->equipoTaller['observaciones']));
+                
                 $equipo_taller->save(); 
 
                 $numOrden = $equipo_taller->num_orden;
                 $idCliente = $equipo_taller->equipo->cliente->id;
-
 
                 $idsFallas = array_keys(array_filter($this->fallas, function ($valor) {
                     return $valor === true;
@@ -650,12 +683,6 @@ class AgregaEquipoTaller extends Component
                     }
                 }
 
-                // if ($this->equipoTaller['anticipo'] > $this->equipoTaller['totalEstimado'])
-                // {
-                //     dd('El anticipo no puede ser mayor que el total estimado');
-                // }
-                // else
-                // {
                     if ($this->equipoTaller['anticipo'] > 0)
                     {
                         $cobroTallerCredito = new CobroTallerCredito();
@@ -667,8 +694,23 @@ class AgregaEquipoTaller extends Component
                         $cobroTallerCreditoDetalle = new CobroTallerCreditoDetalle();
                         $cobroTallerCreditoDetalle->num_orden = $numOrden;
                         $cobroTallerCreditoDetalle->abono = $this->equipoTaller['anticipo'];
+                        $cobroTallerCreditoDetalle->id_modo_pago = $this->equipoTaller['idModoPagoAnticipo'];
                         $cobroTallerCreditoDetalle->id_usuario_cobro = Auth::id();
                         $cobroTallerCreditoDetalle->save();
+
+                        if ($this->equipoTaller['idModoPagoAnticipo'] == 1) //Si es EFECTIVO se registra el MOVIMIENTO
+                        { 
+                            $idRef = $numOrden % 1000;
+                            $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+    
+                            $movimiento = new MovimientoCaja();
+                            $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+                            $movimiento->id_tipo = 3;
+                            $movimiento->monto = $this->calculaMonto(3, $this->equipoTaller['anticipo']);
+                            $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $this->equipoTaller['anticipo']); // Asegura que el saldo_caja sea un número decimal
+                            $movimiento->id_usuario = Auth::id();
+                            $movimiento->save();
+                        }
                     }
                 // }
   
@@ -1434,6 +1476,23 @@ class AgregaEquipoTaller extends Component
         return ctype_digit($valor);
     }
 
+    public function validarNumerosContacto()
+    {
+        // Obtener el valor actual del campo de entrada
+        $valor = $this->cliente['telefonoContacto'];
+
+        // Usar una expresión regular para eliminar cualquier caracter no numérico
+        $valorR = preg_replace("/[^0-9]/", "", $valor);
+
+        if (strlen($valor) > 10) {
+            $valorR = substr($valor, 0, 10);
+        }
+        // Actualizar el valor del campo de entrada
+        $this->cliente['telefonoContacto'] = $valorR;
+
+        return ctype_digit($valor);
+    }
+
     public function nuevoTipoEquipoModal()
     {
         $this->tipoEquipoMod = [
@@ -1670,9 +1729,9 @@ class AgregaEquipoTaller extends Component
         $cobroEstimado = CobroEstimadoTaller::where('num_orden', $numOrden)->first();
 
         if ($cobroEstimado->credito) {
-            // $this->equipoTaller['anticipo'] = $cobroEstimado->credito->detalles()->where('id_abono', 1)->first()->abono;
             $detalle = $cobroEstimado->credito->detalles()->where('id_abono', 0)->first();
             $this->equipoTaller['anticipo'] = $detalle ? $detalle->abono : 0; //Determina si hay anticipo
+            $this->equipoTaller['idModoPagoAnticipo'] = $detalle ? $detalle->id_modo_pago : 1; // Determina el modo de pago del anticipo si existe
         } else 
         {
             $this->equipoTaller['anticipo'] = 0;

@@ -7,14 +7,18 @@ use App\Models\Venta;
 use App\Models\VentaCredito;
 use App\Models\VentaCreditoDetalle;
 use App\Models\EstatusVentaCredito;
+use App\Models\ModoPago;
+use App\Models\MovimientoCaja;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Livewire\Attributes\On; 
+use Livewire\Attributes\On;
+use App\Traits\MovimientoCajaTrait;  //Funciones globales de MOVIMIENTOS EN CAJA
 
 class VentaCreditoLw extends Component
 {
+    use MovimientoCajaTrait;
     use WithPagination;
 
     protected $listeners = [
@@ -25,7 +29,8 @@ class VentaCreditoLw extends Component
     public $numberOfPaginatorsRendered = [];
     public $showMainErrors, $showModalErrors;
     public $muestraDivAbono, $detallesCredito;
-    public $datosCargados, $muestraDivAgregaBono;
+    public $datosCargados, $muestraDivAgregaBono, $modosPagoModal, $ventaModal, $idModoPago;
+    public $idVentaModal, $idAbonoModal;
     public $sumaAbonos, $montoLiquidar;
 
     public $busquedaCreditos =
@@ -33,7 +38,7 @@ class VentaCreditoLw extends Component
         'fechaVentaInicio' => null,
         'fechaVentaFin' => null,
         'idEstatus' => null,
-        'nombreCliente' => null,
+        'nombreCliente' => null, 
     ];
 
     public $ventaCredito = 
@@ -44,7 +49,8 @@ class VentaCreditoLw extends Component
         'estatus' => null,
         'monto' => null,
         'abono' => null,
-        'idAbonoSeleccionado' => null
+        'idAbonoSeleccionado' => null,
+        'idModoPago' => null
     ];
 
     public function render()
@@ -109,8 +115,25 @@ class VentaCreditoLw extends Component
                $ventaCreditoDetalles->id = $idVenta;
                $ventaCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                $ventaCreditoDetalles->abono = $this->montoLiquidar;
+               $ventaCreditoDetalles->id_modo_pago = $this->ventaCredito['idModoPago'];
                $ventaCreditoDetalles->id_usuario_venta = Auth::id();
                $ventaCreditoDetalles->save();
+
+               if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+               { 
+                   $idRef = $idVenta % 1000;
+                   $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                   $monto = $this->montoLiquidar;
+                   $tipoMov = 3;
+
+                   $movimiento = new MovimientoCaja();
+                   $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                   $movimiento->id_tipo = $tipoMov;
+                   $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                   $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                   $movimiento->id_usuario = Auth::id();
+                   $movimiento->save();
+               }
 
                 VentaCredito::where('id', $idVenta)->update(['id_estatus' => 2]);
                 $this->ventaCredito['estatus'] = $ventaCreditoDetalles->first()->ventaCredito->estatus->descripcion;
@@ -139,6 +162,10 @@ class VentaCreditoLw extends Component
         {
             DB::transaction(function () use ($idVenta, $idAbono) 
             {
+                $detCredito =  VentaCreditoDetalle::where('id', $idVenta)
+                ->where('id_abono', $idAbono)
+                ->first();
+                
                 $detalleCredito =  VentaCreditoDetalle::where('id', $idVenta)
                 ->where('id_abono', $idAbono)
                 ->delete();
@@ -150,6 +177,29 @@ class VentaCreditoLw extends Component
 
                     $this->sumaAbonos = $this->detallesCredito->sum('abono');
                     $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+
+                    if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+                    { 
+                        $idRef = $idVenta % 1000;
+                        $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                        $monto = $detCredito->abono;
+                        $tipoMov = 7;
+     
+                        $movimiento = new MovimientoCaja();
+                        $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                        $movimiento->id_tipo = $tipoMov;
+                        $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                        $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                        
+                        // Verifica si el saldo_caja es menor que 0
+                        if ($movimiento->saldo_caja < 0) {
+                            DB::rollBack();
+                            $this->dispatch('mostrarToastError', 'No hay SUFICIENTE EFECTIVO en la caja para realizar esta operación!!!');
+                        }
+
+                        $movimiento->id_usuario = Auth::id();
+                        $movimiento->save();
+                    }
 
                     VentaCredito::where('id', $idVenta)->update(['id_estatus' => 1]);
 
@@ -199,6 +249,67 @@ class VentaCreditoLw extends Component
         $this->datosCargados = false;
     }
 
+    public function cierraModalActualizarModoPago()
+    {
+        
+    }
+
+    public function abrirEditarModoPagoModal($idVenta, $idAbono)
+    {
+        $this->idVentaModal = $idVenta;
+        $this->idAbonoModal = $idAbono;
+
+        $this->ventaModal = VentaCreditoDetalle::where('id', $idVenta)->where('id_abono', $idAbono)->firstOrFail();
+
+        $this->idModoPago =  $this->ventaModal->id_modo_pago;
+
+        $this->dispatch('abreModalEditaModoPagoVentaCredito');
+    }
+
+    public function actualizarModoPago()
+    {
+        $ventaCreditoDetalle = VentaCreditoDetalle::where('id', $this->idVentaModal)
+        ->where('id_abono', $this->idAbonoModal)
+        ->first();
+
+        $idModoPago = $ventaCreditoDetalle->id_modo_pago;
+        $abono = $ventaCreditoDetalle->abono;
+
+        VentaCreditoDetalle::where('id', $this->idVentaModal)
+        ->where('id_abono', $this->idAbonoModal)
+        ->update(['id_modo_pago' => $this->idModoPago]);
+
+        if ($idModoPago == 1 && $this->idModoPago == 2)  //Si el MODO DE PAGO era EFECTIVO y se cambia a TRANSF.
+        {
+            $idRef = $this->idVentaModal % 1000;
+            $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+            $movimiento = new MovimientoCaja();
+            $movimiento->referencia = $this->regresaReferencia(8, $idRef);
+            $movimiento->id_tipo = 8;
+            $movimiento->monto = $this->calculaMonto(8, $abono);
+            $movimiento->saldo_caja = $this->calculaSaldoCaja(8, $abono); // Asegura que el saldo_caja sea un número decimal
+            $movimiento->id_usuario = Auth::id();
+            $movimiento->save();
+        }
+        elseif ($idModoPago == 2 && $this->idModoPago == 1) //Si el MODO DE PAGO era TRANSF. y se cambia a EFECTIVO
+        {
+            $idRef = $this->idVentaModal % 1000;
+            $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+
+            $movimiento = new MovimientoCaja();
+            $movimiento->referencia = $this->regresaReferencia(3, $idRef);
+            $movimiento->id_tipo = 3;
+            $movimiento->monto = $this->calculaMonto(3, $abono);
+            $movimiento->saldo_caja = $this->calculaSaldoCaja(3, $abono); // Asegura que el saldo_caja sea un número decimal
+            $movimiento->id_usuario = Auth::id();
+            $movimiento->save();
+        }
+
+        $this->dispatch('cierraModalEditaModoPagoVentaCredito');
+        $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
+    }
+
     public function mount()
     {
         $this->busquedaCreditos = [
@@ -220,6 +331,19 @@ class VentaCreditoLw extends Component
             $this->abreVentaCredito($idVenta);
             $this->dispatch('abreCobroCreditoVentasModal2');
         }
+
+        $this->ventaCredito = [
+            'nombreCliente' => null,
+            'id' => null,
+            'idEstatus' => null,
+            'estatus' => null,
+            'monto' => null,
+            'abono' => null,
+            'idAbonoSeleccionado' => null,
+            'idModoPago' => 1
+        ];
+
+        $this->modosPagoModal = ModoPago::where('id', '>', 0)->get();
     }
 
     public function muestraDivAgregaAbono()
@@ -254,6 +378,7 @@ class VentaCreditoLw extends Component
                         $ventaCreditoDetalles->id = $idVenta;
                         $ventaCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $ventaCreditoDetalles->abono = $this->ventaCredito['abono'];
+                        $ventaCreditoDetalles->id_modo_pago = $this->ventaCredito['idModoPago'];
                         $ventaCreditoDetalles->id_usuario_venta = Auth::id();
                         $ventaCreditoDetalles->save();
 
@@ -261,6 +386,22 @@ class VentaCreditoLw extends Component
                         ->where('id_abono', '>', 0)->get();
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+
+                        if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+                        { 
+                            $idRef = $idVenta % 1000;
+                            $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                            $monto = $this->ventaCredito['abono'];
+                            $tipoMov = 3;
+    
+                            $movimiento = new MovimientoCaja();
+                            $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                            $movimiento->id_tipo = $tipoMov;
+                            $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                            $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                            $movimiento->id_usuario = Auth::id();
+                            $movimiento->save();
+                        }
 
                         if ($acumulado == $this->ventaCredito['monto'])
                         {
@@ -282,7 +423,7 @@ class VentaCreditoLw extends Component
         }
         else
         {
-            if (strlen(trim($this->ventaCredito['abono'])) == 0)
+            if (strlen(trim((string) $this->ventaCredito['abono'])) == 0)
             {
                 $this->addError('abono', 'Debes capturar el abono.');
             }

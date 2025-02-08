@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CobroTallerCredito;
 use App\Models\User;
+use App\Models\ModoPago;
 
 class CobroTallerCreditoDetalle extends Model
 {
@@ -17,6 +18,7 @@ class CobroTallerCreditoDetalle extends Model
         'num_orden',
         'id_abono',
         'abono',
+        'id_modo_pago',
         'id_usuario_cobro'
     ];
 
@@ -31,4 +33,10 @@ class CobroTallerCreditoDetalle extends Model
     {
         return $this->belongsTo(User::class, 'id_usuario_cobro');
     }
+
+    public function modoPago()
+    {
+        return $this->belongsTo(ModoPago::class, 'id_modo_pago');
+    }
+
 }

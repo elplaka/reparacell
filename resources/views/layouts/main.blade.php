@@ -46,7 +46,7 @@
     border-radius: inherit !important;
     font-size: 11pt !important;
     height: 30px !important;
-    margin-bottom: 5px !important;
+    margin-bottom: 1px !important;
     display: flex !important;
     align-items: center !important;
     background-color: #f8f9fa;
@@ -58,6 +58,7 @@
         .collapse {
             z-index: 999;
         }
+        
  }
 
 /* Estilo cuando el select está enfocado */
@@ -78,11 +79,6 @@
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Cambia la sombra cuando está en hover */
 }
 
-/* Puedes ajustar el color y otros estilos según tus necesidades */
-/* .btn-light.bs-placeholder[title="--TODOS--"] {
-  background-color: green !important; 
-  color: white !important; 
-} */
 
 
 /* Estilos personalizados para el texto de la opción seleccionada */
@@ -94,13 +90,6 @@
     font-size: 11pt;
 }
 
-/* .filter-option,
-.filter-option:focus,
-.filter-option.show,
-.filter-option:hover {
-    background-color: #f8f9fa;
-} */
-
 .filter-option-inner,
 .filter-option-inner:show,
 .filter-option-inner:focus,
@@ -111,17 +100,6 @@
     border: 1px solid transparent; /* Borde transparente */
     /* Agregar otros estilos si es necesario */
 }
-
-/*.filter-option-inner-inner,
-.filter-option-inner-inner:focus,
-.filter-option-inner-inner.show,
-.filter-option-inner-inner:hover {
-    background-color: #f8f9fa;
-} */
-
-/* select::-ms-expand {
-  display: none;
-} */
 
 .spinner-overlay {
     position: fixed;
@@ -353,6 +331,8 @@ input[type="date"]:hover {
             </div>
             <!-- End of Main Content -->
 
+            <livewire:modal-inicializacion-caja />
+
             <!-- Footer -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
@@ -374,7 +354,7 @@ input[type="date"]:hover {
         <i class="fas fa-angle-up"></i>
     </a> --}}
 
-    <script src="{{ asset('js/jquery.js') }}"></script>
+    {{-- <script src="{{ asset('js/jquery.js') }}"></script> --}}
     <!-- Custom scripts for all pages-->
     <script src="{{ asset('js/sb-admin.min.js') }}"></script>
 
@@ -454,10 +434,6 @@ input[type="date"]:hover {
             Livewire.on('abreCobroCreditoTallerModal', () => {
                 $('#cobroCreditoTallerModal').modal('show');
             })
-
-            Livewire.on('abreVentaCreditoModal', () => {
-                $('#ventaCreditoModal').modal('show');
-            })  
     });
 
     document.addEventListener('abreCobroCreditoTallerModal2', function () {
@@ -469,6 +445,8 @@ input[type="date"]:hover {
         $('#ventaCreditoModal').modal('show');
     });
 </script>
+
+
     <script>
         document.addEventListener('livewire:initialized', function () {
             Livewire.on('mostrarToast', (attr) => {
@@ -476,7 +454,7 @@ input[type="date"]:hover {
                     position: 'bottom-end',
                     width: 300,
                     icon: 'success',
-                    title: attr[0],
+                    text: attr[0],
                     showConfirmButton: false,
                     timer: 2000,
                     customClass: {
@@ -615,8 +593,17 @@ input[type="date"]:hover {
                 link.click();
             }
         }
+    });    
+</script>
+
+<script>
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalInicializarCaja', () => {
+            $('#inicializarCajaModal').modal('hide');
+        });
     });
 </script>
+
 
 
 </body>

@@ -5,8 +5,8 @@
 @endphp
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
-    {{-- @include('livewire.productos.modal-nuevo')
-    @include('livewire.productos.modal-editar') --}}
+    {{-- @include('livewire.productos.modal-nuevo')--}}
+    @include('livewire.ventas.modal-editar-modo-pago') 
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-table"></i> Registros de Ventas</b></h4>
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
@@ -45,9 +45,18 @@
             <label for="filtrosVentas.fechaFinal" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Fecha Final </label>
             <input type="date" class="form-control input-height" wire:model.live="filtrosVentas.fechaFinal" style="font-size:11pt;">
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-2 mb-3">
             <label for="filtrosVentas.cliente" class="form-label text-gray-700" style="font-weight:500;font-size:11pt"> Cliente </label>
             <input type="text" class="form-control input-height" wire:model.live="filtrosVentas.cliente" style="font-size:11pt;">
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="filtrosVentas.idModoPago" class="form-label text-gray-700" style="font-weight:500;font-size:11pt">Modo de Pago </label>
+            <select wire:model.live="filtrosVentas.idModoPago" id="selectModoPagoFiltro" class="selectpicker select-picker w-100">
+                <option value="0">-- TODOS --</option>
+                @foreach ($modosPago as $modoPago)
+                    <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                @endforeach
+            </select>
         </div>
         <div class="col-md-2 mb-3">
             <label for="filtrosVentas.idUsuario" class="form-label  text-gray-700" style="font-weight:500;font-size:11pt">Vendió</label>
@@ -72,11 +81,11 @@
             <thead>
                 <tr>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ID.</th>
-                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">FECHA/HORA</th>
+                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="width: 140px;">FECHA/HORA</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CLIENTE</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">TOTAL</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">VENDIÓ</th>
-                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ESTATUS</th>
+                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider" style="width: 90px;">ESTATUS</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
                 </tr>
             </thead>
@@ -118,6 +127,9 @@
                        $ {{ $venta->total }} 
                        @if ($venta->ventaCredito)
                        [C]
+                       @else 
+                        &nbsp;
+                        <i class='{{  $venta->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $venta->id }})" style="cursor: pointer;"></i>
                        @endif
                     </td>
                     <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
@@ -228,17 +240,44 @@
     </div> 
 </div>
 
-{{-- <script>
-    document.addEventListener('livewire:initialized', function () {
-        Livewire.on('cerrarModalNuevoProducto', () => {
-        document.getElementById('btnCerrarNuevoProductoModal').click();
-            })
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#selectModoPago3').selectpicker();
+
+        $('#editarModoPagoModal').on('shown.bs.modal', function () {
+            setTimeout(function() { 
+                $('#selectModoPago3').selectpicker(); },
+                 10); 
+
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                $('.selectpicker').selectpicker();
+
+                succeed(({ snapshot, effect }) => {
+                    $('#selectModoPago3').selectpicker('destroy');
+
+                    queueMicrotask(() => {
+                        setTimeout(() => { 
+                            $('#selectModoPago3').selectpicker('refresh'); 
+                        }, 10);
+                    });
+                });
+
+                fail(() => {
+                    console.error('Livewire commit failed');
+                });
+            });
+        });
     });
 
     document.addEventListener('livewire:initialized', function () {
-        Livewire.on('cerrarModalEditarProducto', () => {
-        document.getElementById('btnCerrarEditarProductoModal').click();
-            })
+        @this.on('cierraModalEditaModoPago', () => {
+            $('#editarModoPagoModal').modal('hide');
+        });
     });
 
-</script> --}}
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('abreModalEditaModoPagoVentaCredito', () => {
+            $('#editarModoPagoModal').modal('show');
+        });
+    });
+</script>

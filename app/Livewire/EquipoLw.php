@@ -88,24 +88,7 @@ class EquipoLw extends Component
     {
         $this->muestraHistorialEquipoTaller = true;
 
-        $this->equipoMod['id'] = $idEquipo;
-
-        // if ($this->historialEquipoTaller->isEmpty())
-        // {
-        //     $equipo = Equipo::findOrFail($idEquipo);
-
-        //     $this->equipoHistorial['iconoTipo'] = $equipo->tipo_equipo->icono;
-        //     $this->equipoHistorial['marca'] = $equipo->marca->nombre;
-        //     $this->equipoHistorial['modelo'] = $equipo->modelo->nombre;
-        //     $this->equipoHistorial['cliente'] = $equipo->cliente->nombre; 
-        // }
-        // else
-        // {
-        //     $this->equipoHistorial['iconoTipo'] = $this->historialEquipoTaller->first()->equipo->tipo_equipo->icono;
-        //     $this->equipoHistorial['marca'] = $this->historialEquipoTaller->first()->equipo->marca->nombre;
-        //     $this->equipoHistorial['modelo'] = $this->historialEquipoTaller->first()->equipo->modelo->nombre;
-        //     $this->equipoHistorial['cliente'] = $this->historialEquipoTaller->first()->equipo->cliente->nombre;
-        // }
+        $this->equipoMod['id'] = $idEquipo;        
     }
 
     public function cierraModalEquipoHistorial()
@@ -326,7 +309,7 @@ class EquipoLw extends Component
 
         $this->datosCargados = false;
         $this->busquedaClienteHabilitada = false;
-
+        
         $equipo = Equipo::find($idEquipo);
         
         if ($equipo)

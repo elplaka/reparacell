@@ -24,6 +24,16 @@
                     <input type="date" class="form-control" id="fechaFinal" wire:model="corteCaja.fechaFinal">
                 </div>
 
+                <div class="mb-3">
+                    <label for="corteCaja.idModoPagoCorte" class="form-label">Modo Pago</label>
+                    {{-- {{ $corteCaja['idModoPago' ]}} --}}
+                    <select wire:model.live="corteCaja.idModoPago" id="selectModoPagoCorte" class="selectpicker select-picker w-100">
+                        @foreach ($modosPagoModal as $modoPago)
+                            <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                        @endforeach
+                    </select>
+                </div>
+
                 @role('admin')
                 <div class="mb-3">
                     <label for="corteCaja.idUsuario" class="form-label">Recibió Equipo(s)</label>

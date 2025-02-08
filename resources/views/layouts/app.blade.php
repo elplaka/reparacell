@@ -19,10 +19,6 @@
         @livewireStyles
     </head>
     <body class="font-sans antialiased">
-    {{-- <body> --}}
-        {{-- <x-banner /> --}}
-
-        {{-- <div class="min-h-screen bg-gray-100"> --}}
         <div>
             @livewire('navigation-menu')
 
@@ -45,10 +41,6 @@
 
         @livewireScripts 
 
-        {{-- <script src="{{ asset('js/jquery.js') }}"></script>
-
-   
-        <!-- Custom scripts for all pages-->
-        <script src="{{ asset('js/sb-admin.min.js') }}"></script>  --}}
+      
     </body>
 </html>

@@ -8,6 +8,7 @@
 
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.creditos.modal-taller')
+    @include('livewire.creditos.modal-editar-modo-pago-taller')
     <div class="w-100 d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-2xl font-bold"><b><i class="fa-solid fa-credit-card"></i> Créditos de Taller</b></h4>
         <span wire:loading style="font-weight:500">Cargando... <i class="fa fa-spinner fa-spin"></i> </span>
@@ -212,3 +213,66 @@
         </label>
     </div> 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#selectModoPago5').selectpicker();
+
+        $('#cobroCreditoTallerModal').on('shown.bs.modal', function () {
+                $('#selectModoPago5').selectpicker(); 
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                $('.selectpicker').selectpicker();
+
+                succeed(({ snapshot, effect }) => {
+                    $('#selectModoPago5').selectpicker('destroy');
+
+                    queueMicrotask(() => {
+                        setTimeout(() => { 
+                            $('#selectModoPago5').selectpicker('refresh'); 
+                        }, 100);
+                    });
+                });
+
+                fail(() => {
+                    console.error('Livewire commit failed');
+                });
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#selectModoPago6').selectpicker();
+
+        $('#editarModoPagoModalTallerCredito').on('shown.bs.modal', function () {
+                $('#selectModoPago6').selectpicker(); 
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                $('.selectpicker').selectpicker();
+
+                succeed(({ snapshot, effect }) => {
+                    $('#selectModoPago6').selectpicker('destroy');
+
+                    queueMicrotask(() => {
+                        setTimeout(() => { 
+                            $('#selectModoPago6').selectpicker('refresh'); 
+                        }, 100);
+                    });
+                });
+
+                fail(() => {
+                    console.error('Livewire commit failed');
+                });
+            });
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('cierraModalEditaModoPagoTallerCredito', () => {
+            $('#editarModoPagoModalTallerCredito').modal('hide');
+        });
+
+        @this.on('abreModalEditaModoPagoTallerCredito', () => {
+            $('#editarModoPagoModalTallerCredito').modal('show');
+        });
+    });
+</script>
+

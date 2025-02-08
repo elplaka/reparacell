@@ -180,16 +180,34 @@
                     @endif
                     <div class="row mb-2">
                         <div class="col-md-12 p-0">
-                            <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt;"> Estatus </label>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <select wire:model="cobroFinal.idEstatusEquipo" id="estatusEquiposSelect" type="text" class="select-height form-control" style="font-size:11pt">
+                                    <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt;"> Estatus </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="col-form-label text-md-left w-100 d-block pl-2 text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider" style="font-size: 10pt;"> MODO DE PAGO </label>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <select wire:model="cobroFinal.idEstatusEquipo" id="estatusEquiposSelect" class="selectpicker select-picker w-100">
                                         @if ($estatusEquipos)
                                             @foreach ($estatusEquipos as $estatus)
-                                                <option value="{{ $estatus->id }}">{{ $estatus->descripcion }}</option>
+                                            <option value="{{ $estatus->id }}" data-content="{{  $this->obtenerIconoEstatus($estatus->id) }} &nbsp; {{ $estatus->descripcion }}"></option>
                                             @endforeach
                                         @endif
                                     </select>
+                                </div>                                 
+                                <div class="col-md-6">
+                                    <select wire:model.live="cobroFinal.idModoPago" id="modoPagoSelect" class="selectpicker select-picker w-100">
+                                        @foreach ($modosPagoModal as $modoPago)
+                                            <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                                        @endforeach
+                                    </select>
+                                </div>                              
+                            </div>                            
+                            <div class="row">
+                                <div class="col-md-6">                                    
                                 </div>
                                 @if ($cobroFinal['anticipo'] || $cobroFinal['montoAbonado'])
                                 <div class="col-md-3 text-right">

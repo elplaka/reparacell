@@ -14,19 +14,28 @@
            <div class="modal-body">
                 <!-- Seleccionar Fecha Inicial -->
                 <div class="mb-3">
-                    <label for="corteCaja.fechaInicial" class="form-label">Fecha Inicial:</label>
+                    <label for="corteCaja.fechaInicial" class="form-label">Fecha Inicial</label>
                     <input type="date" class="form-control" id="fechaInicial" wire:model="corteCaja.fechaInicial">
                 </div>
 
                 <!-- Seleccionar Fecha Final -->
                 <div class="mb-3">
-                    <label for="corteCaja.fechaFinal" class="form-label">Fecha Final:</label>
+                    <label for="corteCaja.fechaFinal" class="form-label">Fecha Final</label>
                     <input type="date" class="form-control" id="fechaFinal" wire:model="corteCaja.fechaFinal">
+                </div>
+
+                <div class="mb-3">
+                    <label for="corteCaja.idModoPago" class="form-label">Modo Pago</label>
+                    <select wire:model.live="corteCaja.idModoPago" id="selectModoPagoCorte" class="selectpicker select-picker w-100">
+                        @foreach ($modosPagoModal as $modoPago)
+                            <option value="{{ $modoPago->id }}" data-content="<i class='{{ $modoPago->icono }}'></i> &nbsp; {{ $modoPago->nombre }}"></option>
+                        @endforeach
+                    </select>
                 </div>
 
                 @role('admin')
                 <div class="mb-3">
-                    <label for="corteCaja.idUsuario" class="form-label">Cajero:</label>
+                    <label for="corteCaja.idUsuario" class="form-label">Cajero</label>
                     <select wire:model="corteCaja.idUsuario" type="text" class="select-height form-control w-100">
                         <option value="0">--TODOS--</option>
                         @foreach ($usuariosModal as $usuario)

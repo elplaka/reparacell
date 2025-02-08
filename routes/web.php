@@ -59,6 +59,11 @@ Route::get('/test-pdf', function () {
 });
 
 
+// Route::get('/selectpicker', function () {
+//     return view('selectpicker');  // Asegúrate de que esta vista exista en la carpeta resources/views/taller/index.blade.php
+// })->name('selectpicker');
+
+
 Route::middleware(['auth'])
 ->group(function () {
     Route::get('/taller/index', [EquipoTallerController::class, 'index'])->name('taller.index');
@@ -70,6 +75,7 @@ Route::middleware(['auth'])
 
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
     Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
+    Route::get('/caja/movimientos', [CajaController::class, 'movimientos'])->name('caja.movimientos');
 
     Route::get('/equipos/index', [EquipoController::class, 'index'])->name('equipos.index');
     Route::get('/equipos/tipos', [TipoEquipoController::class, 'index'])->name('equipos.tipos');

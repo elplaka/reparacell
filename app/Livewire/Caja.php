@@ -8,33 +8,39 @@ use App\Models\Cliente;
 use App\Models\Venta;
 use App\Models\CobroTaller;
 use App\Models\CobroTallerCredito;
-use App\Models\VentaDetalle;
-use App\Models\EstatusEquipo;
+use App\Models\MovimientoCaja;
 use App\Models\VentaCredito;
 use App\Models\VentaCreditoDetalle;
+use App\Models\ModoPago;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Barryvdh\Snappy\Facades\SnappyPdf;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Traits\MovimientoCajaTrait; 
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector; //Funciones globales de MOVIMIENTOS EN CAJA
+
 
 class Caja extends Component
 {
-    use WithPagination;
+    use MovimientoCajaTrait;
 
+    use WithPagination;
     public $numberOfPaginatorsRendered = [];
     public $codigoProductoCapturado;
     public $cantidadProductoCapturado, $cantidadProductosCarrito;
     public $carrito, $totalCarrito, $totalCarritoDescuento;
     public $showMainErrors, $showModalErrors;
-    public $clientesModal, $nombreClienteModal, $usuariosModal;
+    public $nombreClienteModal, $usuariosModal, $modosPagoModal, $idModoPagoA;
     public $descripcionProductoModal;
     public $muestraDivAbono, $detallesCredito, $datosCargados;
     public $sumaAbonos, $montoLiquidar;
     public $consecutivoComun, $cantidadProductoComun, $descripcionProductoComun, $precioProductoComun, $montoProductoComun;
+    public $selectModoPago, $ayerCaja, $saldoCajaActual;
+    public $tipoPrecio = [];
 
     public $corteCaja = [
         'fechaInicial',
@@ -42,15 +48,17 @@ class Caja extends Component
         'cajero',
         'idUsuario',
         'chkCobrosTaller',
-        'chkAbonos'
+        'chkAbonos',
+        'idModoPago'
     ];
 
     protected $listeners = [
-        'f4-pressed' => 'cobrar',
         'f9-pressed' => 'abrirCaja', 
         'f10-pressed' => 'abrirCorteCaja', 
-    ];    
-
+        'lisLiquidarVentaCredito' => 'liquidarVentaCredito',
+        'lisBorraAbono' => 'borraAbono'
+    ];  
+    
     public $cliente = [
         'id',
         'nombre',              
@@ -75,7 +83,8 @@ class Caja extends Component
         'estatus' => null,
         'monto' => null,
         'abono' => 0,
-        'idAbonoSeleccionado' => null
+        'idAbonoSeleccionado' => null,
+        'idModoPago' => 1
     ];
 
     // Reglas de validación
@@ -127,13 +136,14 @@ class Caja extends Component
     
         return $fechaFormateada;
     }
-    
+
     public function generaCorteCajaPDF()
     {
         $this->corteCaja = Session::get('corteCaja');
 
         $fechaInicial = Carbon::parse($this->corteCaja['fechaInicial'])->startOfDay();
         $fechaFinal = Carbon::parse($this->corteCaja['fechaFinal'])->endOfDay();
+        $idModoPago = $this->corteCaja['idModoPago'];
 
         if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
         {
@@ -146,30 +156,34 @@ class Caja extends Component
 
         $cajeroSeleccionado = $this->corteCaja['idUsuario'] != 0 ? true : false ;
 
-
-        if ($this->corteCaja['chkAbonos'])
+        if ($this->corteCaja['chkAbonos'])   //Si se quieren ver los ABONOS
         {
             $ventas = Venta::with([
                 'cliente',
                 'usuario',
-                'ventaCredito.ventaCreditoDetalles' => function ($query) use ($fechaInicial, $fechaFinal) {
+                'ventaCredito.ventaCreditoDetalles' => function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
                     $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                          ->where('abono', '>', 0);
+                          ->where('abono', '>', 0)
+                          ->where('id_modo_pago', $idModoPago);
                 },
             ])
             ->when($cajeroSeleccionado, function ($query) {
                 return $query->where('id_usuario', $this->corteCaja['idUsuario']);
             })
             ->where('cancelada', 0)
-            ->where(function($query) use ($fechaInicial, $fechaFinal) {
+            ->where(function($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
                 // Condición para ventas sin VentaCredito
-                $query->whereDoesntHave('ventaCredito')
-                      ->whereBetween('created_at', [$fechaInicial, $fechaFinal])            
-                      // Condición para ventas con VentaCredito que tienen detalles válidos
-                      ->orWhereHas('ventaCredito.ventaCreditoDetalles', function ($query) use ($fechaInicial, $fechaFinal) {
-                          $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                                ->where('abono', '>', 0);
-                      });
+                $query->where(function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
+                    $query->whereDoesntHave('ventaCredito')
+                          ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                          ->where('id_modo_pago', $idModoPago);            
+                })
+                // Condición para ventas con VentaCredito que tienen detalles válidos
+                ->orWhereHas('ventaCredito.ventaCreditoDetalles', function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
+                    $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                          ->where('abono', '>', 0)
+                          ->where('id_modo_pago', $idModoPago);
+                });
             })
             ->orderBy('created_at')
             ->get()
@@ -185,6 +199,7 @@ class Caja extends Component
                         'monto' => $venta->total,
                         'cajero' => $venta->usuario->name,
                         'tipo' => 'VENTA',
+                        'id_modo_pago' => $venta->id_modo_pago
                     ]);
                 }
             
@@ -199,6 +214,7 @@ class Caja extends Component
                                 'monto' => $detalle->abono,
                                 'cajero' => $detalle->usuario->name ?? 'N/A',
                                 'tipo' => 'ABONO_VENTA',
+                                'id_modo_pago' => $detalle->id_modo_pago
                             ]);
                         });
                 }
@@ -213,6 +229,7 @@ class Caja extends Component
                     return $query->where('id_usuario', $this->corteCaja['idUsuario']);
                 })
                 ->where('cancelada', 0)
+                ->where('id_modo_pago', $idModoPago)
                 ->where(function($query) {
                     $query->whereDoesntHave('ventaCredito')
                           ->orWhereHas('ventaCredito', function ($query) {
@@ -227,7 +244,8 @@ class Caja extends Component
                         'nombre_cliente' => $venta->cliente->nombre,
                         'monto' => $venta->total,
                         'cajero' => $venta->usuario->name,
-                        'tipo' => 'VENTA'
+                        'tipo' => 'VENTA',
+                        'id_modo_pago' => $venta->id_modo_pago
                     ];
                 });
         }
@@ -241,14 +259,16 @@ class Caja extends Component
             {                
                 // 1. Obtener los detalles de CobroTallerCredito
                 $cobrosTallerCredito = CobroTallerCredito::with([
-                    'detalles' => function ($query) use ($fechaInicial, $fechaFinal) {
+                    'detalles' => function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
                         $query->where('abono', '>', 0)
-                            ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                        ->where('id_modo_pago', $idModoPago);            
                     }
                 ])
-                ->whereHas('detalles', function ($query) use ($fechaInicial, $fechaFinal, $cajeroSeleccionado) {
+                ->whereHas('detalles', function ($query) use ($fechaInicial, $fechaFinal, $cajeroSeleccionado, $idModoPago) {
                     $query->where('abono', '>', 0)
-                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                    ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                    ->where('id_modo_pago', $idModoPago);
                     if ($cajeroSeleccionado) 
                     { 
                         $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']); 
@@ -266,6 +286,7 @@ class Caja extends Component
                             'cajero' => $detalle->usuario->name ?? "N/A",
                             'credito_id' => $credito->num_orden,
                             'tipo' => 'ABONO_TALLER',
+                            'id_modo_pago' => $detalle->id_modo_pago
                         ];
                     });
                 });
@@ -277,6 +298,7 @@ class Caja extends Component
                 ])
                 ->whereDoesntHave('credito') // Filtra los que no tienen CobroTallerCredito
                 ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->where('id_modo_pago', $idModoPago)         
                 ->when($cajeroSeleccionado, function ($query) {
                     $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
                 })
@@ -291,6 +313,7 @@ class Caja extends Component
                         'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre ?? "N/A",
                         'cajero' => $cobro->usuario->name ?? "N/A",
                         'tipo' => 'TALLER',
+                        'id_modo_pago' => $cobro->id_modo_pago
                     ];
                 });
 
@@ -301,6 +324,7 @@ class Caja extends Component
             {
                 $cobrosTaller = CobroTaller::with(['equipoTaller.equipo.cliente', 'equipoTaller.usuario'])
                 ->whereDoesntHave('credito')
+                ->where('id_modo_pago', $idModoPago)         
                 ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
                 ->where('cobro_realizado', '>', 0)
                 ->when($cajeroSeleccionado, function ($query) {
@@ -317,7 +341,8 @@ class Caja extends Component
                         'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre,
                         'monto' => $cobro->cobro_realizado,
                         'cajero' => $cobro->equipoTaller->usuario->name,
-                        'tipo' => 'TALLER'
+                        'tipo' => 'TALLER',
+                        'id_modo_pago' => $cobro->id_modo_pago
                     ];
                 });
             }
@@ -331,7 +356,6 @@ class Caja extends Component
 
         // Conversión de resultado a colección de objetos
         $registros = $registros->map(function($item) { return (object) $item; });
-
 
         $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'registros' => $registros])
         ->setOption('page-size', 'Letter')
@@ -352,19 +376,19 @@ class Caja extends Component
 
     public function cierraCorteCajaModal()
     {
-
+        $this->corteCaja['idModoPago'] = 1;
     }
 
     public function abrirCaja()
     {
-        dd('abre caja');
+        // $printer_name = "Ticket";
+        // $connector = new WindowsPrintConnector($printer_name);
+        // $printer = new Printer($connector);
 
-        $printer_name = "Ticket";
-        $connector = new WindowsPrintConnector($printer_name);
-        $printer = new Printer($connector);
+        // $printer->pulse();
+        // $printer->close();
 
-        $printer->pulse();
-        $printer->close();
+        return redirect()->route('caja.movimientos');
     }
 
     public function cierraBuscarProductoModal()
@@ -416,25 +440,12 @@ class Caja extends Component
     public function cierraBuscarClienteModal()
     {
         $this->nombreClienteModal = '';
-        $this->clientesModal = null;
+        // $this->clientesModal = null;
     }
 
     public function cierraModalBuscarCliente()
     {
 
-    }
-
-    public function updatedNombreClienteModal($value)
-    {
-        if (strlen($value) == 0) $this->clientesModal = null;
-        else $this->clientesModal = Cliente::where('nombre', 'like', '%' . $value . '%')
-        ->where('telefono', '!=', '0000000000')->where('disponible', 1)
-        ->get();
-
-        if (!is_null($this->clientesModal) && $this->clientesModal->count() == 0) 
-        {
-            $this->clientesModal = null;
-        }
     }
 
     public function capturarFila($clienteId)   //Selecciona un cliente de la tabla de buscar clientes
@@ -453,7 +464,7 @@ class Caja extends Component
         $this->cliente['publicoGeneral'] = false;
 
         $this->nombreClienteModal = '';
-        $this->clientesModal = null;
+        // $this->clientesModal = null;
     }
 
     public function mount()
@@ -482,18 +493,153 @@ class Caja extends Component
             'cajero' => Auth::user()->name,
             'idUsuario' => 0,
             'chkCobrosTaller' => true,
-            'chkAbonos' => true
+            'chkAbonos' => true,
+            'idModoPago' => 1
         ];
 
         $this->consecutivoComun = 1;
 
         $this->showModalErrors = false;
         $this->showMainErrors = !$this->showModalErrors;
+
+        $this->idModoPagoA = 1;        
     }
 
     public function cierraVentaCreditoModal()
     {
 
+    }
+
+    public function rendered()
+    {
+    
+    }
+
+    public function preguntaBorraAbono($idVenta, $idAbono)
+    {
+        $this->ventaCredito['idAbonoSeleccionado'] = $idAbono;
+        $this->dispatch('mostrarToastAceptarCancelar', '¿Deseas eliminar el abono seleccionado?', 'lisBorraAbono');
+    }
+
+    public function borraAbono()
+    {
+        $idVenta = $this->ventaCredito['id'];
+        $idAbono = $this->ventaCredito['idAbonoSeleccionado'];
+
+        try 
+        {
+            DB::transaction(function () use ($idVenta, $idAbono) 
+            {
+                $detCredito =  VentaCreditoDetalle::where('id', $idVenta)
+                ->where('id_abono', $idAbono)
+                ->first();
+
+                $detalleCredito =  VentaCreditoDetalle::where('id', $idVenta)
+                ->where('id_abono', $idAbono)
+                ->delete();
+
+                if ($detalleCredito)
+                {
+                    $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)
+                                        ->where('id_abono', '>', 0)->get();
+
+                    $this->sumaAbonos = $this->detallesCredito->sum('abono');
+                    $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+
+                    VentaCredito::where('id', $idVenta)->update(['id_estatus' => 1]);
+
+                    if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+                    { 
+                        $idRef = $idVenta % 1000;
+                        $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                        $monto = $detCredito->abono;
+                        $tipoMov = 7;
+     
+                        $movimiento = new MovimientoCaja();
+                        $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                        $movimiento->id_tipo = $tipoMov;
+                        $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                        $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                        $movimiento->id_usuario = Auth::id();
+                        $movimiento->save();
+                    }
+
+                    $this->ventaCredito['idEstatus'] = 1;
+                    $this->ventaCredito['estatus'] = "SIN LIQUIDAR";
+
+                    session()->flash('success', 'El ABONO se ha ELIMINADO con éxito.');
+                }
+                else
+                {
+                    $this->addError('abono', 'El abono seleccionado no existe o hubo problemas con la base de datos.');
+                }
+            });
+        } catch (\Exception $e)
+        {
+                // Manejo de errores si ocurre una excepción
+                dd($e);
+        }
+    }
+
+    public function liquidaCredito()
+    {
+        $this->dispatch('mostrarToastAceptarCancelar', '¿Deseas liquidar el crédito?', 'lisLiquidarVentaCredito');
+    }
+
+    public function liquidarVentaCredito()
+    {
+       $idVenta = $this->ventaCredito['id'];
+
+       try 
+       {
+           DB::transaction(function () use ($idVenta) 
+           {
+               $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->get();
+               $ultimoIdAbono = $this->detallesCredito->max('id_abono');
+               $this->ventaCredito['monto'] = $this->detallesCredito->first()->ventaCredito->venta->total;
+               $this->sumaAbonos = $this->detallesCredito->sum('abono');
+               $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+       
+               $ventaCreditoDetalles = new VentaCreditoDetalle();
+               $ventaCreditoDetalles->id = $idVenta;
+               $ventaCreditoDetalles->id_abono = $ultimoIdAbono + 1;
+               $ventaCreditoDetalles->abono = $this->montoLiquidar;
+               $ventaCreditoDetalles->id_modo_pago = $this->ventaCredito['idModoPago'];
+               $ventaCreditoDetalles->id_usuario_venta = Auth::id();
+               $ventaCreditoDetalles->save();
+               
+               if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+               { 
+                   $idRef = $idVenta % 1000;
+                   $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                   $monto = $this->montoLiquidar;
+                   $tipoMov = 3;
+
+                   $movimiento = new MovimientoCaja();
+                   $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                   $movimiento->id_tipo = $tipoMov;
+                   $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                   $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                   $movimiento->id_usuario = Auth::id();
+                   $movimiento->save();
+               }
+
+                VentaCredito::where('id', $idVenta)->update(['id_estatus' => 2]);
+                $this->ventaCredito['estatus'] = $ventaCreditoDetalles->first()->ventaCredito->estatus->descripcion;
+                $this->ventaCredito['idEstatus'] = 2;
+
+                $this->muestraDivAbono = false;
+                $this->ventaCredito['abono'] = null;
+
+                $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->get();
+
+                session()->flash('success', 'El crédito ha sido LIQUIDADO exitosamente.');
+           });
+       } catch (\Exception $e)
+       {
+               // Manejo de errores si ocurre una excepción
+               dd($e);
+       }
     }
 
     public function muestraDivAgregaAbono()
@@ -529,12 +675,29 @@ class Caja extends Component
                         $ventaCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $ventaCreditoDetalles->abono = $this->ventaCredito['abono'];
                         $ventaCreditoDetalles->id_usuario_venta = Auth::id();
+                        $ventaCreditoDetalles->id_modo_pago = $this->ventaCredito['idModoPago'];
                         $ventaCreditoDetalles->save();
 
                         $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)
                         ->where('id_abono', '>', 0)->get();
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->ventaCredito['monto'] - $this->sumaAbonos;
+
+                        if ($this->ventaCredito['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+                        { 
+                            $idRef = $idVenta % 1000;
+                            $idRef = "V" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
+                            $monto = $this->ventaCredito['abono'];
+                            $tipoMov = 3;
+    
+                            $movimiento = new MovimientoCaja();
+                            $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                            $movimiento->id_tipo = $tipoMov;
+                            $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                            $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                            $movimiento->id_usuario = Auth::id();
+                            $movimiento->save();
+                        }
 
                         if ($acumulado == $this->ventaCredito['monto'])
                         {
@@ -583,6 +746,7 @@ class Caja extends Component
                         // Asignar valores a las propiedades del modelo
                         $venta->id_cliente = $this->cliente['id'];
                         $venta->total = $this->totalCarrito;
+                        $venta->id_modo_pago = 0;  //Venta a crédito
                         $venta->id_usuario = Auth::id();
 
                         // Guardar la instancia del modelo en la base de datos
@@ -642,7 +806,7 @@ class Caja extends Component
                 $this->muestraDivAbono = false;
 
                 $this->detallesCredito = VentaCreditoDetalle::where('id', $idVenta)->where('id_abono', '>', 0)->get();
-
+                
                 $this->dispatch('abreVentaCreditoModal');
 
                 $this->datosCargados = true;
@@ -656,6 +820,18 @@ class Caja extends Component
             
     }
 
+    public function abrirModal()
+    {
+        $this->ventaCredito['idEstatus'] = 1;
+        $this->muestraDivAbono = true;
+        $this->detallesCredito = VentaCreditoDetalle::where('id', 125)->where('id_abono', '>', 0)->get();
+
+        $this->dispatch('abreVentaCreditoModal');
+
+        $this->datosCargados = true;
+    }
+    
+
     public function executeRender()
     {
         $this->render();
@@ -664,6 +840,7 @@ class Caja extends Component
     public function render()
     {
         $productosModal = null;
+        $clientesModal = null;
   
         if (strlen($this->descripcionProductoModal) > 0)
         {
@@ -676,7 +853,18 @@ class Caja extends Component
             $this->resetPage();
         }
 
-        return view('livewire.caja', compact('productosModal'));
+        if (strlen($this->nombreClienteModal) > 0)
+        {
+            $clientesModal = Cliente::where('nombre', 'like', '%' . $this->nombreClienteModal . '%')
+            ->where('telefono', '!=', '0000000000')->where('disponible', 1)
+            ->paginate(10);
+
+            $this->resetPage();
+        }
+
+        $this->modosPagoModal = ModoPago::where('id', '>', 0)->get();
+
+        return view('livewire.caja', compact('productosModal', 'clientesModal'));
     }
 
     public function agregaProductoComun()
@@ -772,6 +960,37 @@ class Caja extends Component
         }
     }
 
+    public function updatedTipoPrecio($value, $key)
+    {
+        $index = (int) strtok($key, '.');   //Para obtener el item dentro del carrito
+ 
+        $producto = $this->carrito[$index]['producto'];
+
+        if ($value == 1)  //Si es MENUDEO
+        {
+            $precio = $producto->precio_venta;
+        }
+        else  //Si es MAYOREO
+        {
+            $precio = $producto->precio_mayoreo;
+        }
+
+        $cantidad = $this->carrito[$index]['cantidad'];
+
+        $subTotal = $precio * $cantidad;
+
+        // Actualizar el subTotal utilizando transform
+        $this->carrito->transform(function ($item, $key) use ($index, $subTotal, $cantidad) {
+            if ($key === $index) {
+                $item['subTotal'] = number_format($subTotal, 2, '.', ',');
+                $item['cantidadVieja'] = $cantidad;
+            }
+            return $item;
+        });
+
+        $this->cuentaCantidadProductosCarrito();
+    }
+
     public function updatedCarrito($value, $key)
     {
         if (substr($key, -8) === 'cantidad')
@@ -796,7 +1015,16 @@ class Caja extends Component
 
                 if ($inventarioDisponible >= 0)
                 {
-                    $subTotal = $producto->precio_venta * $value;
+                    // dd($this->tipoPrecio);
+
+                    if ($this->tipoPrecio[0] == 1)
+                    {
+                        $subTotal = $producto->precio_venta * $value;
+                    }
+                    else
+                    {
+                        $subTotal = $producto->precio_mayoreo * $value;
+                    }
 
                     // Actualizar el subTotal utilizando transform
                     $this->carrito->transform(function ($item, $key) use ($index, $subTotal, $value) {
@@ -844,16 +1072,9 @@ class Caja extends Component
     
     public function eliminaDelCarrito($index)
     {
-        // if ($this->carrito[$index]['esProductoComun'])
-        // {
-        //     if ($this->consecutivoComun > 1) $this->consecutivoComun--;
-        // }
-
         $this->carrito->forget($index);
         $this->carrito = $this->carrito->values();
         $this->cuentaCantidadProductosCarrito();
-
-  
     }
 
     public function agregaAlCarrito($producto)
@@ -894,7 +1115,10 @@ class Caja extends Component
                     'cantidadVieja' => $this->cantidadProductoCapturado
                 ]);
 
-                $this->carrito->push($item); 
+                $this->carrito->push($item);
+                $index = $this->carrito->count();
+
+                $this->tipoPrecio[$index - 1] = 1;  //POR DEFAULT es MENUDEO
 
                 if ($item['esProductoComun']) 
                 { 
@@ -955,10 +1179,28 @@ class Caja extends Component
                     // Asignar valores a las propiedades del modelo
                     $venta->id_cliente = $this->cliente['id'];
                     $venta->total = $this->totalCarrito;
+                    $venta->id_modo_pago = $this->idModoPagoA;
                     $venta->id_usuario = Auth::id();
 
                     // Guardar la instancia del modelo en la base de datos
                     $venta->save();
+                    $idVenta = $venta->id;
+
+                    if ($this->idModoPagoA == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
+                    { 
+                        $idRef = $idVenta % 10000;
+                        $idRef = str_pad($idRef, 4, '0', STR_PAD_LEFT);
+                        $monto = $this->totalCarrito;
+                        $tipoMov = 1;
+
+                        $movimiento = new MovimientoCaja();
+                        $movimiento->referencia = $this->regresaReferencia($tipoMov, $idRef);
+                        $movimiento->id_tipo = $tipoMov;
+                        $movimiento->monto = $this->calculaMonto($tipoMov, $monto);
+                        $movimiento->saldo_caja = $this->calculaSaldoCaja($tipoMov, $monto); // Asegura que el saldo_caja sea un número decimal
+                        $movimiento->id_usuario = Auth::id();
+                        $movimiento->save();
+                    }
                     
                     foreach ($this->carrito as $item)
                     {
@@ -1001,6 +1243,7 @@ class Caja extends Component
                     $this->cantidadProductosCarrito = 0;
                     $cliente = $this->regresacliente('0000000000');
 
+                    $this->dispatch('cierraModalCobrar');
                     $this->dispatch('mostrarToast', 'Venta realizada con éxito!!!');
                 });
             } catch (\Exception $e)

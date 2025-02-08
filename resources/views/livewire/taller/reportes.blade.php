@@ -9,6 +9,7 @@
     @include('livewire.taller.modal-param-modelos')
     @include('livewire.taller.modal-param-fallas')
     @include('livewire.taller.modal-param-clientes')
+    @include('livewire.taller.modal-editar-modo-pago')
 
     @if ($showMainErrors)
         @if (session('error'))
@@ -204,6 +205,7 @@
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">MODELO</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">FALLA(S)</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CLIENTE</th>
+                    <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">COBRO</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">RECIBIÓ</th>
                     <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">ESTATUS</th>
                     @if ($chkFechaSalida == true)
@@ -290,6 +292,15 @@
                             $hayNoDisponibles = true;
                         @endphp
                         @endif
+                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                            $ &nbsp; {{ $taller->cobroTaller->cobro_realizado }} 
+                            @if ($taller->cobroTaller->credito)
+                                [C]
+                            @else 
+                                &nbsp;
+                                <i class='{{  $taller->cobroTaller->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $taller->num_orden }})" style="cursor: pointer;"></i>
+                            @endif
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
@@ -350,6 +361,7 @@
                                 @endforeach
                             </td>
                             <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->equipo->cliente->nombre }}</td>
+                            <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">$ &nbsp; {{ $taller->cobroTaller->cobro_realizado }} </td>
                             <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                             <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                             <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
@@ -365,11 +377,6 @@
                 @endforeach
             </tbody>
         </table>
-        {{-- <div class="w-100 d-flex justify-content-end align-items-center mb-4">
-        <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
-            <i class="fa-solid fa-file-invoice-dollar"></i> &nbsp; Corte de Caja [F10]
-        </x-button>
-        </div> --}}
         @if ($hayNoDisponibles || $hayInexistentes)
         <div class="col-md-5">
             <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
@@ -386,28 +393,65 @@
 </div>
 
 <script>
-        function eliminarMarca(id) {
-    // Aquí se puede agregar la lógica para eliminar la marca utilizando Livewire
-    Livewire.dispatch('eliminarMarca', id);
-    }
+    //     function eliminarMarca(id) {
+    // // Aquí se puede agregar la lógica para eliminar la marca utilizando Livewire
+    // Livewire.dispatch('eliminarMarca', id);
+    // }
+    //     document.addEventListener('DOMContentLoaded', function () {
+    //     // Hook para manejar el commit de Livewire
+    //     Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+    //         // Re-inicializar los selectpickers después de la actualización
+    //         $('.selectpicker').selectpicker();
 
-        document.addEventListener('DOMContentLoaded', function () {
-        // Hook para manejar el commit de Livewire
-        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-            // Re-inicializar los selectpickers después de la actualización
+    //         succeed(({ snapshot, effect }) => {
+    //             // Destruir y volver a inicializar los selectpickers
+    //             $('select').selectpicker('destroy');
+    //             queueMicrotask(() => {
+    //                 $('.selectpicker').selectpicker('refresh');
+    //             });
+    //         });
+
+    //         fail(() => {
+    //             console.error('Livewire commit failed');
+    //         });
+    //     });
+    // });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
             $('.selectpicker').selectpicker();
 
-            succeed(({ snapshot, effect }) => {
-                // Destruir y volver a inicializar los selectpickers
-                $('select').selectpicker('destroy');
-                queueMicrotask(() => {
-                    $('.selectpicker').selectpicker('refresh');
+        $('#editarModoPagoModalCobroTaller').on('shown.bs.modal', function () {
+            $('.selectpicker').selectpicker();
+
+            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                $('.selectpicker').selectpicker();
+
+                succeed(({ snapshot, effect }) => {
+                    $('#selectModoPago8').selectpicker('destroy');
+
+                    queueMicrotask(() => {
+                            $('#selectModoPago8').selectpicker('refresh'); 
+                    });
+                });
+
+                fail(() => {
+                    console.error('Livewire commit failed');
                 });
             });
+        });
+    });
 
-            fail(() => {
-                console.error('Livewire commit failed');
-            });
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('cierraModalEditaModoPagoCobroTaller', () => {
+            $('#editarModoPagoModalCobroTaller').modal('hide');
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
+        @this.on('abreModalEditaModoPagoCobroTaller', () => {
+            $('#editarModoPagoModalCobroTaller').modal('show');
         });
     });
 </script>
