@@ -382,12 +382,12 @@ class Caja extends Component
 
     public function abrirCaja()
     {
-        // $printer_name = "Ticket";
-        // $connector = new WindowsPrintConnector($printer_name);
-        // $printer = new Printer($connector);
+        $printer_name = "Ticket";
+        $connector = new WindowsPrintConnector($printer_name);
+        $printer = new Printer($connector);
 
-        // $printer->pulse();
-        // $printer->close();
+        $printer->pulse();
+        $printer->close();
 
         return redirect()->route('caja.movimientos');
     }

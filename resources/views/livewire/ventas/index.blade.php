@@ -146,7 +146,7 @@
                         {{ $venta->cancelada ? 'CANCELADA' : 'ACTIVA' }}
                     </td>
                     <td colspan="2" class="px-3 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                        <div class="row ml-1">
+                        <div style="display: flex; align-items: center;" >
                             <a wire:click="invertirEstatusVenta('{{ $venta->id }}')" wire:loading.attr="disabled" wire:target="invertirEstatusVenta" style="color: dimgrey;cursor:pointer; display: flex; align-items: center;">
                                 @if ($venta->cancelada)
                                 <i class='fa-solid fa-square-check' style="color: dimgrey;" onmouseover="this.style.color='green'" onmouseout="this.style.color='dimgrey'" title="Activar"></i>
