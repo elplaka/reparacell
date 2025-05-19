@@ -53,6 +53,7 @@ class Caja extends Component
     ];
 
     protected $listeners = [
+        'f4-pressed' => 'cobrar',
         'f9-pressed' => 'abrirCaja', 
         'f10-pressed' => 'abrirCorteCaja', 
         'lisLiquidarVentaCredito' => 'liquidarVentaCredito',
@@ -429,12 +430,21 @@ class Caja extends Component
     {
         $cliente = Cliente::where('telefono', $telefono)->first();
 
-        $this->cliente['id'] = $cliente->id;
-        $this->cliente['nombre'] = $cliente->nombre;
-        $this->cliente['telefono'] = $cliente->telefono;
-        $this->cliente['direccion'] = $cliente->direccion;
-        $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
-        $this->cliente['publicoGeneral'] = $telefono == '0000000000' ? 1 : 0;
+if ($cliente) {
+    $this->cliente['id'] = $cliente->id;
+    $this->cliente['nombre'] = $cliente->nombre;
+    $this->cliente['telefono'] = $cliente->telefono;
+    $this->cliente['direccion'] = $cliente->direccion;
+    $this->cliente['telefonoContacto'] = $cliente->telefono_contacto;
+    $this->cliente['publicoGeneral'] = $telefono == '0000000000' ? 1 : 0;
+} else {
+    $this->cliente['id'] = null; // O cualquier otro valor por defecto
+    $this->cliente['nombre'] = '';
+    $this->cliente['telefono'] = $telefono;
+    $this->cliente['direccion'] = '';
+    $this->cliente['telefonoContacto'] = '';
+    $this->cliente['publicoGeneral'] = $telefono == '0000000000' ? 1 : 0;
+}
     }
 
     public function cierraBuscarClienteModal()
@@ -1242,6 +1252,13 @@ class Caja extends Component
                     $this->carrito = collect(); // Inicializa $carrito como una colección vacía
                     $this->cantidadProductosCarrito = 0;
                     $cliente = $this->regresacliente('0000000000');
+
+                    if ($this->idModoPagoA == 1)  //Solo si es EFECTIVO se imprime ticket
+                    {
+                        $this->showMainErrors = true;
+
+                        return redirect()->route('ventas.print', $idVenta);
+                    }
 
                     $this->dispatch('cierraModalCobrar');
                     $this->dispatch('mostrarToast', 'Venta realizada con éxito!!!');

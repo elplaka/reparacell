@@ -15,7 +15,7 @@ class CreateMovimientosCajaTable extends Migration
     {
         Schema::create('movimientos_caja', function (Blueprint $table) {
             // Campo folio (string de longitud 4, no es clave primaria)
-            $table->string('referencia', 4); // No es clave primaria y puede repetirse
+            $table->string('referencia', 5); // No es clave primaria y puede repetirse
 
             // Campo fecha (timestamps, pero solo uno)
             $table->timestamp('fecha')->useCurrent(); // Fecha de creación

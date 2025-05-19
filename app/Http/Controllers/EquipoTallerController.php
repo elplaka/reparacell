@@ -130,7 +130,7 @@ class EquipoTallerController extends Controller
 
             // Cortar el papel (si es una impresora térmica)
             $printer->cut();
-            $printer->pulse();
+            // $printer->pulse();
 
             // Finalizar la conexión con la impresora
             $printer->close();

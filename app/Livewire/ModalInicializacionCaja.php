@@ -28,7 +28,7 @@ class ModalInicializacionCaja extends Component
 
     function obtenerFechaConDatos() {
         $this->fechaCaja = Carbon::yesterday();
-    
+
         while (!$this->hayDatosParaFecha($this->fechaCaja)) {
             $this->fechaCaja->subDay();
         }
@@ -39,17 +39,43 @@ class ModalInicializacionCaja extends Component
     function hayDatosParaFecha($fecha) {
         // Implementa la lógica para verificar si hay datos para la fecha dada
         // Por ejemplo:
-        return DB::table('movimientos_caja')
-                 ->whereDate('fecha', $fecha)
-                 ->exists();
+
+        if (DB::table('movimientos_caja')->exists())
+        {
+                return DB::table('movimientos_caja')
+                ->whereDate('fecha', $fecha)
+                ->exists();
+        }
+        else
+        {
+            // La tabla está vacía, insertamos un registro inicial
+            $fechaInicial = Carbon::now(); // Puedes usar otra fecha si lo prefieres
+            $fechaAnterior = $fechaInicial->subDay();
+            $usuarioId = Auth::id() ?? null; // Obtén el ID del usuario autenticado o null si no hay
+
+            DB::table('movimientos_caja')->insert([
+                'referencia' => 'I0000', // Valor predeterminado para referencia
+                'fecha' => $fechaAnterior,
+                'id_tipo' => 1, // Un ID de tipo predeterminado
+                'monto' => 0.00, // Monto inicial
+                'saldo_caja' => 0.00, // Saldo inicial
+                'id_usuario' => $usuarioId, // ID del usuario (si aplica)
+            ]);
+
+               // Obtenemos el registro recién insertado
+                     return DB::table('movimientos_caja')
+                   ->where('referencia', 'I0000')
+                   ->first();
+        }
+  
     }
 
     public function inicializaCaja()
     {
         $this->validate();
 
-        DB::transaction(function () {
-            // Crear el nuevo registro de movimiento
+        DB::transaction(function () 
+        {
             $movimiento = new MovimientoCaja();
             $movimiento->referencia = $this->regresaReferencia(4, "0000");
             $movimiento->id_tipo = 4;

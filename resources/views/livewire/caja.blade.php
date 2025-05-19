@@ -17,6 +17,28 @@
     </div>
 
     <div class="container-fluid px-0">
+         @if ($showMainErrors)
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" wire:ignore>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{!! $error !!}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                {{ session('success') }}
+            </div>
+            @endif
+        @endif
         <div class="row mx-0">
             <div class="col-12 col-md-3 mb-3 px-0">
                 <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
@@ -216,7 +238,8 @@
 <script>
     window.addEventListener('keydown', function(event) {
         if (event.key === 'F4') {
-            $('#cobrarModal').modal('show');
+            // $('#cobrarModal').modal('show');
+            Livewire.dispatch('f4-pressed');
         }
     });
 

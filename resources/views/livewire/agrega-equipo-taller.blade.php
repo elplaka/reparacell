@@ -484,7 +484,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('nombreClienteModal');
             if (input && document.activeElement !== input) {
                 input.focus();
-                console.log('Foco restaurado solo si es necesario.');
             }
             shouldFocus = false; // Resetear el flag después de enfocar
         }
@@ -511,5 +510,49 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#marcaMod\\.idTipoEquipo').selectpicker();
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+
+            succeed(({ snapshot, effect }) => {
+                $('#marcaMod\\.idTipoEquipo').selectpicker('destroy');
+
+                queueMicrotask(() => {
+                    setTimeout(() => { 
+                        $('#marcaMod\\.idTipoEquipo').selectpicker('refresh'); 
+                    }, 100);
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#fallaMod\\.idTipoEquipo').selectpicker();
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+
+            succeed(({ snapshot, effect }) => {
+                $('#fallaMod\\.idTipoEquipo').selectpicker('destroy');
+
+                queueMicrotask(() => {
+                    setTimeout(() => { 
+                        $('#fallaMod\\.idTipoEquipo').selectpicker('refresh'); 
+                    }, 100);
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
+
+
 </script>
 

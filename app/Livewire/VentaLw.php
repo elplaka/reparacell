@@ -92,6 +92,8 @@ class VentaLw extends Component
             }
         }
 
+        $this->showMainErrors = true;
+
         return view('livewire.ventas.index', compact('ventas'));
     }
 
@@ -117,6 +119,9 @@ class VentaLw extends Component
 
         $this->usuarios = User::all();
         $this->modosPago = ModoPago::where('id', '>', 0)->get();
+
+        $this->showMainErrors = true;
+
     }
 
     public function verDetalles($ventaId)

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_equipo');
             $table->unsignedBigInteger('id_usuario_recibio');
             $table->unsignedBigInteger('id_estatus');
+            $table->unsignedBigInteger('id_cobro_estimado')->nullable();
             $table->string('observaciones', 50);
             
             $table->timestamp('fecha_entrada')->useCurrent();
@@ -35,6 +36,11 @@ return new class extends Migration
                 ->references('id')
                 ->on('estatus_equipos_taller')
                 ->onDelete('restrict');
+
+            $table->foreign('id_cobro_estimado')
+                ->references('id')
+                ->on('cobros_estimados_taller')
+                ->onDelete('restrict'); 
         });
     }
 

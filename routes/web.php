@@ -16,6 +16,7 @@ use App\Http\Controllers\ClienteController;
 use App\Livewire\Caja;
 use App\Livewire\Taller;
 use Barryvdh\Snappy\Facades\SnappyPdf;
+use Illuminate\Support\Facades\Storage;
 
 
 /*
@@ -91,6 +92,8 @@ Route::middleware(['auth'])
 
     Route::get('/ventas/index', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/ventas/creditos', [VentaController::class, 'creditos'])->name('ventas.creditos');
+    Route::get('/ventas/print/{id}', [VentaController::class, 'print'])->name('ventas.print');
+
 
     Route::get('/clientes/index', [ClienteController::class, 'index'])->name('clientes.index');
     Route::get('/clientes/historial', [ClienteController::class, 'historial'])->name('clientes.historial');
@@ -100,7 +103,6 @@ Route::middleware(['auth'])
 ->get('/storage/{archivo}', function ($archivo) {
     return Storage::disk('public')->response($archivo);
 })->where('archivo', '.*');
-
   
 // Rutas protegidas para administradores
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -111,10 +113,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::post('/register', [RegisteredUserController::class, 'store']);
     Route::get('/usuarios/index', [UsuarioController::class, 'index'])->name('usuarios.index');
-    Route::post('/usuarios/create', [UsuarioController::class, 'create'])->name('usuarios.create');
     Route::get('/usuarios/edit/{id_usuario}', [UsuarioController::class, 'edit'])->name('usuarios.edit');
     Route::post('/usuarios/update/{id_usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');    
 });
+
+Route::get('/registrar', function () {
+       $roles = \Spatie\Permission\Models\Role::all();
+        return view('auth.registrar', compact('roles'));
+})->name('registrar');
+
+Route::post('/usuarios/create', [UsuarioController::class, 'create'])->name('usuarios.create');
+
 
 
 

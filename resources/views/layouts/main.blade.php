@@ -18,7 +18,6 @@
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
-    {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"> --}}
     
 
     <!-- Custom styles for this template-->
@@ -154,21 +153,32 @@ input[type="date"]:hover {
 .custom-option:hover {
     background-color: #dbdfee;
 }
+
+.swal2-confirm {
+    display: inline-block !important; /* Ensure it's displayed */
+    visibility: visible !important; /* Ensure it's visible */
+    opacity: 1 !important; /* Ensure it's opaque */
+    color: white !important; /* Ensure the text color contrasts with blue */
+    background-color: #1e40af !important; /* Force the blue background */
+    /* Add other basic button styles if needed (padding, border, etc.) */
+    padding: 0.4em 1em !important;
+    border: none !important;
+    border-radius: 0.25em !important;
+    font-size: 1em !important;
+}
+
+
 </style>
 
 <body id="page-top">
-    <!-- Page Wrapper -->
     <div id="wrapper">
-        <!-- Sidebar -->
         <ul class="navbar-nav bg-gradient-navy sidebar sidebar-dark accordion" id="accordionSidebar">
-            <!-- Nav Item - Dashboard -->
             <li class="nav-item active">
                 <a class="nav-link" href="{{ route('home') }}">
                     <i class="fa-solid fa-house"></i>
                     <span>SOCIO :: REPARACELL</span></a>
             </li>
 
-            <!-- Divider -->
             <hr class="sidebar-divider">
  
             <li class="nav-item">
@@ -220,7 +230,6 @@ input[type="date"]:hover {
                 </div>
             </li>
             <hr class="sidebar-divider">
-            <!-- Nav Item - Dashboard -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProductos"
                     aria-expanded="true" aria-controls="collapseProductos" data-key="4">
@@ -230,7 +239,6 @@ input[type="date"]:hover {
                 <div id="collapseProductos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('productos.index') }}" data-key="P">                     
-                            {{-- <i class="fa-solid fa-rectangle-list"></i> Catálogo  --}}
                         <i class="fa-solid fa-boxes-stacked"></i> Inventario <small>[ P ]</small> </a>
                         <a class="collapse-item" href="{{ route('productos.reportes') }}" data-key="R"> <i class="fa-solid fa-file-invoice"></i> Reportes <small>[ R ]</small></a>
                         </a> 
@@ -254,10 +262,8 @@ input[type="date"]:hover {
                 </div>
             </li>
 
-            <!-- Divider -->
             <hr class="sidebar-divider">
 
-            <!-- Nav Item - Pages Collapse Menu -->
             @can('configurar-usuarios')
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUser"
@@ -273,33 +279,24 @@ input[type="date"]:hover {
             </li>
             @endcan
         </ul>
-        <!-- End of Sidebar -->
 
-        <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
-            <!-- Main Content -->
             <div id="content">
-                <!-- Topbar -->
-                {{-- <nav class="navbar navbar-expand navbar-light bg-white topbar static-top" style='margin-bottom: -50px !important;'> --}}
                 <nav class="navbar navbar-expand navbar-light bg-white topbar static-top">
 
-                    <!-- Sidebar Toggle (Topbar) -->
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
 
-                    <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
 
                         <div class="topbar-divider d-none d-sm-block"></div>
 
-                        <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ Auth::user()->name }}</span>
                             </a>
-                            <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
 
@@ -319,21 +316,14 @@ input[type="date"]:hover {
                         </li>
                     </ul>
                 </nav>
-                <!-- End of Topbar -->
 
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
+            <div class="container-fluid">
                     @yield('content')
                 </div>
-                
-                <!-- /.container-fluid -->
-
             </div>
-            <!-- End of Main Content -->
 
             <livewire:modal-inicializacion-caja />
 
-            <!-- Footer -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
@@ -341,28 +331,13 @@ input[type="date"]:hover {
                     </div>
                 </div>
             </footer>
-            <!-- End of Footer -->
-
         </div>
-        <!-- End of Content Wrapper -->
-
     </div>
-    <!-- End of Page Wrapper -->
 
-    <!-- Scroll to Top Button-->
-    {{-- <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a> --}}
-
-    {{-- <script src="{{ asset('js/jquery.js') }}"></script> --}}
-    <!-- Custom scripts for all pages-->
-    <script src="{{ asset('js/sb-admin.min.js') }}"></script>
-
- 
+    <script src="{{ asset('js/sb-admin.min.js') }}"></script> 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
-    {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
     
 <script>
         window.addEventListener('contentChanged', function () {
@@ -477,12 +452,11 @@ input[type="date"]:hover {
                     icon: 'error',
                     title: attr[0],
                     showConfirmButton: true,
-                    confirmButtonColor: "#3085d6",
-                    // timer: 2000,
+                    showCancelButton: false,
                     customClass: {
-                        title: 'swal2-title-custom', // Clase CSS personalizada para el título
-                        content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
-                        icon: 'fa-xs'
+                            title: 'swal2-title-custom', // Clase CSS personalizada para el título
+                            content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
+                            icon: 'fa-xs',
                         },
                     })
             });

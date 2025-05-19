@@ -23,7 +23,7 @@ class CreateModosPagoTable extends Migration
 
         // Insertar registros iniciales con íconos y IDs específicos
         DB::table('modos_pago')->insert([
-            ['id' => 0, 'nombre' => 'CRÉDITO', 'icono' => 'fa-solid fa-credit-card'],
+            ['id' => 3, 'nombre' => 'CRÉDITO', 'icono' => 'fa-solid fa-credit-card'],
             ['id' => 1, 'nombre' => 'EFECTIVO', 'icono' => 'fa-solid fa-coins'],
             ['id' => 2, 'nombre' => 'TRANSFERENCIA', 'icono' => 'fa-solid fa-money-bill-transfer'],
         ]);

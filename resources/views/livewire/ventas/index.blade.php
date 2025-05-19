@@ -154,6 +154,15 @@
                                 <i class='fa-solid fa-rectangle-xmark' style="color: dimgrey;" onmouseover="this.style.color='red'" onmouseout="this.style.color='dimgrey'" title="Cancelar"></i>
                                  @endif
                             </a>
+                             &nbsp; &nbsp;
+                            <a href="{{ route('ventas.print', $venta->id) }}" class="label-button">
+                                <i class="fa-solid fa-print" 
+                                style="color:dimgrey;" 
+                                onmouseover="this.style.color='blue'" 
+                                onmouseout="this.style.color='dimgrey'" 
+                                title="Imprimir recibo">
+                                </i>
+                            </a>
                             &nbsp; &nbsp;
                             <button class="btn col-md-1" 
                                 data-toggle="collapse" 

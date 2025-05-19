@@ -293,14 +293,26 @@
                         @endphp
                         @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            $ &nbsp; {{ $taller->cobroTaller->cobro_realizado }} 
-                            @if ($taller->cobroTaller->credito)
-                                [C]
-                            @else 
-                                &nbsp;
-                                <i class='{{  $taller->cobroTaller->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $taller->num_orden }})" style="cursor: pointer;"></i>
-                            @endif
-                        </td>
+    {{-- Check if the cobroTaller relationship exists --}}
+    @if ($taller->cobroTaller)
+        {{-- If cobroTaller exists, display the realiado amount --}}
+        $ &nbsp; {{ $taller->cobroTaller->cobro_realizado }}
+
+        {{-- Then check for the credit status on the existing cobroTaller --}}
+        @if ($taller->cobroTaller->credito)
+            [C]
+        @else
+            &nbsp;
+            {{-- Also check if the modoPago relationship exists on the existing cobroTaller --}}
+            @if ($taller->cobroTaller->modoPago)
+                <i class='{{ $taller->cobroTaller->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $taller->num_orden }})" style="cursor: pointer;"></i>
+            @endif
+        @endif
+    @else
+        {{-- If cobroTaller is null, display something else, e.g., a dash or "Pending" --}}
+        - {{-- Or leave this section empty: --}}{{-- &nbsp; --}}
+    @endif
+</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
@@ -420,19 +432,21 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-            $('.selectpicker').selectpicker();
+            $('#selectModoPago8').selectpicker();
 
         $('#editarModoPagoModalCobroTaller').on('shown.bs.modal', function () {
-            $('.selectpicker').selectpicker();
+            $('#selectModoPago8').selectpicker();
 
             Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
                 $('.selectpicker').selectpicker();
 
                 succeed(({ snapshot, effect }) => {
                     $('#selectModoPago8').selectpicker('destroy');
+                    $('#selectIdTipos').selectpicker('destroy');
 
                     queueMicrotask(() => {
-                            $('#selectModoPago8').selectpicker('refresh'); 
+                            $('#selectModoPago8').selectpicker('refresh');
+                            $('#selectIdTipos').selectpicker('refresh'); 
                     });
                 });
 
@@ -442,6 +456,8 @@
             });
         });
     });
+
+    
 
     document.addEventListener('livewire:initialized', function () {
         @this.on('cierraModalEditaModoPagoCobroTaller', () => {
@@ -454,4 +470,28 @@
             $('#editarModoPagoModalCobroTaller').modal('show');
         });
     });
+
+        
+   document.addEventListener('DOMContentLoaded', function() {
+   // Inicializar selectpicker
+
+         $('#selectIdTipos').selectpicker();
+
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            $('.selectpicker').selectpicker();
+            succeed(({ snapshot, effect }) => {
+                $('selectIdTipos').selectpicker('destroy');
+                queueMicrotask(() => {
+                    setTimeout(() => {
+                        $('.selectpicker').selectpicker('refresh');
+                    }, 10); //
+                });
+            });
+
+            fail(() => {
+                console.error('Livewire commit failed');
+            });
+        });
+    });
+    
 </script>
