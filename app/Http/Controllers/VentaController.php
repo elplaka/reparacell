@@ -9,6 +9,7 @@ use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\CapabilityProfile;
 use Carbon\Carbon;
+use Exception; 
 
 class VentaController extends Controller
 {
@@ -42,74 +43,78 @@ class VentaController extends Controller
             $i = 0;
             foreach($ventas_detalles as $venta_detalle)
             {
-                $ventaPrint['productos'][$i]['nombre'] = $venta_detalle->producto->descripcion;
+                if (substr($venta_detalle->codigo_producto, 0, 3) == "COM" && $venta_detalle->productoComun) {
+                    $ventaPrint['productos'][$i]['nombre'] = $venta_detalle->productoComun->descripcion_producto;
+                } 
+                else 
+                {
+                    $ventaPrint['productos'][$i]['nombre'] = $venta_detalle->producto->descripcion;
+                }
                 $ventaPrint['productos'][$i]['cantidad'] = $venta_detalle->cantidad;
                 $ventaPrint['productos'][$i]['precio'] = $venta_detalle->importe / $venta_detalle->cantidad;
                 $ventaPrint['productos'][$i]['subtotal'] = $venta_detalle->importe;
                 $i++;
             }
 
-            // Cargar imagen (ajusta la ruta)
-            $logo = EscposImage::load(public_path('android.png'), true);
+            dd($ventaPrint);
 
-            // --- Configuración básica ---
-            $printer->setJustification(Printer::JUSTIFY_LEFT);
-            $printer->setEmphasis(false); // Desactiva negrita (opcional)
-
-            // --- Línea 1: Imagen (izquierda) + Texto (derecha) ---
-            $printer->bitImage($logo, Printer::JUSTIFY_LEFT); // Imagen a la izquierda
-            
-            // Texto a la derecha (3 renglones)
-            $printer->setJustification(Printer::JUSTIFY_RIGHT);
+            try{
+                $logo = EscposImage::load("android.png", false);
+                $printer->bitImage($logo);
+                //$printer->graphics($logo);
+            }catch(Exception $e){/*No hacemos nada si hay error*/
+                dd('error al cargar la imagen: ' . $e->getMessage());
+            }
 
             // Título centrado
-            $titulo = "CIBER SOCIAL - REPARACELL\n 
-            SERVICIO/REPARACIÓN DE CELULARES, TABLETS Y EQUIPOS DE CÓMPUTO\n
-            ALVARO OBREGON #9   COL. CENTRO    CONCORDIA, SINALOA\n
-            CEL: (694) 115-01-79\n";
+            $titulo =        "   CIBER SOCIAL - REPARACELL   SERVICIO/REPARACIÓN DE CELULARESTABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
 
-            $printer->text($titulo . "\n");
+		$printer->text($titulo . "\n");
 
-            $printer->setJustification(Printer::JUSTIFY_LEFT);
              $texto0 = "Cliente: " . $ventaPrint['cliente'];
              $texto1 = "  Fecha: " . $ventaPrint['fecha'];
              $texto2 = "   Hora: " . $ventaPrint['hora'];
-             $texto3 =   str_pad("Cant", 5) . 
-                        str_pad("Producto", 20) . 
-                        str_pad("Precio", 10) . 
-                        str_pad("Subtotal", 10) . "\n";
-             $texto4 = "----------------------------------------\n";        
+             $texto3 =   str_pad("Can", 4) . 
+                        str_pad("Prod/Serv", 12) . 
+                        str_pad("Precio", 7) . 
+                        str_pad("Subtot", 7) . "\n";
+             $texto4 = "- - - - - - - - - - - - - - - -\n";        
 
             // Imprimir los campos
             $printer->text($texto0 . "\n");
             $printer->text($texto1 . "\n");
-            $printer->text($texto2 . "\n");
+            $printer->text($texto2 . "\n \n");
             $printer->text($texto3);
             $printer->text($texto4);
 
+      
             $total = 0;
 
-            // Imprimir fallas de equipo si existen
-            if (!empty($ventaPrint['productos'])) 
-            {
+            if (!empty($ventaPrint['productos'])) {
                 foreach ($ventaPrint['productos'] as $producto) {
-                    $printer->text(
-                        str_pad($producto['cantidad'], 5) .
-                        str_pad(substr($producto['nombre'], 0, 20), 20) .
-                        "$ " . str_pad($producto['precio'], 10) .
-                        "$ " . str_pad($producto['subtotal'], 10) .                    
-                        "\n"
-                    );
+                    $precio_formateado = number_format($producto['precio'], 2, '.', '');
+                    $subtotal_formateado = number_format($producto['subtotal'], 2, '.', '');
+
+                    $printer->text(sprintf("%3d %-12s %7s %8s\n",
+                        $producto['cantidad'],
+                        substr($producto['nombre'], 0, 11), // Limita el nombre a 12 caracteres
+                        $precio_formateado,
+                        $subtotal_formateado
+                    ));
+
                     $total += $producto['subtotal'];
                 }
             }
 
-
-            $texto5 = "----------------------------------------\n";
+            $texto5 = "- - - - - - - - - - - - - - - - \n";
             $printer->text($texto5);
-            $texto6 = str_pad("Total", 35) . "$ " . str_pad($total, 10) . "\n";
 
-            $printer->text($texto6);
+
+            $printer->text(sprintf("%23s %8.2f\n", "TOTAL: $", $total));
+            $printer->text($texto5);
+
+
+            //$printer->text($texto6);
 
             $printer->text("\n");
             $printer->text("\n");
@@ -123,7 +128,7 @@ class VentaController extends Controller
 
             // Cortar el papel (si es una impresora térmica)
             $printer->cut();
-            // $printer->pulse();
+            $printer->pulse();
 
             // Finalizar la conexión con la impresora
             $printer->close();
