@@ -14,6 +14,8 @@ use App\Models\CobroTallerCredito;
 use App\Models\CobroTallerCreditoDetalle;
 use App\Models\MovimientoCaja;
 use App\Models\Venta;
+use App\Models\VentaDetalle;
+use App\Models\VentaCreditoDetalle;
 use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Attributes\On; 
@@ -137,7 +139,8 @@ class Taller extends Component
         'idUsuario',
         'incluyeCredito',
         'incluyeVentas',
-        'idModoPago'
+        'idModoPago',
+        'chkAgrupar'
     ];
 
     public function abrirWhatsApp($numeroTelefono)
@@ -986,6 +989,13 @@ class Taller extends Component
 
                         $this->modalCobroFinalAbierta = false;
 
+                        if ($this->cobroFinal['idModoPago'] == 1)  //Solo si es EFECTIVO se imprime ticket
+                        {
+                            $this->showMainErrors = true;
+
+                            return redirect()->route('taller.print', $numOrden, true); 
+                        }
+
                         $this->dispatch('cierraCobroModal');
                         $this->dispatch('mostrarToast', 'Cobro realizado con éxito!!!');
 
@@ -1212,7 +1222,12 @@ class Taller extends Component
             $tituloCorteCaja = 'CORTE DE CAJA DEL ' .  $this->formatearFecha($this->corteCaja['fechaInicial']) . ' AL ' . $this->formatearFecha($this->corteCaja['fechaFinal']);
         }
 
-        $cajeroSeleccionado = $this->corteCaja['idUsuario'] != 0 ? true : false ;
+        $cajeroSeleccionado = $this->corteCaja['idUsuario'] != 0 ? true : false;
+
+        $movimientoCaja = MovimientoCaja::
+        whereBetween('fecha', [$fechaInicial, $fechaFinal])
+        ->where('id_tipo', 4)
+        ->first();
 
         $ventas = collect();
         if ($this->corteCaja['incluyeVentas'])
@@ -1248,7 +1263,7 @@ class Taller extends Component
                 })
                 ->orderBy('created_at')
                 ->get()
-                ->flatMap(function ($venta) {
+                ->flatMap(function ($venta) use($movimientoCaja) {
                     $resultado = collect();
                 
                     // Si no hay VentaCredito, incluir la venta
@@ -1260,14 +1275,16 @@ class Taller extends Component
                             'monto' => $venta->total,
                             'cajero' => $venta->usuario->name,
                             'tipo' => 'VENTA',
-                            'id_modo_pago' => $venta->id_modo_pago
+                            'id_modo_pago' => $venta->id_modo_pago,
+                            'inicializacion_caja' => $movimientoCaja->saldo_caja,
+                            'detalles' => $venta->detalles
                         ]);
                     }
                 
                     // Si hay VentaCredito, incluir únicamente los detalles válidos
                     if ($venta->ventaCredito) {
                         $venta->ventaCredito->ventaCreditoDetalles
-                            ->each(function ($detalle) use ($resultado, $venta) {
+                            ->each(function ($detalle) use ($resultado, $venta, $movimientoCaja) {
                                 $resultado->push([
                                     'id' => $detalle->id,
                                     'created_at' => $detalle->created_at,
@@ -1275,7 +1292,9 @@ class Taller extends Component
                                     'monto' => $detalle->abono,
                                     'cajero' => $detalle->usuario->name ?? 'N/A',
                                     'tipo' => 'ABONO_VENTA',
-                                    'id_modo_pago' => $detalle->id_modo_pago
+                                    'id_modo_pago' => $detalle->id_modo_pago,
+                                    'inicializacion_caja' => $movimientoCaja->saldo_caja,
+                                    'detalles' => $venta->ventaCredito->ventaCreditoDetalles
                                 ]);
                             });
                     }
@@ -1297,7 +1316,7 @@ class Taller extends Component
                             });
                     })
                     ->get()
-                    ->map(function($venta) {
+                    ->map(function($venta) use($movimientoCaja) {
                         return [
                             'id' => $venta->id,
                             'created_at' => $venta->created_at,
@@ -1305,9 +1324,77 @@ class Taller extends Component
                             'monto' => $venta->total,
                             'cajero' => $venta->usuario->name,
                             'tipo' => 'VENTA',
-                            'id_modo_pago' => $venta->id_modo_pago
+                            'id_modo_pago' => $venta->id_modo_pago,
+                            'inicializacion_caja' => $movimientoCaja->saldo_caja,
+                            'detalles' => $venta->detalles
                         ];
                     });
+            } 
+            
+            if ($this->corteCaja['chkAgrupar'])
+            {
+                $idsVentas = collect($ventas)->pluck('id');
+                $ventasCredito = Venta::with('ventaCredito') 
+                    ->whereIn('id', $idsVentas)
+                    ->get();
+
+                list($ventasConCredito, $ventasSinCredito) = collect($ventasCredito)->partition(function ($venta) {
+                    return $venta->ventaCredito !== null;
+                });
+
+                $idsVentasSinCredito = collect($ventasSinCredito)->pluck('id');
+
+                // Obtén los detalles desde la base de datos
+                $detalles = VentaDetalle::with('producto')
+                    ->whereIn('id_venta', $idsVentasSinCredito)
+                    ->get();            
+
+                $productosAgrupados = $detalles
+                    ->groupBy(function ($item) {
+                        // Agrupa por descripción del productoComun si existe, si no por la del producto normal
+                        if ($item->productoComun && $item->productoComun->descripcion_producto) {
+                            return $item->productoComun->descripcion_producto;
+                        }
+                        return $item->codigo_producto;
+                    })
+                    ->map(function ($items) use ($movimientoCaja) {
+                        $primerItem = $items->first();
+
+                        // Verifica si tiene relación con productoComun y si tiene descripción
+                        $descripcion = $primerItem->productoComun && $primerItem->productoComun->descripcion_producto
+                            ? $primerItem->productoComun->descripcion_producto
+                            : ($primerItem->producto->descripcion ?? '—');
+
+                        return [
+                            'cantidad' => $items->sum('cantidad'),
+                            'prod_serv' => $descripcion,
+                            'subtotal' => $items->sum('importe'),
+                            'tipo' => 'VENTA_AGRUPADA',
+                            'inicializacion_caja' => $movimientoCaja->saldo_caja
+                        ];
+                    })
+                    ->values();
+
+                if ($this->corteCaja['incluyeCredito'])
+                {
+                    $idsVentasConCredito = collect($ventasConCredito)->pluck('id');
+
+                    // Obtén los detalles desde la base de datos
+                    $detallesCredito = VentaCreditoDetalle::
+                    whereIn('id', $idsVentasConCredito)->where('abono', '>', 0)
+                    ->get();
+                        
+                    if ($detallesCredito->count() > 0) {
+                            $productosAgrupados->push([
+                                'cantidad' => $detallesCredito->count(),
+                                'prod_serv' => 'ABONO A VENTA',
+                                'subtotal' => $detallesCredito->sum('abono'),
+                                'tipo' => 'ABONOS_AGRUPADOS',
+                                'inicializacion_caja' => $movimientoCaja->saldo_caja,
+                            ]);
+                        }
+                }
+                $ventas = $productosAgrupados;
             }
         }
         // Inicializar $cobrosTaller como una colección vacía 
@@ -1333,9 +1420,9 @@ class Taller extends Component
                 }
             })
             ->get()
-            ->flatMap(function ($credito) {
+            ->flatMap(function ($credito) use ($movimientoCaja) {
                 // Transformar los detalles válidos
-                return $credito->detalles->map(function ($detalle) use ($credito) {
+                return $credito->detalles->map(function ($detalle) use ($credito, $movimientoCaja) {
                     return [
                         'id' => $detalle->num_orden,
                         'created_at' => $detalle->created_at,
@@ -1344,7 +1431,8 @@ class Taller extends Component
                         'cajero' => $detalle->usuario->name ?? "N/A",
                         'credito_id' => $credito->num_orden,
                         'tipo' => 'ABONO_TALLER',
-                        'id_modo_pago' => $detalle->id_modo_pago
+                        'id_modo_pago' => $detalle->id_modo_pago,
+                        'inicializacion_caja' => $movimientoCaja->saldo_caja
                     ];
                 });
             });
@@ -1357,12 +1445,13 @@ class Taller extends Component
             ->whereDoesntHave('credito') // Filtra los que no tienen CobroTallerCredito
             ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
             ->where('id_modo_pago', $idModoPago)
+            ->where('cobro_realizado', '>', 0)
             ->when($cajeroSeleccionado, function ($query) {
                 $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
             })
             ->orderBy('created_at')
             ->get()
-            ->map(function ($cobro) {
+            ->map(function ($cobro) use($movimientoCaja) {
                 // Transformar los registros de CobroTaller
                 return [
                     'id' => $cobro->num_orden,
@@ -1372,12 +1461,70 @@ class Taller extends Component
                     'cajero' => $cobro->usuario->name ?? "N/A",
                     'credito_id' => $cobro->num_orden,
                     'tipo' => 'TALLER',
-                    'id_modo_pago' => $cobro->id_modo_pago
+                    'id_modo_pago' => $cobro->id_modo_pago,
+                    'inicializacion_caja' => $movimientoCaja->saldo_caja
                 ];
             });
 
             // 3. Combinar los resultados
             $cobrosTaller = collect($cobrosTallerAux)->merge($cobrosTallerCredito);
+
+             if ($this->corteCaja['chkAgrupar'])
+                {
+                    $numerosOrden = collect($cobrosTaller)->pluck('id');
+
+                    $cobrosCredito = CobroTaller::with('credito') 
+                    ->whereIn('num_orden', $numerosOrden)
+                    ->get();
+
+                    list($cobrosConCredito, $cobrosSinCredito) = collect($cobrosCredito)->partition(function ($cobro) {
+                    return $cobro->credito !== null;
+                    });
+
+                    $numerosOrdenSinCredito = collect($cobrosSinCredito)->pluck('num_orden');
+
+                    $detalles = CobroTaller::
+                        whereIn('num_orden', $numerosOrdenSinCredito)
+                        ->get();
+
+                    
+                    $cobrosAgrupados = collect();
+                    if ($detalles->count() > 0)
+                    {
+                        $cobrosAgrupados = collect([[
+                            'cantidad' => $detalles->count(),
+                            'prod_serv' => 'REPARACIÓN EN TALLER',
+                            'subtotal' => $detalles->sum('cobro_realizado'),
+                            'tipo' => 'TALLER_AGRUPADO',
+                            'inicializacion_caja' => $movimientoCaja->saldo_caja
+                        ]]);
+                    }
+
+
+                    if ($this->corteCaja['incluyeCredito'])
+                    {
+                        $numerosOrdenConCredito = collect($cobrosConCredito)->pluck('num_orden');
+
+                        $detalles = CobroTallerCreditoDetalle::
+                            whereIn('num_orden', $numerosOrdenConCredito)
+                             ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                            ->where('abono', '>', 0)
+                            ->get();
+
+                        if ($detalles->count() > 0) 
+                        {
+                            $cobrosAgrupados->push([
+                                'cantidad' => $detalles->count(),
+                                'prod_serv' => 'ABONO TALLER',
+                                'subtotal' => $detalles->sum('abono'),
+                                'tipo' => 'ABONO_TALLER_AGRUPADO',
+                                'inicializacion_caja' => $movimientoCaja->saldo_caja
+                            ]);
+                        }
+                    }
+
+                    $cobrosTaller = $cobrosAgrupados;
+                }
         }
         else
         {
@@ -1393,7 +1540,7 @@ class Taller extends Component
             })
             ->orderBy('created_at')
             ->get()
-            ->map(function($cobro) {
+            ->map(function($cobro) use($movimientoCaja) {
                 return [
                     'id' => $cobro->num_orden,
                     'created_at' => $cobro->created_at,
@@ -1401,9 +1548,29 @@ class Taller extends Component
                     'monto' => $cobro->cobro_realizado,
                     'cajero' => $cobro->equipoTaller->usuario->name,
                     'tipo' => 'TALLER',
-                    'id_modo_pago' => $cobro->id_modo_pago
+                    'id_modo_pago' => $cobro->id_modo_pago,
+                    'inicializacion_caja' => $movimientoCaja->saldo_caja
                 ];
             });
+
+             if ($this->corteCaja['chkAgrupar'])
+                {
+                    $numerosOrden = collect($cobrosTaller)->pluck('id');
+
+                    $detalles = CobroTaller::
+                        whereIn('num_orden', $numerosOrden)
+                        ->get();
+
+                    $cobrosAgrupados = collect([[
+                        'cantidad' => $detalles->count(),
+                        'prod_serv' => 'REPARACIÓN EN TALLER',
+                        'subtotal' => $detalles->sum('cobro_realizado'),
+                        'tipo' => 'TALLER_AGRUPADO',
+                        'inicializacion_caja' => $movimientoCaja->saldo_caja
+                    ]]);
+
+                    $cobrosTaller = $cobrosAgrupados;
+                }
         }
 
         $ventas = collect($ventas); 
@@ -1426,7 +1593,7 @@ class Taller extends Component
         ->setOption('footer-font-name', 'Montserrat');
 
 
-        return $pdf->stream('test.pdf');
+        return $pdf->stream('corteCaja.pdf');
     }
 
     function formatearFecha($fecha) {
@@ -1471,7 +1638,8 @@ class Taller extends Component
             'idUsuario' => 0,
             'incluyeCredito' => true,
             'incluyeVentas' => true,
-            'idModoPago' => 1
+            'idModoPago' => 1,
+            'chkAgrupar' => false
         ];
 
         $this->busquedaEquipos = [
@@ -1668,7 +1836,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
 
     public function cobroEquipoTaller($numOrden)
     {
-        return redirect()->route('taller.print', $numOrden);
+        return redirect()->route('taller.print', $numOrden, false);
     }
 
     public function anteriorEstatus($numOrden, $idEstatus)

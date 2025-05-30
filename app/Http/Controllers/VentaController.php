@@ -54,30 +54,16 @@ class VentaController extends Controller
                 $ventaPrint['productos'][$i]['precio'] = $venta_detalle->importe / $venta_detalle->cantidad;
                 $ventaPrint['productos'][$i]['subtotal'] = $venta_detalle->importe;
                 $i++;
-            }
+            }   
 
-            dd($ventaPrint);
-
-            try{
-                $logo = EscposImage::load("android.png", false);
-                $printer->bitImage($logo);
-                //$printer->graphics($logo);
-            }catch(Exception $e){/*No hacemos nada si hay error*/
-                dd('error al cargar la imagen: ' . $e->getMessage());
-            }
-
-            // Título centrado
-            $titulo =        "   CIBER SOCIAL - REPARACELL   SERVICIO/REPARACIÓN DE CELULARESTABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
-
-		$printer->text($titulo . "\n");
 
              $texto0 = "Cliente: " . $ventaPrint['cliente'];
              $texto1 = "  Fecha: " . $ventaPrint['fecha'];
              $texto2 = "   Hora: " . $ventaPrint['hora'];
              $texto3 =   str_pad("Can", 4) . 
                         str_pad("Prod/Serv", 12) . 
-                        str_pad("Precio", 7) . 
-                        str_pad("Subtot", 7) . "\n";
+                        str_pad("Precio", 8) . 
+                        str_pad("Subtot", 8) . "\n";
              $texto4 = "- - - - - - - - - - - - - - - -\n";        
 
             // Imprimir los campos
@@ -95,7 +81,7 @@ class VentaController extends Controller
                     $precio_formateado = number_format($producto['precio'], 2, '.', '');
                     $subtotal_formateado = number_format($producto['subtotal'], 2, '.', '');
 
-                    $printer->text(sprintf("%3d %-12s %7s %8s\n",
+                    $printer->text(sprintf("%3d %-12s %6s %8s\n",
                         $producto['cantidad'],
                         substr($producto['nombre'], 0, 11), // Limita el nombre a 12 caracteres
                         $precio_formateado,

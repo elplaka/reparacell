@@ -47,16 +47,22 @@
                 @endrole
 
                 <div class="mb-3 row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="chkCobrosTaller" class="form-label">
                             <input type="checkbox" id="chkCobrosTaller" wire:model="corteCaja.incluyeVentas" checked>
                             Incluir Ventas
                         </label>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="chkAbonos" class="form-label">
                             <input type="checkbox" id="chkAbonos" wire:model="corteCaja.incluyeCredito" checked>
                             Incluir Abonos
+                        </label>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="chkAgrupar" class="form-label">
+                            <input type="checkbox" id="chkAgrupar" wire:model="corteCaja.chkAgrupar" checked>
+                            Agrupar
                         </label>
                     </div>
                 </div>

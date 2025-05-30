@@ -45,7 +45,7 @@ class EquipoTallerController extends Controller
         return redirect()->route('taller.print-final', $numOrden);
     }
 
-    public function print($numOrden)
+    public function print($numOrden, $abrirCaja = null)
     {
         // $printer_name = "usb://LAP-HP/Ticket";
         // $printer_name = "usb://LAP-HP/POS-58 11.3.0.1 ";
@@ -87,10 +87,30 @@ class EquipoTallerController extends Controller
                 $this->cobro['fallasEquipo'][$i++] = $falla->falla;
             }
 
-            // Título centrado
-            $titulo = "           REPARACELL\n";
+                       $imagePath = public_path('images/android.png');
 
-            $printer->text($titulo . "\n");
+            try {
+                $logo = EscposImage::load($imagePath, false); // This is the line that errors
+
+            } catch (\Exception $e) {
+                dd('Error al cargar la imagen: ' . $e->getMessage() . '. Ruta intentada: ' . $imagePath);
+            }
+                
+
+            try {
+                //$printer->bitImage($logo); 
+            $printer->text("\n\n"); // Espacio antes de la imagen
+            $printer->bitImage($logo);
+            $printer->text("\n\n"); // Espacio después de la imagen
+            } catch (\Exception $e) {
+            dd('Error al enviar la imagen a la impresora (graphics()): ' . $e->getMessage() . '. Verifique la imagen y las capacidades de la impresora.');
+            }
+				
+
+            // Título centrado
+            $titulo =        "   CIBER SOCIAL - REPARACELL    SERVICIO/REPARACIÓN DE CELULARESTABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
+
+		    $printer->text($titulo . "\n");
 
             // Resto del contenido
             $texto0 = "Cliente: " . $this->cobro['cliente'];
@@ -130,12 +150,16 @@ class EquipoTallerController extends Controller
 
             // Cortar el papel (si es una impresora térmica)
             $printer->cut();
-            // $printer->pulse();
+            
+            if ($abrirCaja)
+            { 
+                $printer->pulse();
+            }
 
             // Finalizar la conexión con la impresora
             $printer->close();
 
-            echo "Impresión exitosa.";
+            //echo "Impresión exitosa.";
 
             // return redirect()->back();
             return redirect()->back()->with('success', '¡Operación exitosa!');
@@ -228,10 +252,10 @@ class EquipoTallerController extends Controller
             // Finalizar la conexión con la impresora
             $printer->close();
 
-            echo "Impresión exitosa.";
+            //echo "Impresión exitosa.";
 
             // return redirect()->back();
-            return redirect()->back()->with('success', '¡Operación exitosa!');
+            return redirect()->back()->with('success', 'Operación exitosa...');
         }
         catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
