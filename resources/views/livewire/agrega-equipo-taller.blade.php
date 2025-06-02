@@ -30,6 +30,16 @@
             </div>
         </div>
     </div>
+    @if(!$muestraDivAgregaEquipo)    
+    <div class="d-flex justify-content-center">
+        <span wire:loading class="ml-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Cargando...</span>
+        </span>
+    </div>
+    @endif
+    <div id="divPrincipal" name="divPrincipal" style="display: @if(!$muestraDivAgregaEquipo) none @endif">
+    <div wire:ignore.self class="collapse" id="collapseAgregaEquipoTaller">
     @if ($showMainErrors)
         @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" wire:ignore>
@@ -52,16 +62,6 @@
         </div>
         @endif
     @endif
-    @if(!$muestraDivAgregaEquipo)
-    <div class="d-flex justify-content-center">
-        <span wire:loading class="ml-2">
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <span>Cargando...</span>
-        </span>
-    </div>
-    @endif
-    <div id="divPrincipal" name="divPrincipal" style="display: @if(!$muestraDivAgregaEquipo) none @endif">
-    <div wire:ignore.self class="collapse" id="collapseAgregaEquipoTaller">
     <div class="modal-header">
         <span>
             @if ($equipoTaller['estatus'] == 1)

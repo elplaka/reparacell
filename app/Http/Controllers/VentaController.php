@@ -119,7 +119,7 @@ class VentaController extends Controller
             // Finalizar la conexión con la impresora
             $printer->close();
 
-            echo "Impresión exitosa.";
+            //echo "Impresión exitosa.";
 
             // return redirect()->back();
             return redirect()->back()->with('success', '¡Operación exitosa!');

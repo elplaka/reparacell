@@ -8,12 +8,11 @@ use Illuminate\Http\Request;
 use App\Models\FallaEquipoTaller;
 use App\Models\CobroEstimadoTaller;
 use App\Models\CobroTaller;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-use Mike42\Escpos\CapabilityProfile;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class EquipoTallerController extends Controller
 {
