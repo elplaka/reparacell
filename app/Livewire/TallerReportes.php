@@ -13,6 +13,8 @@ use App\Models\FallaEquipo;
 use App\Models\ModoPago;
 use App\Models\CobroTaller;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+
 
 class TallerReportes extends Component
 {
@@ -31,6 +33,11 @@ class TallerReportes extends Component
     public $clientesSeleccionados = [];
     public $clientesDiv, $nombreCliente;
     public $chkFechaSalida;
+    public $chkAgrupar;
+    public $verGrafico;
+    public $labels = [];
+    public $valores = [];
+    public $equiposTaller;
 
     public $busquedaEquipos =
     [
@@ -196,67 +203,199 @@ class TallerReportes extends Component
         $this->busquedaEquipos['idModelos'] = $this->modelosSeleccionados;
     }
 
+    public function abreTallerGrafico()
+    {
+        // return redirect()->route('taller.graficos', ['equiposTaller' => 'equipos_taller']);
+        $this->verGrafico = true;
+    }
+
+    public function updatedChkAgrupar()
+    {
+        if (!$this->chkAgrupar)
+        {
+            if ($this->verGrafico)
+            {
+                $this->verGrafico = false;
+            }
+        }
+    }
+
     public function render()
     {
-        $equipos_taller = EquipoTaller::query();
+        //$equipos_taller = EquipoTaller::query()->with('equipo');
 
-        if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin']))
-        {
+        // if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin']))
+        // {
+        //     $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaInicio']));
+        //     $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaFin']));
+
+        //     if ($fechaInicio == $fechaFin)
+        //     {
+        //         $equipos_taller->whereDate('fecha_entrada', '=', $fechaInicio);
+        //     }
+        //     else
+        //     {
+        //         $equipos_taller->whereDate('fecha_entrada', '>=', $fechaInicio)
+        //                     ->whereDate('fecha_entrada', '<=', $fechaFin);
+        //     }
+        // }
+
+        // if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
+        // {
+        //     $equipos_taller->whereHas('equipo', function ($query) {
+        //         $query->whereIn('id_tipo', $this->busquedaEquipos['idTipos']);
+        //     });
+        // }
+
+        // if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
+        // {
+        //     if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
+        //     {
+        //         $equipos_taller->whereHas('equipo.marca', function ($query) {
+        //             $query->whereIn('id', $this->busquedaEquipos['idMarcas'])->whereIn('id_tipo', $this->busquedaEquipos['idTipos']);
+        //         });
+        //     }
+        //     else
+        //     {
+        //         $equipos_taller->whereHas('equipo.marca', function ($query) {
+        //         $query->whereIn('id', $this->busquedaEquipos['idMarcas']);
+        //     });
+        //     }
+        // }
+
+        // if (isset($this->busquedaEquipos['idModelos']) && $this->busquedaEquipos['idModelos'] != [])
+        // {
+        //     if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
+        //     {
+        //         $equipos_taller->whereHas('equipo.modelo', function ($query) {
+        //             $query->whereIn('id', $this->busquedaEquipos['idModelos'])->whereIn('id_marca', $this->busquedaEquipos['idMarcas']);
+        //         });
+        //     }
+        //     else
+        //     {
+        //         $equipos_taller->whereHas('equipo.modelo', function ($query) {
+        //         $query->whereIn('id', $this->busquedaEquipos['idModelos']);
+        //     });
+            
+        //     }
+        // }
+
+        // if (isset($this->busquedaEquipos['idFallas']) && $this->busquedaEquipos['idFallas'] != [])
+        // {
+        //     if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
+        //     {
+        //         $equipos_taller->whereHas('fallas.falla', function ($query) {
+        //             $query->whereIn('id', $this->busquedaEquipos['idFallas'])->whereIn('id_tipo_equipo', $this->busquedaEquipos['idTipos']);
+        //         });
+        //     }
+        //     else
+        //     {
+        //         $equipos_taller->whereHas('fallas.falla', function ($query) {
+        //         $query->whereIn('id', $this->busquedaEquipos['idFallas']);
+        //     });
+        //     }
+        // }
+
+        // if (isset($this->busquedaEquipos['idClientes']) && $this->busquedaEquipos['idClientes'] != [])
+        // {
+        //     $equipos_taller->whereHas('equipo.cliente', function ($query) {
+        //         $query->whereIn('id', $this->busquedaEquipos['idClientes']);
+        //     });
+        // }
+
+        // if ($this->chkFechaSalida)
+        // {
+        //     if (isset($this->busquedaEquipos['fechaSalidaInicio']) && isset($this->busquedaEquipos['fechaSalidaFin']))
+        //     {
+        //         $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaInicio']));
+        //         $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaFin']));
+
+        //         if ($fechaInicio == $fechaFin)
+        //         {
+        //             $equipos_taller->whereDate('fecha_salida', '=', $fechaInicio);
+        //         }
+        //         else
+        //         {
+        //             $equipos_taller->whereDate('fecha_salida', '>=', $fechaInicio)
+        //                         ->whereDate('fecha_salida', '<=', $fechaFin);
+        //         }
+        //     }
+        // }
+
+        // $equipos_taller = $equipos_taller->orderBy('equipo.id_modelo', 'asc')->paginate(10);
+
+        $equipos_taller = EquipoTaller::query()
+        ->with(['equipo', 'equipo.marca', 'equipo.modelo', 'equipo.cliente', 'fallas']) // carga relaciones que usas
+        ->join('equipos', 'equipos.id', '=', 'equipos_taller.id_equipo')
+        ->join('modelos_equipos', 'modelos_equipos.id', '=', 'equipos.id_modelo');
+
+        if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin'])) {
             $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaInicio']));
             $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaFin']));
 
-            if ($fechaInicio == $fechaFin)
-            {
-                $equipos_taller->whereDate('fecha_entrada', '=', $fechaInicio);
-            }
-            else
-            {
-                $equipos_taller->whereDate('fecha_entrada', '>=', $fechaInicio)
-                            ->whereDate('fecha_entrada', '<=', $fechaFin);
+            if ($fechaInicio == $fechaFin) {
+                $equipos_taller->whereDate('equipos_taller.fecha_entrada', '=', $fechaInicio);
+            } else {
+                $equipos_taller->whereDate('equipos_taller.fecha_entrada', '>=', $fechaInicio)
+                            ->whereDate('equipos_taller.fecha_entrada', '<=', $fechaFin);
             }
         }
 
-        if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
-        {
-            $equipos_taller->whereHas('equipo', function ($query) {
-                $query->whereIn('id_tipo', $this->busquedaEquipos['idTipos']);
-            });
+        // Si buscas por tipos, filtro directo sobre 'equipos.id_tipo'
+        if (isset($this->busquedaEquipos['idTipos']) && !empty($this->busquedaEquipos['idTipos'])) {
+            $equipos_taller->whereIn('equipos.id_tipo', $this->busquedaEquipos['idTipos']);
         }
 
-        if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
+        // Si buscas por marcas, haces join con marcas y filtras
+        if (isset($this->busquedaEquipos['idMarcas']) && !empty($this->busquedaEquipos['idMarcas'])) {
+            // Si no has hecho el join con marcas, hazlo aquí
+            $equipos_taller->join('marcas_equipos', 'marcas_equipos.id', '=', 'equipos.id_marca');
+
+            if (isset($this->busquedaEquipos['idTipos']) && !empty($this->busquedaEquipos['idTipos'])) {
+                // Filtra marcas y también tipos (ya está el join a equipos)
+                $equipos_taller->whereIn('marcas_equipos.id', $this->busquedaEquipos['idMarcas'])
+                            ->whereIn('equipos.id_tipo', $this->busquedaEquipos['idTipos']);
+            } else {
+                $equipos_taller->whereIn('marcas_equipos.id', $this->busquedaEquipos['idMarcas']);
+            }
+        }
+
+        if ($this->verGrafico)
+        { 
+            unset($this->busquedaEquipos['idModelos']);
+            // if (isset($this->busquedaEquipos['idModelos']) && !empty($this->busquedaEquipos['idModelos'])) {
+            //     // Añadimos join con modelos para poder filtrar directamente
+            //     $equipos_taller->join('modelos_equipos', 'modelos_equipos.id', '=', 'equipos.id_modelo');
+
+            //     if (isset($this->busquedaEquipos['idMarcas']) && !empty($this->busquedaEquipos['idMarcas'])) {
+            //         $equipos_taller->whereIn('modelos_equipos.id', $this->busquedaEquipos['idModelos'])
+            //                     ->whereIn('modelos_equipos.id_marca', $this->busquedaEquipos['idMarcas']);
+            //     } else {
+            //         $equipos_taller->whereIn('modelos_equipos.id', $this->busquedaEquipos['idModelos']);
+            //     }
+            // }
+        }
+        else
         {
-            if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
+            if (isset($this->busquedaEquipos['idModelos']) && $this->busquedaEquipos['idModelos'] != [])
             {
-                $equipos_taller->whereHas('equipo.marca', function ($query) {
-                    $query->whereIn('id', $this->busquedaEquipos['idMarcas'])->whereIn('id_tipo', $this->busquedaEquipos['idTipos']);
+                if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
+                {
+                    $equipos_taller->whereHas('equipo.modelo', function ($query) {
+                        $query->whereIn('id', $this->busquedaEquipos['idModelos'])->whereIn('id_marca', $this->busquedaEquipos['idMarcas']);
+                    });
+                }
+                else
+                {
+                    $equipos_taller->whereHas('equipo.modelo', function ($query) {
+                    $query->whereIn('id', $this->busquedaEquipos['idModelos']);
                 });
-            }
-            else
-            {
-                $equipos_taller->whereHas('equipo.marca', function ($query) {
-                $query->whereIn('id', $this->busquedaEquipos['idMarcas']);
-            });
+                
+                }
             }
         }
 
-        if (isset($this->busquedaEquipos['idModelos']) && $this->busquedaEquipos['idModelos'] != [])
-        {
-            if (isset($this->busquedaEquipos['idMarcas']) && $this->busquedaEquipos['idMarcas'] != [])
-            {
-                $equipos_taller->whereHas('equipo.modelo', function ($query) {
-                    $query->whereIn('id', $this->busquedaEquipos['idModelos'])->whereIn('id_marca', $this->busquedaEquipos['idMarcas']);
-                });
-            }
-            else
-            {
-                $equipos_taller->whereHas('equipo.modelo', function ($query) {
-                $query->whereIn('id', $this->busquedaEquipos['idModelos']);
-            });
-            
-            }
-        }
-
-        if (isset($this->busquedaEquipos['idFallas']) && $this->busquedaEquipos['idFallas'] != [])
+         if (isset($this->busquedaEquipos['idFallas']) && $this->busquedaEquipos['idFallas'] != [])
         {
             if (isset($this->busquedaEquipos['idTipos']) && $this->busquedaEquipos['idTipos'] != [])
             {
@@ -272,37 +411,64 @@ class TallerReportes extends Component
             }
         }
 
-        if (isset($this->busquedaEquipos['idClientes']) && $this->busquedaEquipos['idClientes'] != [])
-        {
-            $equipos_taller->whereHas('equipo.cliente', function ($query) {
-                $query->whereIn('id', $this->busquedaEquipos['idClientes']);
-            });
+        if (isset($this->busquedaEquipos['idClientes']) && !empty($this->busquedaEquipos['idClientes'])) {
+            $equipos_taller->join('clientes', 'clientes.id', '=', 'equipos.id_cliente')
+                        ->whereIn('clientes.id', $this->busquedaEquipos['idClientes']);
         }
 
-        if ($this->chkFechaSalida)
-        {
-            if (isset($this->busquedaEquipos['fechaSalidaInicio']) && isset($this->busquedaEquipos['fechaSalidaFin']))
-            {
+        if ($this->chkFechaSalida) {
+            if (isset($this->busquedaEquipos['fechaSalidaInicio']) && isset($this->busquedaEquipos['fechaSalidaFin'])) {
                 $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaInicio']));
                 $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaSalidaFin']));
 
-                if ($fechaInicio == $fechaFin)
-                {
+                if ($fechaInicio == $fechaFin) {
                     $equipos_taller->whereDate('fecha_salida', '=', $fechaInicio);
-                }
-                else
-                {
+                } else {
                     $equipos_taller->whereDate('fecha_salida', '>=', $fechaInicio)
                                 ->whereDate('fecha_salida', '<=', $fechaFin);
                 }
             }
         }
 
-        // $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
+        if ($this->chkAgrupar)
+        { 
+            $equipos_taller = $equipos_taller
+            ->select('equipos_taller.*', 'modelos_equipos.nombre as nombre_modelo')
+            ->orderBy('modelos_equipos.nombre', 'asc');
 
-        $equipos_taller = $equipos_taller->whereHas('equipo.tipo_equipo', function ($query) {
-            $query->where('disponible', 1);
-        })->orderBy('fecha_entrada', 'asc')->paginate(10);        
+            // Ejecutas la consulta filtrada
+            $equiposFiltrados = $equipos_taller->get();
+
+            // Agrupas y cuentas por nombre del modelo en PHP
+            $equiposTaller = $equiposFiltrados->groupBy('nombre_modelo')->map(function ($items, $modelo) {
+                return count($items);
+            });
+                      
+            $equipos_taller = $equipos_taller
+            ->paginate(10);
+        }
+        else
+        {
+            $equiposTaller = $equipos_taller;
+
+            $equiposFiltrados = $equipos_taller->get();
+
+            // Agrupas y cuentas por nombre del modelo en PHP
+            $equiposTaller = $equiposFiltrados->groupBy('nombre_modelo')->map(function ($items, $modelo) {
+                return count($items);
+            });
+            
+
+            $equipos_taller = $equipos_taller->paginate(10);
+        }
+
+        $this->labels = $equiposTaller->keys()->toArray();     
+        $this->valores = $equiposTaller->values()->toArray(); 
+
+        if ($this->verGrafico)
+        {
+            $this->dispatch('renderChart', labels: $this->labels, valores: $this->valores);
+        }
 
         $estatus_equipos = EstatusEquipo::all();
         $tipos_equipos = TipoEquipo::where('disponible', 1)->get();
@@ -446,6 +612,22 @@ class TallerReportes extends Component
         $this->fallasDiv = FallaEquipo::whereIn('id', $this->fallasSeleccionadas)->orderBy('descripcion', 'asc')->orderBy('id_tipo_equipo', 'asc')->get();
     }
 
+    public function muestraGrafico()
+    {
+        $this->verGrafico = true;
+
+        // dd($this->equiposTaller);
+
+
+        $this->dispatch('renderChart', labels: $this->labels, valores: $this->valores);
+
+    }
+
+    public function muestraTabla()
+    {
+        $this->verGrafico = false;
+    }
+
     public function mount()
     {
         $this->busquedaEquipos = [
@@ -477,8 +659,15 @@ class TallerReportes extends Component
         $this->nombreCliente = '';
 
         $this->chkFechaSalida = false;
+        $this->chkAgrupar = false;
         
         $this->modosPago = ModoPago::where('id', '>', 0)->get();
+
+        $this->verGrafico = false;
+
+        // $this->labels = ['Enero', 'Febrero', 'Marzo'];
+        // $this->valores = [100, 200, 150];
+
     }
 
     public function obtenerIconoSegunEstatus($id_estatus)

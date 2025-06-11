@@ -338,6 +338,7 @@ input[type="date"]:hover {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
 <script>
         window.addEventListener('contentChanged', function () {

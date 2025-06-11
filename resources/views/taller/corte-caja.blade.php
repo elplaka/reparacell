@@ -104,15 +104,27 @@
                 $total = 0;
                 $totalTaller = 0;
                 $totalVentas = 0;
+                $totalEntradasManuales = 0;
+                $totalSalidasManuales = 0;
                 $numTaller = 0;
                 $numVentas = 0;
+                $numEntradasManuales = 0;
+                $numSalidasManuales = 0;
                 $inicializacionCaja = 0;
             @endphp
             <tbody>
                 @foreach ($registros as $registro)
-                @php
-                    $inicializacionCaja = $registro->inicializacion_caja;
-                @endphp
+                @if ($registro->tipo == 'INICIALIZACION')
+                    @if ($corteCaja['chkAgrupar'])
+                        @php
+                            $inicializacionCaja = $registro->subtotal;
+                        @endphp
+                    @else
+                        @php
+                            $inicializacionCaja = $registro->monto;
+                        @endphp
+                    @endif
+                @else
                 <tr>
                     @if ($corteCaja['chkAgrupar'])
                         <td style="text-align: center;"> {{  $registro->cantidad }} </td>
@@ -123,6 +135,16 @@
                         {
                             $totalTaller += $registro->subtotal;
                             $numTaller++;
+                        }
+                        else if($registro->tipo == 'ENTRADA_MANUAL_AGRUPADO')
+                        {
+                            $totalEntradasManuales += $registro->subtotal;
+                            $numEntradasManuales++;
+                        }
+                        else if($registro->tipo == 'SALIDA_MANUAL_AGRUPADO')
+                        {
+                            $totalSalidasManuales += $registro->subtotal;
+                            $numSalidasManuales++;
                         }
                         else 
                         {
@@ -139,6 +161,10 @@
                             {{'TA' . $registro->id }}
                         @elseif($registro->tipo == "VENTA")
                             {{'V' . $registro->id }}
+                        @elseif($registro->tipo == "ENTRADA_MANUAL")
+                            {{'ENT' }}
+                        @elseif($registro->tipo == "SALIDA_MANUAL")
+                            {{'SAL' }}
                         @else
                             {{'VA' . $registro->id }}
                         @endif
@@ -152,6 +178,10 @@
                         ABONO DE TALLER
                      @elseif ($registro->tipo == "ABONO_VENTA")
                         ABONO DE VENTA
+                    @elseif ($registro->tipo == "ENTRADA_MANUAL")
+                        ENTRADA MANUAL
+                    @elseif ($registro->tipo == "SALIDA_MANUAL")
+                        SALIDA MANUAL
                      @else
                         @foreach ($registro->detalles as $detalle)
                                 {{ $detalle->cantidad }}
@@ -184,6 +214,16 @@
                             $totalTaller += $registro->monto;
                             $numTaller++;
                         }
+                        else if ($registro->tipo == 'ENTRADA_MANUAL')
+                        {
+                            $totalEntradasManuales += $registro->monto;
+                            $numEntradasManuales++;
+                        }
+                        else if ($registro->tipo == 'SALIDA_MANUAL')
+                        {
+                            $totalSalidasManuales += $registro->monto;
+                            $numSalidasManuales++;
+                        }
                         else 
                         {
                             $totalVentas += $registro->monto;
@@ -192,12 +232,13 @@
                     @endphp
                     @endif
                 </tr>
+                @endif
                 @endforeach
             </tbody>
         </table>
         <br>
         @php
-            $total += $totalTaller + $totalVentas + $inicializacionCaja;
+            $total += $totalTaller + $totalVentas + $inicializacionCaja + $totalEntradasManuales + $totalSalidasManuales;
         @endphp
         <table style="page-break-inside: avoid; width: 50%; margin-left: auto; margin-right: 0; border-collapse: collapse; border: none; border-spacing: 0;">
             <tr>
@@ -232,6 +273,46 @@
                     <strong>$ {{ number_format($inicializacionCaja, 2, '.', ',') }}</strong>
                 </td>
             </tr>
+             @if ($numEntradasManuales > 0)
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>
+                        @if ($numEntradasManuales == 1)
+                            @if (!$corteCaja['chkAgrupar'])
+                            &nbsp; ENTRADA MANUAL :
+                            @else
+                            &nbsp; ENTRADAS MANUALES :    
+                            @endif
+                        @else
+                            &nbsp; ENTRADAS MANUALES [ {{ $numEntradasManuales }} ] :
+                        @endif
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalEntradasManuales, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @endif
+             @if ($numSalidasManuales > 0)
+            <tr>
+                <td style="width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>
+                        @if ($numSalidasManuales == 1)
+                            @if (!$corteCaja['chkAgrupar'])
+                            &nbsp; SALIDA MANUAL :
+                            @else
+                            &nbsp; SALIDAS MANUALES :    
+                            @endif
+                        @else
+                            &nbsp; SALIDAS MANUALES [ {{ $numSalidasManuales }} ] :
+                        @endif
+                    </strong>
+                </td>
+                <td style="font-size:12pt; text-align: right; padding: 2px; width: 1%; white-space: nowrap; border: none; vertical-align: middle; line-height: 1;">
+                    <strong>$ {{ number_format($totalSalidasManuales, 2, '.', ',') }}</strong>
+                </td>
+            </tr>
+            @endif
             <tr>
                 <td style="font-size:12pt; width: 4%; text-align: right; padding: 2px; border: none; vertical-align: middle; line-height: 1;">
                     <strong>TOTAL :</strong>

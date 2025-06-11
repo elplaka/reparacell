@@ -73,7 +73,9 @@ Route::middleware(['auth'])
     Route::get('/taller/corte', [Taller::class, 'generaCorteCajaPDF'])->name('corte-caja');
     Route::get('/taller/creditos', [EquipoTallerController::class, 'creditos'])->name('taller.creditos');
     Route::get('/reparaciones/reportes', [EquipoTallerController::class, 'reportesReparaciones'])->name('reparaciones.reportes');
+    Route::get('/taller/graficos', [EquipoTallerController::class, 'reportesGraficos'])->name('taller.graficos');
 
+    
     Route::get('/caja/index', [CajaController::class, 'index'])->name('caja.index');
     Route::get('/caja/corte', [Caja::class, 'generaCorteCajaPDF'])->name('corte-caja');
     Route::get('/caja/movimientos', [CajaController::class, 'movimientos'])->name('caja.movimientos');

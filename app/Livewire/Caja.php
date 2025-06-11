@@ -165,6 +165,16 @@ class Caja extends Component
         ->where('id_tipo', 4)
         ->first();
 
+        $entradasManuales = MovimientoCaja::
+        whereBetween('fecha', [$fechaInicial, $fechaFinal])
+        ->where('id_tipo', 5)
+        ->get();
+
+        $salidasManuales = MovimientoCaja::
+        whereBetween('fecha', [$fechaInicial, $fechaFinal])
+        ->where('id_tipo', 6)
+        ->get();
+
         if ($this->corteCaja['chkAbonos'])   //Si se quieren ver los ABONOS
         {
             $ventas = Venta::with([
@@ -209,7 +219,6 @@ class Caja extends Component
                         'cajero' => $venta->usuario->name,
                         'tipo' => 'VENTA',
                         'id_modo_pago' => $venta->id_modo_pago,
-                        'inicializacion_caja' => $movimientoCaja->saldo_caja,
                         'detalles' => $venta->detalles
                     ]);
                 }
@@ -226,7 +235,6 @@ class Caja extends Component
                                 'cajero' => $detalle->usuario->name ?? 'N/A',
                                 'tipo' => 'ABONO_VENTA',
                                 'id_modo_pago' => $detalle->id_modo_pago,
-                                'inicializacion_caja' => $movimientoCaja->saldo_caja,
                                 'detalles' => $venta->ventaCredito->ventaCreditoDetalles
                             ]);
                         });
@@ -259,7 +267,6 @@ class Caja extends Component
                     'cajero' => $venta->usuario->name,
                     'tipo' => 'VENTA',
                     'id_modo_pago' => $venta->id_modo_pago,
-                    'inicializacion_caja' => $movimientoCaja->saldo_caja,
                     'detalles' => $venta->detalles
                 ];
             });
@@ -304,7 +311,6 @@ class Caja extends Component
                         'prod_serv' => $descripcion,
                         'subtotal' => $items->sum('importe'),
                         'tipo' => 'VENTA_AGRUPADA',
-                        'inicializacion_caja' => $movimientoCaja->saldo_caja
                     ];
                 })
                 ->values();
@@ -324,7 +330,6 @@ class Caja extends Component
                             'prod_serv' => 'ABONO A VENTA',
                             'subtotal' => $detallesCredito->sum('abono'),
                             'tipo' => 'ABONOS_AGRUPADOS',
-                            'inicializacion_caja' => $movimientoCaja->saldo_caja,
                         ]);
                     }
             }
@@ -368,7 +373,6 @@ class Caja extends Component
                             'credito_id' => $credito->num_orden,
                             'tipo' => 'ABONO_TALLER',
                             'id_modo_pago' => $detalle->id_modo_pago,
-                            'inicializacion_caja' => $movimientoCaja->saldo_caja,
                         ];
                     });
                 });
@@ -397,13 +401,10 @@ class Caja extends Component
                         'cajero' => $cobro->usuario->name ?? "N/A",
                         'tipo' => 'TALLER',
                         'id_modo_pago' => $cobro->id_modo_pago,
-                        'inicializacion_caja' => $movimientoCaja->saldo_caja
                     ];
                 });
 
-                //dd($cobrosTaller);
-
-              $cobrosTallerAux = collect($cobrosTallerAux->all()); 
+                $cobrosTallerAux = collect($cobrosTallerAux->all()); 
 
                  // 3. Combinar los resultados
                 $cobrosTaller = $cobrosTallerAux->merge($cobrosTallerCredito);
@@ -431,14 +432,12 @@ class Caja extends Component
                         'cajero' => $cobro->equipoTaller->usuario->name,
                         'tipo' => 'TALLER',
                         'id_modo_pago' => $cobro->id_modo_pago,
-                        'inicializacion_caja' => $movimientoCaja->saldo_caja
                     ];
                 });                
             }
 
             if ($this->corteCaja['chkAgrupar'])
-                {
-                    
+                {                    
                     $numerosOrden = collect($cobrosTaller)->pluck('id');
 
                     $cobrosCredito = CobroTaller::with('credito') 
@@ -454,7 +453,6 @@ class Caja extends Component
                     $detalles = CobroTaller::
                         whereIn('num_orden', $numerosOrdenSinCredito)
                         ->get();
-
                     
                     $cobrosAgrupados = collect();
                     if ($detalles->count() > 0)
@@ -464,10 +462,8 @@ class Caja extends Component
                             'prod_serv' => 'REPARACIÓN EN TALLER',
                             'subtotal' => $detalles->sum('cobro_realizado'),
                             'tipo' => 'TALLER_AGRUPADO',
-                            'inicializacion_caja' => $movimientoCaja->saldo_caja
                         ]]);
                     }
-
 
                     if ($this->corteCaja['chkAbonos'])
                     {
@@ -486,7 +482,6 @@ class Caja extends Component
                                 'prod_serv' => 'ABONO TALLER',
                                 'subtotal' => $detalles->sum('abono'),
                                 'tipo' => 'ABONO_TALLER_AGRUPADO',
-                                'inicializacion_caja' => $movimientoCaja->saldo_caja
                             ]);
                         }
                     }
@@ -499,10 +494,79 @@ class Caja extends Component
 
         // Unión de ambas colecciones
         $registros = $ventas->merge($cobrosTaller);
-
+        if ($this->corteCaja['idModoPago'] == 1)
+        {
+            if ($this->corteCaja['chkAgrupar'])
+            {
+                $registros->push([
+                    'cantidad' => 1,
+                    'prod_serv' => 'INICIALIZACION',
+                    'subtotal' => $movimientoCaja->saldo_caja,
+                    'tipo' => 'INICIALIZACION',
+                ]);
+                $registros->push([
+                    'cantidad' => $entradasManuales->count(),
+                    'prod_serv' => 'ENTRADA MANUAL',
+                    'subtotal' => $entradasManuales->sum('monto'),
+                    'tipo' => 'ENTRADA_MANUAL_AGRUPADO',
+                ]);
+                $registros->push([
+                    'cantidad' => $salidasManuales->count(),
+                    'prod_serv' => 'SALIDA MANUAL',
+                    'subtotal' => $salidasManuales->sum('monto'),
+                    'tipo' => 'SALIDA_MANUAL_AGRUPADO',
+                ]);
+            }
+            else
+            {
+                $registros->push([
+                    'id' => $movimientoCaja->referencia,
+                    'created_at' => $movimientoCaja->fecha,
+                    'nombre_cliente' => '-',
+                    'monto' => $movimientoCaja->saldo_caja,
+                    'cajero' => $movimientoCaja->usuario->name,
+                    'tipo' => 'INICIALIZACION',
+                    'id_modo_pago' => 1,
+                    'detalles' => null
+                ]);
+                if ($entradasManuales)
+                { 
+                    foreach($entradasManuales as $entrada)
+                    { 
+                        $registros->push([
+                            'id' => $entrada->referencia,
+                            'created_at' => $entrada->fecha,
+                            'nombre_cliente' => '-',
+                            'monto' => $entrada->monto,
+                            'cajero' => $entrada->usuario->name,
+                            'tipo' => 'ENTRADA_MANUAL',
+                            'id_modo_pago' => 1,
+                            'detalles' => null
+                        ]);
+                    }
+                }
+                if ($salidasManuales)
+                { 
+                    foreach($salidasManuales as $salida)
+                    { 
+                        $registros->push([
+                            'id' => $salida->referencia,
+                            'created_at' => $salida->fecha,
+                            'nombre_cliente' => '-',
+                            'monto' => $salida->monto,
+                            'cajero' => $salida->usuario->name,
+                            'tipo' => 'SALIDA_MANUAL',
+                            'id_modo_pago' => 1,
+                            'detalles' => null
+                        ]);
+                    }
+                }
+            }
+        }
         // Conversión de resultado a colección de objetos
         $registros = $registros->map(function($item) { return (object) $item; });
 
+        //dd($registros);
 
         $pdf = SnappyPdf::loadView('livewire.corte-caja', ['corteCaja' => $this->corteCaja, 'registros' => $registros])
         ->setOption('page-size', 'Letter')

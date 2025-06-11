@@ -4,7 +4,7 @@
     $hayInexistentes = false;
 @endphp
 
-<div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
+<div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased ">
     @include('livewire.taller.modal-param-marcas')
     @include('livewire.taller.modal-param-modelos')
     @include('livewire.taller.modal-param-fallas')
@@ -36,6 +36,23 @@
         </div>
     </div>
 
+<div
+    wire:loading
+    class="fixed top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center"
+    style="top: 0; left: 0; position: fixed;
+    width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.7);
+        z-index: 9999;">
+    <div class="flex flex-col items-center">
+        <svg class="animate-spin w-12 h-12 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span class="mt-3 text-lg font-medium text-gray-600">Procesando...</span>
+    </div>
+</div>
+
     <div class="w-100">     
         <!-- Encabezados visibles solo en pantallas medianas y grandes -->
         <div class="row mb-2 d-none d-md-flex">
@@ -48,9 +65,11 @@
             <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
                 <b>Marca(s)</b>
             </div>
+             @if (!$verGrafico)
             <div class="col-md-3 text-xs leading-4 font-bold text-gray-700 tracking-wider" style="font-size: 11pt;">
                 <b>Modelo(s)</b>
             </div>
+            @endif
         </div>
     
         <!-- Fila de campos -->
@@ -101,23 +120,25 @@
             @endif
     
             <!-- Modelo(s) -->
-            @if($modelosDiv)
-            <div class="col-12 col-md-3 mb-4" data-toggle="modal" data-target="#paramModelosModal" wire:click="abreParamModelosModal">
-                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
-                <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
-                    @foreach($modelosDiv as $modelo)
-                    <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->nombre }}  &nbsp; [ {{ $modelo->marca->nombre }} ]
-                    <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
-                    @endforeach
+            @if (!$verGrafico)
+                @if($modelosDiv)
+                <div class="col-12 col-md-3 mb-4" data-toggle="modal" data-target="#paramModelosModal" wire:click="abreParamModelosModal">
+                    <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
+                    <div class="d-flex flex-wrap text-xs leading-4 font-bold text-gray-700 tracking-wider w-100 hover-bg" style="border: 1px solid rgb(93, 90, 90); font-size: 11pt; cursor: pointer;">
+                        @foreach($modelosDiv as $modelo)
+                        <span class="badge badge-secondary m-1" onclick="event.stopPropagation();" style="height:1.5em; font-weight:normal; font-size: 10pt">{!! $modelo->marca->tipoEquipo->icono !!} &nbsp; {{ $modelo->nombre }}  &nbsp; [ {{ $modelo->marca->nombre }} ]
+                        <a href="#" wire:click.prevent="eliminarModelo({{ $modelo->id }})" onclick="event.stopPropagation();" style="text-decoration: none;">×</a></span>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-            @else
-            <div class="col-12 col-md-3 mb-3">
-                <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
-                <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramModelosModal">
-                    --TODOS--
+                @else
+                <div class="col-12 col-md-3 mb-3">
+                    <label class="d-block d-md-none font-bold text-gray-700 mb-1" style="font-size: 11pt;">Modelo(s)</label>
+                    <div class="text-xs leading-4 font-bold text-gray-700 tracking-wider hover-bg" style="border: 1px solid rgb(93, 90, 90); padding-top: 5px; padding-left: 10px; font-size: 11pt; cursor: pointer; height:2em;" data-toggle="modal" data-target="#paramModelosModal">
+                        --TODOS--
+                    </div>
                 </div>
-            </div>
+                @endif
             @endif
         </div>
     </div>   
@@ -193,7 +214,28 @@
             </div>
             @endif
         </div>
+        <div class="row">
+            <div class="col-2 col-md-2 mt-2 text-xs leading-4 font-bold text-gray-700 tracking-wider mb-2" style="font-size: 11pt;">
+                <input type="checkbox" wire:model.live="chkAgrupar"> <b> Agrupar por modelo </b>
+            </div>
+        </div>
     </div>
+    <div class="{{ $verGrafico && $chkAgrupar ? '' : 'd-none' }}">
+        <div class="card">
+            <div class="card-body">
+                <div style="position: relative; width: 100%;">
+                    <canvas id="graficaBarras" style="width: 100% !important; height: 70px !important;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-100 d-flex justify-content-end align-items-center mb-1 mt-2">
+            <x-button id="botonCorteCaja" wire:click='muestraTabla' data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
+                <i class="fa-solid fa-table-list"></i> &nbsp; Tabla
+            </x-button> &nbsp; 
+        </div>
+    </div>
+    @if (!$verGrafico)
     <div class="table-responsive">
         <table class="w-full table table-bordered table-hover">
             <thead>
@@ -293,26 +335,26 @@
                         @endphp
                         @endif
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-    {{-- Check if the cobroTaller relationship exists --}}
-    @if ($taller->cobroTaller)
-        {{-- If cobroTaller exists, display the realiado amount --}}
-        $ &nbsp; {{ $taller->cobroTaller->cobro_realizado }}
+                            {{-- Check if the cobroTaller relationship exists --}}
+                            @if ($taller->cobroTaller)
+                                {{-- If cobroTaller exists, display the realiado amount --}}
+                                $ &nbsp; {{ $taller->cobroTaller->cobro_realizado }}
 
-        {{-- Then check for the credit status on the existing cobroTaller --}}
-        @if ($taller->cobroTaller->credito)
-            [C]
-        @else
-            &nbsp;
-            {{-- Also check if the modoPago relationship exists on the existing cobroTaller --}}
-            @if ($taller->cobroTaller->modoPago)
-                <i class='{{ $taller->cobroTaller->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $taller->num_orden }})" style="cursor: pointer;"></i>
-            @endif
-        @endif
-    @else
-        {{-- If cobroTaller is null, display something else, e.g., a dash or "Pending" --}}
-        - {{-- Or leave this section empty: --}}{{-- &nbsp; --}}
-    @endif
-</td>
+                                {{-- Then check for the credit status on the existing cobroTaller --}}
+                                @if ($taller->cobroTaller->credito)
+                                    [C]
+                                @else
+                                    &nbsp;
+                                    {{-- Also check if the modoPago relationship exists on the existing cobroTaller --}}
+                                    @if ($taller->cobroTaller->modoPago)
+                                        <i class='{{ $taller->cobroTaller->modoPago->icono }}' wire:click="abrirEditarModoPagoModal({{ $taller->num_orden }})" style="cursor: pointer;"></i>
+                                    @endif
+                                @endif
+                            @else
+                                {{-- If cobroTaller is null, display something else, e.g., a dash or "Pending" --}}
+                                - {{-- Or leave this section empty: --}}{{-- &nbsp; --}}
+                            @endif
+                        </td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $taller->usuario->name }}</td>
                         <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle; text-align: center">
                         <span title="{{ $taller->estatus->descripcion }}">&nbsp; {!! $this->obtenerIconoSegunEstatus($taller->id_estatus) !!}  &nbsp; </span>
@@ -389,6 +431,7 @@
                 @endforeach
             </tbody>
         </table>
+        @endif
         @if ($hayNoDisponibles || $hayInexistentes)
         <div class="col-md-5">
             <label class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">
@@ -397,38 +440,19 @@
         </div>
     @endif
     </div>
+    @if ($chkAgrupar)
+    <div class="w-100 d-flex justify-content-end align-items-center mb-1">
+        <x-button id="botonCorteCaja" wire:click='muestraGrafico' data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center">
+            <i class="fa-solid fa-chart-simple"></i> &nbsp; Gráfico
+        </x-button> &nbsp; 
+    </div>
+    @endif
     <div class="col-mx">
         <label class="col-form-label float-left">
             {{ $equipos_taller->links('livewire.paginame') }}
         </label>
     </div> 
 </div>
-
-<script>
-    //     function eliminarMarca(id) {
-    // // Aquí se puede agregar la lógica para eliminar la marca utilizando Livewire
-    // Livewire.dispatch('eliminarMarca', id);
-    // }
-    //     document.addEventListener('DOMContentLoaded', function () {
-    //     // Hook para manejar el commit de Livewire
-    //     Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-    //         // Re-inicializar los selectpickers después de la actualización
-    //         $('.selectpicker').selectpicker();
-
-    //         succeed(({ snapshot, effect }) => {
-    //             // Destruir y volver a inicializar los selectpickers
-    //             $('select').selectpicker('destroy');
-    //             queueMicrotask(() => {
-    //                 $('.selectpicker').selectpicker('refresh');
-    //             });
-    //         });
-
-    //         fail(() => {
-    //             console.error('Livewire commit failed');
-    //         });
-    //     });
-    // });
-</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -493,5 +517,75 @@
             });
         });
     });
-    
+
+    let chartInstance = null;
+
+document.addEventListener('livewire:initialized', function () {
+    Livewire.on('renderChart', ({ labels, valores }) => {
+        const canvas = document.getElementById('graficaBarras');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+
+        const noDataPlugin = {
+            id: 'noData',
+            afterDraw(chart) {
+                if (chart.data.labels.length === 0 || chart.data.datasets[0].data.length === 0) {
+                    const { ctx, chartArea } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#999';
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillText('No hay datos para mostrar', (chartArea.left + chartArea.right) / 2, (chartArea.top + chartArea.bottom) / 2);
+                    ctx.restore();
+                }
+            }
+        };
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (chartInstance) {
+                chartInstance.resize();
+            }
+        });
+        resizeObserver.observe(canvas);
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Reparaciones',
+                    data: valores,
+                    backgroundColor: '#dc3545'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return Number.isInteger(value) ? value : null;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [noDataPlugin] // 👈 activamos el plugin personalizado
+        });
+    });
+});
+
+
 </script>
+
