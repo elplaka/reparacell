@@ -325,9 +325,10 @@ class TallerReportes extends Component
         // $equipos_taller = $equipos_taller->orderBy('equipo.id_modelo', 'asc')->paginate(10);
 
         $equipos_taller = EquipoTaller::query()
-        ->with(['equipo', 'equipo.marca', 'equipo.modelo', 'equipo.cliente', 'fallas']) // carga relaciones que usas
+        ->with(['equipo', 'equipo.marca', 'equipo.modelo', 'equipo.cliente', 'fallas', 'equipo.tipo_equipo']) // carga relaciones que usas
         ->join('equipos', 'equipos.id', '=', 'equipos_taller.id_equipo')
-        ->join('modelos_equipos', 'modelos_equipos.id', '=', 'equipos.id_modelo');
+        ->join('modelos_equipos', 'modelos_equipos.id', '=', 'equipos.id_modelo')
+        ->join('tipos_equipos', 'tipos_equipos.id', '=', 'equipos.id_tipo');
 
         if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin'])) {
             $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaInicio']));
@@ -433,16 +434,29 @@ class TallerReportes extends Component
         if ($this->chkAgrupar)
         { 
             $equipos_taller = $equipos_taller
-            ->select('equipos_taller.*', 'modelos_equipos.nombre as nombre_modelo')
+            ->select('equipos_taller.*', 'modelos_equipos.nombre as nombre_modelo', 'tipos_equipos.cve_nombre as id_tipo_equipo')
             ->orderBy('modelos_equipos.nombre', 'asc');
 
             // Ejecutas la consulta filtrada
             $equiposFiltrados = $equipos_taller->get();
 
             // Agrupas y cuentas por nombre del modelo en PHP
-            $equiposTaller = $equiposFiltrados->groupBy('nombre_modelo')->map(function ($items, $modelo) {
-                return count($items);
+            // $equiposTaller = $equiposFiltrados->groupBy('nombre_modelo', 'id_tipo_equipo')->map(function ($items) {
+            //     return count($items);
+            // });
+
+            $equiposTaller = $equiposFiltrados->groupBy(function ($item) {
+                return $item->nombre_modelo . '_' . $item->id_tipo_equipo;
+            })->map(function ($items, $key) {
+                $firstItem = $items->first();
+                return [
+                    'label' => $firstItem->nombre_modelo . ' (' . $firstItem->id_tipo_equipo . ')',
+                    'cantidad' => $items->count(),
+                ];
             });
+
+
+            // dd($equiposTaller);
                       
             $equipos_taller = $equipos_taller
             ->paginate(10);
@@ -462,8 +476,12 @@ class TallerReportes extends Component
             $equipos_taller = $equipos_taller->paginate(10);
         }
 
-        $this->labels = $equiposTaller->keys()->toArray();     
-        $this->valores = $equiposTaller->values()->toArray(); 
+        // $this->labels = $equiposTaller->keys()->toArray();     
+        // $this->valores = $equiposTaller->values()->toArray(); 
+
+        $this->labels = $equiposTaller->pluck('label')->toArray();
+        $this->valores = $equiposTaller->pluck('cantidad')->toArray();
+
 
         if ($this->verGrafico)
         {
