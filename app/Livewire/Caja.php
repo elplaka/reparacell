@@ -43,6 +43,7 @@ class Caja extends Component
     public $consecutivoComun, $cantidadProductoComun, $descripcionProductoComun, $precioProductoComun, $montoProductoComun;
     public $selectModoPago, $ayerCaja, $saldoCajaActual;
     public $tipoPrecio = [];
+    public $cambio, $pagoCon;
 
     public $corteCaja = [
         'fechaInicial',
@@ -590,6 +591,12 @@ class Caja extends Component
         $this->corteCaja['idModoPago'] = 1;
     }
 
+    public function cierraCobroCambioModal()
+    {
+        $this->cambio = 0;
+        $this->pagoCon = '';        
+    }
+
     public function abrirCaja()
     {
         $printer_name = "Ticket";
@@ -723,7 +730,10 @@ if ($cliente) {
         $this->showModalErrors = false;
         $this->showMainErrors = !$this->showModalErrors;
 
-        $this->idModoPagoA = 1;        
+        $this->idModoPagoA = 1;  
+        
+        $this->cambio = 0;
+        $this->pagoCon = '';
     }
 
     public function cierraVentaCreditoModal()
@@ -1289,6 +1299,7 @@ if ($cliente) {
                 }
             }
         }
+
     }
     
     public function eliminaDelCarrito($index)
@@ -1353,6 +1364,9 @@ if ($cliente) {
         }
         $this->cuentaCantidadProductosCarrito();
         $this->reset('codigoProductoCapturado');
+
+        $this->cambio = 0;
+        $this->pagoCon = '';
     }
 
     public function cuentaCantidadProductosCarrito()
@@ -1392,6 +1406,8 @@ if ($cliente) {
             {
                 DB::transaction(function ()
                 {
+                    $this->dispatch('cerrarModalCobroCambioCaja');
+
                     $this->totalCarrito = $this->totalCarritoDescuento;
 
                     // Crear una nueva instancia del modelo Venta

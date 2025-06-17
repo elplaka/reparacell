@@ -117,7 +117,7 @@ class EquipoTallerController extends Controller
             $texto2 = "Tipo de Equipo: " . $this->cobro['tipoEquipo'];
             $texto3 = "Marca del Equipo: " . $this->cobro['marcaEquipo'];
             $texto4 = "Modelo del Equipo: " . $this->cobro['modeloEquipo'];
-            $texto5 = "Total Estimado: $" . $this->cobro['totalEstimado'];
+            //$texto5 = "Total Estimado: $" . $this->cobro['totalEstimado'];
 
             // Imprimir los campos
             $printer->text($texto0 . "\n");
@@ -152,7 +152,7 @@ class EquipoTallerController extends Controller
             
             if ($abrirCaja)
             { 
-                $printer->pulse();
+                //$printer->pulse();
             }
 
             // Finalizar la conexión con la impresora

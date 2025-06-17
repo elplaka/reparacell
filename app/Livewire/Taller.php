@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use App\Traits\MovimientoCajaTrait;  //Funciones globales de MOVIMIENTOS EN CAJA
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 class Taller extends Component
 {
@@ -993,7 +996,14 @@ class Taller extends Component
                         {
                             $this->showMainErrors = true;
 
-                            return redirect()->route('taller.print', $numOrden, true); 
+      				$printer_name = "Ticket";
+         			$connector = new WindowsPrintConnector($printer_name);
+         			$printer = new Printer($connector);
+
+         			$printer->pulse();
+         			$printer->close();
+
+                            //return redirect()->route('taller.print', $numOrden, true); 
                         }
 
                         $this->dispatch('cierraCobroModal');

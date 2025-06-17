@@ -3,7 +3,8 @@
     @include('livewire.modal-buscar-cliente')
     @include('livewire.modal-corte-caja')
     @include('livewire.ventas.modal-agregar-producto-comun')
-    @include('livewire.creditos.modal-venta')
+    @include('livewire.creditos.modal-venta') 
+    @include('livewire.modal-cobro-cambio-caja')
 
     <div class="w-100 mb-4 d-flex align-items-center">
         <h4 class="text-2xl font-bold mb-0">
@@ -218,7 +219,8 @@
                 @endif
             </div>
             <div class="col-md-2">
-                <x-button wire:click="cobrar" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
+                {{-- wire:click="cobrar"  --}}
+                <x-button data-toggle="modal" data-target="#cobroCambioCajaModal" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
                     {{ __('Cobrar [ F4 ]') }}
                 </x-button>
             </div>
@@ -364,6 +366,13 @@
     });
 
     document.addEventListener('livewire:initialized', function () {
+        Livewire.on('cerrarModalCobroCambioCaja', () => {
+            console.log('molina');
+            $('#cobroCambioCajaModal').modal('hide');
+        });
+    });
+
+    document.addEventListener('livewire:initialized', function () {
         $('#productoComunModal').on('shown.bs.modal', function () {
             $('#descripcionProducto').trigger('focus');
         });
@@ -421,6 +430,7 @@ document.addEventListener('livewire:initialized', function () {
             });
         });
     });
+      
 </script>
 
 
