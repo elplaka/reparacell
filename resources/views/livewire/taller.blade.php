@@ -5,6 +5,8 @@
     $itemDisponible = true;
 @endphp
 
+
+
 <div class="w-full min-h-screen mt-3 font-sans text-gray-900 antialiased">
     @include('livewire.modal-cobro-taller')
     @include('livewire.modal-anotaciones')
@@ -12,6 +14,14 @@
     @include('livewire.taller.modal-corte-caja')
     @include('livewire.taller.modal-cambia-estatus-equipo-taller')
     @include('livewire.creditos.modal-editar-modo-pago-taller')
+
+    <style>
+        .swal2-cancel.btn-danger {
+        background-color: #d33 !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    </style>
 
     @if ($showMainErrors)
         @if (session('error'))
@@ -102,7 +112,14 @@
                         <option value="no_entregados">NO ENTREGADOS</option>
                     </optgroup>
                     @foreach ($estatus_equipos as $estatus)
-                        <option value="{{ $estatus->id }}" data-content="{{  $this->obtenerIconoEstatus($estatus->id) }} &nbsp; {{ $estatus->descripcion }}"></option>
+                        @php
+                            $icono = $this->obtenerIconoEstatus($estatus->id) ?? '';
+                        @endphp
+                        @if ($estatus_equipos->count())
+                            <option value="{{ $estatus->id }}" data-content="{{ $icono }} &nbsp; {{ $estatus->descripcion }}"></option>
+                        @else
+                            <option disabled>No hay estatus disponibles</option>
+                        @endif
                     @endforeach                    
                 </select>
             </div>
@@ -134,7 +151,7 @@
                  $modalCobroCreditoTallerAbierta)
             <tbody>
             @else
-            <tbody wire:poll.5s>
+            <tbody wire:poll.10s>
             @endif
                 @php
                     $equipos = 0;
@@ -445,7 +462,6 @@ document.addEventListener('livewire:initialized', function () {
             let textAnotaciones = document.getElementById('textAnotaciones');
             if (textAnotaciones && !textAnotaciones.hasAttribute('readonly')) {
                 textAnotaciones.focus();
-                console.log('Foco vuelto a poner en el textarea "textAnotaciones" después de la actualización.');
             }
         }
     });
@@ -457,28 +473,50 @@ document.addEventListener('DOMContentLoaded', function () {
     let isSelectTipoEquipoOpen = false;
     let isSelectEntregadosOpen = false;
 
+    function safeInitializeSelectpicker(selector) {
+        let $el;
+
+        try {
+            $el = $(selector);
+
+            if (!$el || typeof $el.length === 'undefined' || $el.length === 0) {
+                // console.warn(`⚠️ No se encontró el elemento "${selector}" o no tiene longitud.`);
+                return;
+            }
+
+            if ($el.find('option').length === 0) {
+                // console.warn(`⚠️ ${selector} no tiene opciones. Se omite inicialización.`);
+                return;
+            }
+
+            if ($el.data('selectpicker')) {
+                $el.selectpicker('destroy');
+            }
+
+            $el.selectpicker('render').selectpicker('refresh');
+
+            // console.log(`✅ ${selector} fue inicializado y refrescado correctamente`);
+        } catch (error) {
+            console.error(`🧨 Error al inicializar ${selector}:`, error);
+        }
+    }
+
+
+    // 🧰 Configura todos los selectpickers principales
     function setupSelectpickers() {
         $('.selectpicker').off('shown.bs.select hidden.bs.select changed.bs.select');
 
-        // Detectar si el selectTipoEquipo está abierto
-        $('#selectTipoEquipo').on('shown.bs.select', function () {
-            isSelectTipoEquipoOpen = true;
-        });
+        const selectors = ['#selectTipoEquipo', '#selectEntregados'];
+        selectors.forEach(safeInitializeSelectpicker);
 
-        $('#selectTipoEquipo').on('hidden.bs.select', function () {
-            isSelectTipoEquipoOpen = false;
-        });
+        // 🎯 Eventos para detectar apertura y cierre
+        $('#selectTipoEquipo').on('shown.bs.select', () => (isSelectTipoEquipoOpen = true));
+        $('#selectTipoEquipo').on('hidden.bs.select', () => (isSelectTipoEquipoOpen = false));
 
-        // Detectar si el selectEntregados está abierto
-        $('#selectEntregados').on('shown.bs.select', function () {
-            isSelectEntregadosOpen = true;
-        });
+        $('#selectEntregados').on('shown.bs.select', () => (isSelectEntregadosOpen = true));
+        $('#selectEntregados').on('hidden.bs.select', () => (isSelectEntregadosOpen = false));
 
-        $('#selectEntregados').on('hidden.bs.select', function () {
-            isSelectEntregadosOpen = false;
-        });
-
-        // Cerrar el selectpicker al seleccionar un elemento
+        // 🔁 Eventos para cerrar select automáticamente después de cambiar
         $('#selectTipoEquipo').on('changed.bs.select', function () {
             if (isSelectTipoEquipoOpen) {
                 $('#selectTipoEquipo').selectpicker('toggle');
@@ -486,71 +524,100 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        $('#selectEntregados').on('changed.bs.select', function () {
-            if (isSelectEntregadosOpen) {
-                $('#selectEntregados').selectpicker('toggle');
-                isSelectEntregadosOpen = false;
-            }
-        });
-    }
+       let cerrarEntregadosPendiente = false;
 
+        $('#selectEntregados').on('changed.bs.select', function () {
+            cerrarEntregadosPendiente = true;
+        });
+
+            setInterval(() => {
+                if (cerrarEntregadosPendiente && isSelectEntregadosOpen) {
+                    const $select = $('#selectEntregados');
+                    if ($select.length && $select.data('selectpicker')) {
+                        $select.selectpicker('toggle');
+                    }
+                    isSelectEntregadosOpen = false;
+                    cerrarEntregadosPendiente = false;
+                }
+            }, 120); // ⏱ amortigua el render sin bloquear eventos
+        }
+
+    // 🔄 Sincroniza los valores con Livewire si están inicializados correctamente
     function synchronizeSelectpickerValues() {
+        const tipoEquipoEl = $('#selectTipoEquipo');
+        const entregadosEl = $('#selectEntregados');
+
         let livewireTipoEquipo = @this.get('busquedaEquipos.idTipo') || [];
         let livewireEntregados = @this.get('busquedaEquipos.entregados') || [];
 
-        $('#selectTipoEquipo').selectpicker('val', livewireTipoEquipo);
-        $('#selectEntregados').selectpicker('val', livewireEntregados);
+        if (tipoEquipoEl.length && tipoEquipoEl.data('selectpicker')) {
+            tipoEquipoEl.selectpicker('val', livewireTipoEquipo);
+        }
+
+        if (entregadosEl.length && entregadosEl.data('selectpicker')) {
+            entregadosEl.selectpicker('val', livewireEntregados);
+        }
     }
 
-    // Configurar selectpickers al cargar el documento
+    // ✅ Inicializar al cargar el documento
     setupSelectpickers();
 
-    Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-        // $('.selectpicker').selectpicker();
-        succeed(({ snapshot, effect }) => {
-            // $('select').selectpicker('destroy');
+
+    // 📦 Hook Livewire para manejar morphs y commits
+    Livewire.hook('commit', ({ succeed, fail }) => {
+        let wasEntregadosOpen = false;
+        const $select = $('#selectEntregados');
+
+        if ($select.length && $select.data('selectpicker')) {
+            const $parent = $select.parent('.btn-group');
+            wasEntregadosOpen = $parent.hasClass('show');
+        }
+
+        succeed(() => {
             queueMicrotask(() => {
-                // Refrescar los selectpickers
-                // $('.selectpicker').selectpicker('refresh');
                 setupSelectpickers();
                 synchronizeSelectpickerValues();
 
-                setTimeout(() => { 
-                    $('#selectModoPago5').selectpicker(); 
-                    $('#selectModoPago6').selectpicker(); 
-                    $('#selectModoPagoCorte').selectpicker(); 
-                    $('#modoPagoSelect').selectpicker(); 
-                    $('#estatusEquiposSelect').selectpicker(); 
+                setTimeout(() => {
+                    [
+                        '#selectTipoEquipo',
+                        '#selectEntregados',
+                        '#selectModoPago5',
+                        '#selectModoPago6',
+                        '#selectModoPagoCorte',
+                        '#modoPagoSelect',
+                        '#estatusEquiposSelect'
+                    ].forEach(safeInitializeSelectpicker);
                 }, 30);
 
-
-                // Verificar el estado después del refresh
-                if (isSelectTipoEquipoOpen) {
-                    $('#selectTipoEquipo').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    // console.log("Manteniendo selectTipoEquipo abierto después del refresh");
+                // 🔁 Reabrir los selects si estaban abiertos
+                if (isSelectTipoEquipoOpen && $('#selectTipoEquipo').data('selectpicker')) {
+                    $('#selectTipoEquipo').selectpicker('toggle');
                 }
 
-                if (isSelectEntregadosOpen) {
-                    $('#selectEntregados').selectpicker('toggle'); // Forzar reapertura si estaba abierto
-                    // console.log("Manteniendo selectEntregados abierto después del refresh");
+                if (isSelectEntregadosOpen && $('#selectEntregados').data('selectpicker')) {
+                    $('#selectEntregados').selectpicker('toggle');
                 }
 
-                // Reconfigurar eventos Livewire en los selectpickers
-                $('#selectTipoEquipo').change(function () {
-                    @this.set('busquedaEquipos.idTipo', $(this).val());
-                });
+                // 🧬 Actualizar valores en Livewire de forma segura
+                const tipoEquipoEl = $('#selectTipoEquipo');
+                if (tipoEquipoEl.length && tipoEquipoEl.data('selectpicker')) {
+                    tipoEquipoEl.off('change').on('change', function () {
+                        @this.set('busquedaEquipos.idTipo', $(this).val());
+                    });
+                }
 
-                $('#selectEntregados').change(function () {
-                    @this.set('busquedaEquipos.entregados', $(this).val());
-                });
-
-                // 
-
+                const entregadosEl = $('#selectEntregados');
+                if (entregadosEl.length && entregadosEl.data('selectpicker')) {
+                    entregadosEl.off('change').on('change', function () {
+                        @this.set('busquedaEquipos.entregados', $(this).val());
+                    });
+                }
             });
         });
 
         fail(() => {
-            console.error('Livewire commit failed');
+            console.error('❌ Livewire commit failed');
         });
     });
 });
@@ -564,6 +631,13 @@ document.addEventListener('livewire:initialized', function () {
             $('#editarModoPagoModalTallerCredito').modal('show');
         });
     });
+
+    document.addEventListener('livewire:load', function () {
+    Livewire.hook('message.processed', (message, component) => {
+        $('#selectEntregados').selectpicker('refresh');
+        console.log('✅ selectEntregados refrescado después del render de Livewire');
+    });
+});
     
 </script>
 
@@ -581,12 +655,12 @@ document.addEventListener('livewire:initialized', function () {
             showCancelButton: true,
             confirmButtonText: 'Sí',
             cancelButtonText: 'No',
-            confirmButtonColor: '#3085d6', // Color del botón de confirmación (azul)
-            cancelButtonColor: '#d33', // Color del botón de cancelación (rojo)
             customClass: {
                 title: 'swal2-title-custom', // Clase CSS personalizada para el título
                 content: 'swal2-content-custom', // Clase CSS personalizada para el contenido
-                icon: 'fa-xs'
+                icon: 'fa-xs',
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-danger',
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -599,4 +673,5 @@ document.addEventListener('livewire:initialized', function () {
 
 
 </script>
+
 

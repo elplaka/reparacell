@@ -49,8 +49,9 @@
 
                 <!-- Modal Footer con Botón de Cierre -->
                 <div class="modal-footer d-flex justify-content-center">
-                    <button class="btn btn-primary uppercase tracking-widest font-semibold text-lg" wire:click="cobrar">Cobrar</button>
-                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-lg" data-dismiss="modal" wire:click='cierraCobroCambioModal' id="btnCerrarCorteCajaModal">Cerrar</button>
+                    <button id="btnCobrarConTicket" class="btn btn-success uppercase tracking-widest font-semibold text-md" wire:click="cobrar">C/TICKET [F2] <i class="fa-solid fa-ticket"></i></button>
+                    <button id="btnCobrarSinTicket" class="btn btn-primary uppercase tracking-widest font-semibold text-md" wire:click="cobrar(2)">S/TICKET [F3] <i class="fa-solid fa-cash-register"></i></button>
+                    <button class="btn btn-secondary uppercase tracking-widest font-semibold text-md" data-dismiss="modal" wire:click='cierraCobroCambioModal' id="btnCerrarCorteCajaModal">Cerrar</button>
                 </div>
             </div>
        </div>
@@ -58,6 +59,23 @@
 </div>
 
 <script>
+document.addEventListener('livewire:initialized', () => {
+        document.addEventListener('keydown', (event) => {
+        if (event.key === 'F2' || event.key === 'F3') {
+            event.preventDefault(); // 🛡️ bloquea comportamiento nativo
+
+            if (event.key === 'F2') {
+                document.getElementById('btnCobrarConTicket')?.click();
+            }
+
+            if (event.key === 'F3') {
+                document.getElementById('btnCobrarSinTicket')?.click();
+            }
+        }
+    });
+});
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const pagoConInput = document.getElementById('pagoConInput');
     const cambioDisplay = document.getElementById('cambioCalculado');

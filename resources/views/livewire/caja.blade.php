@@ -41,125 +41,125 @@
             @endif
         @endif
         <div class="row mx-0">
-            <div class="col-12 col-md-3 mb-3 px-0">
-                <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
-                <div class="d-flex align-items-center">
-                    <div class="col-9 col-md-9 pr-1 pl-0">
-                        <input type="text" id="codigoProductoCapturado" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
-                    </div>
-                    <div class="col-3 col-md-3 pl-1">
-                        <button id="buscarProductoBtn" class="btn btn-secondary"
-                                data-toggle="modal" 
-                                data-target="#buscarProductoModal" 
-                                style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;"
-                                title="Buscar producto">
-                                <i class="fa-solid fa-kitchen-set" style="margin-right: 2px;"></i><i class="fa-solid fa-magnifying-glass"></i>
-                        </button> 
-                    </div>
-                </div>
+    <div class="col-12 col-md-3 mb-3 px-0">
+        <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Código del Producto </strong> </label>
+        <div class="d-flex align-items-center">
+            <div class="col-9 col-md-9 pr-1 pl-0">
+                <input type="text" id="codigoProductoCapturado" wire:model.live="codigoProductoCapturado" class="input-height form-control" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" wire:keydown.enter="agregaProducto" autofocus>
             </div>
-            <div class="col-12 col-md-3 mb-3 px-0">
-                <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Cliente </strong> </label>
-                <div class="d-flex align-items-center">
-                    <div class="col-9 col-md-9 pr-1 pl-0">
-                        <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" readonly>
-                    </div>
-                    <div class="col-3 col-md-3 pl-1">
-                        <button class="btn btn-secondary" data-toggle="modal" data-target="#buscarClienteModal" style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;">
-                            <i class="fa-solid fa-user"></i><i class="fa-solid fa-magnifying-glass"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 d-flex align-items-center justify-content-end flex-column flex-md-row px-0">
-                <x-button wire:click="abrirCaja" class="ml-md-4 align-self-center mb-2 mb-md-0" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
-                    <i class="fa-solid fa-coins" style="width: 20px;"></i> &nbsp; Abrir Caja [F9]
-                </x-button>
-                <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
-                    <i class="fa-solid fa-file-invoice-dollar" style="width: 20px;"></i> &nbsp; Corte de Caja [F10]
-                </x-button>
+            <div class="col-3 col-md-3 pl-1">
+                <button id="buscarProductoBtn" class="btn btn-secondary"
+                        data-toggle="modal"
+                        data-target="#buscarProductoModal"
+                        style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;"
+                        title="Buscar producto">
+                    <i class="fa-solid fa-kitchen-set" style="margin-right: 2px;"></i><i class="fa-solid fa-magnifying-glass"></i>
+                </button>
             </div>
         </div>
     </div>
-    <br>
-    {{-- <button class="btn btn-primary" wire:click='abrirModal'> 
-        Abrir Venta Crédito Modal
-    </button> --}}
-        <div class="table-responsive">
-            <table class="w-95 table table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider col-md-1">CANT.</th>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CÓDIGO</th>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">DESCRIPCIÓN</th>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">PRECIO</th>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">IMPORTE</th>
-                        <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($carrito as $index => $item)
-                    <tr style="font-size: 10pt;">
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            <input wire:model.live="carrito.{{ $index }}.cantidad" 
-                            @if ($carrito[$index]['esProductoComun'])
-                                disabled
-                                style="background-color: transparent; border: none; height: 22px; width: 100%; font-size: 10pt"
-                            @else 
-                                type="number"
-                                style="background: #f8f8f8; border: none; height: 22px; width: 100%; font-size: 10pt" 
-                            @endif
-                            >
-                        </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $item['producto']->codigo }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            @if ($carrito[$index]['esProductoComun'])
-                                {{ $carrito[$index]['descripcionProductoComun'] }}
-                            @else
-                                {{ $item['producto']->descripcion }}
-                            @endif
-                        </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> 
-                            <div class="d-flex align-items-center">
-                                @if ($carrito[$index]['esProductoComun'])
-                                    <span class="fw-bold">$ {{ number_format($carrito[$index]['precioProductoComun'], 2, '.', ',') }}</span>
-                                @else
-                                <div class="d-flex align-items-center">
-                                    <span class="me-3 fw-bold">
-                                        $ {{ ($tipoPrecio[$index] ?? 1) == 1 ? $item['producto']->precio_venta : $item['producto']->precio_mayoreo }}
-                                    </span>                            
-                                    &nbsp;
-                                    &nbsp;
-                                    &nbsp;
-                                    <div class="d-flex align-items-center">
-                                        <div class="form-check me-2 d-flex align-items-center">
-                                            <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio1{{ $index }}" value="1">
-                                            <label class="form-check-label" for="tipoPrecio1{{ $index }}">MENUDEO</label>
-                                        </div>
-                                        &nbsp;
-                                        &nbsp;
-                                        &nbsp;
-                                        <div class="form-check d-flex align-items-center">
-                                            <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio2{{ $index }}" value="2">
-                                            <label class="form-check-label" for="tipoPrecio2{{ $index }}">MAYOREO</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; {{ $carrito[$index]['subTotal'] }}</td>
-                        <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
-                            <button wire:click="eliminaDelCarrito({{ $index }})" wire:loading.remove wire:target="eliminaDelCarrito" class="label-button">
-                                <i class="fa-solid fa-trash-can" style="color:black" onmouseover="this.style.color='blue'" onmouseout="this.style.color='red'"></i>
-                            </button>
-                            <span wire:loading wire:target="eliminaDelCarrito" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    <div class="col-12 col-md-3 mb-3 px-0">
+        <label class="d-block font-bold text-gray-700 mb-1" style="font-size: 11pt;"> <strong> Cliente </strong> </label>
+        <div class="d-flex align-items-center">
+            <div class="col-9 col-md-9 pr-1 pl-0">
+                <input wire:model="cliente.nombre" type="text" class="input-height form-control" id="cliente.nombre" style="font-size: 11pt; border-top-right-radius: 0; border-bottom-right-radius: 0;" readonly>
+            </div>
+            <div class="col-3 col-md-3 pl-1">
+                <button class="btn btn-secondary" data-toggle="modal" data-target="#buscarClienteModal" style="font-size: 10pt; height: 100%; white-space: nowrap; display: flex; justify-content: center; align-items: center;">
+                    <i class="fa-solid fa-user"></i><i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
         </div>
+    </div>
+    <div class="col-12 col-md-6 d-flex align-items-center justify-content-end flex-column flex-md-row px-0">
+        <x-button wire:click="abrirCaja" class="ml-md-4 align-self-center mb-2 mb-md-0" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
+            <i class="fa-solid fa-coins" style="width: 20px;"></i> &nbsp; Abrir Caja [F9]
+        </x-button>
+        <x-button id="botonCorteCaja" data-toggle="modal" data-target="#corteCajaModal" class="ml-md-4 align-self-center" style="white-space: nowrap; display: flex; justify-content: center; align-items: center; width: 100%; max-width: 200px;">
+            <i class="fa-solid fa-file-invoice-dollar" style="width: 20px;"></i> &nbsp; Corte de Caja [F10]
+        </x-button>
+    </div>
+</div>
+<br>
+<div class="table-responsive">
+    <table class="w-95 table table-bordered table-hover" id="carritoTable">
+        <thead>
+            <tr>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider col-md-1">CANT.</th>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">CÓDIGO</th>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">DESCRIPCIÓN</th>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">PRECIO</th>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider">IMPORTE</th>
+                <th class="px-2 py-2 bg-gray-200 text-left text-xs leading-4 font-bold text-gray-700 uppercase tracking-wider"><i class="fas fa-list"></i></th>
+            </tr>
+        </thead>
+        <tbody id="carritoTableBody">
+            @foreach ($carrito as $index => $item)
+            <tr style="font-size: 10pt;" data-row-index="{{ $index }}" tabindex="-1"> {{-- tabindex will be managed by JS for visual purposes --}}
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                    {{-- Usaremos wire:ignore para evitar que Livewire re-renderice este input
+                         constantemente y nos permita manejar el + y - directamente aquí.
+                         SIN EMBARGO, para + y - con foco en el input principal, no necesitamos wire:ignore
+                         porque no vamos a manipular el valor del input directamente con JS.
+                         Livewire hará el binding de vuelta. --}}
+                    <input wire:ignore
+                    data-row-index="{{ $index }}"
+                    @if ($carrito[$index]['esProductoComun'])
+                        disabled
+                        style="background-color: transparent; border: none; height: 22px; width: 100%; font-size: 10pt"
+                    @else
+                        type="number"
+                        style="background: #f8f8f8; border: none; height: 22px; width: 100%; font-size: 10pt"
+                    @endif
+                    value="{{ $carrito[$index]['cantidad'] ?? 1 }}">
+                </td>
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">{{ $item['producto']->codigo }}</td>
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                    @if ($carrito[$index]['esProductoComun'])
+                        {{ $carrito[$index]['descripcionProductoComun'] }}
+                    @else
+                        {{ $item['producto']->descripcion }}
+                    @endif
+                </td>
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                    <div class="d-flex align-items-center">
+                        @if ($carrito[$index]['esProductoComun'])
+                            <span class="fw-bold">$ {{ number_format($carrito[$index]['precioProductoComun'], 2, '.', ',') }}</span>
+                        @else
+                        <div class="d-flex align-items-center">
+                            <span class="me-3 fw-bold">
+                                $ {{ ($tipoPrecio[$index] ?? 1) == 1 ? $item['producto']->precio_venta : $item['producto']->precio_mayoreo }}
+                            </span>
+                            &nbsp;
+                            &nbsp;
+                            &nbsp;
+                            <div class="form-check me-2 d-flex align-items-center">
+                                <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio1{{ $index }}" value="1">
+                                <label class="form-check-label" for="tipoPrecio1{{ $index }}">MENUDEO</label>
+                            </div>
+                            &nbsp;
+                            &nbsp;
+                            &nbsp;
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input me-1" type="radio" wire:model.live="tipoPrecio.{{ $index }}" id="tipoPrecio2{{ $index }}" value="2">
+                                <label class="form-check-label" for="tipoPrecio2{{ $index }}">MAYOREO</label>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </td>
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle"> &#36; {{ $carrito[$index]['subTotal'] }}</td>
+                <td class="px-2 py-1 whitespace-no-wrap" style="vertical-align: middle">
+                    <button wire:click="eliminaDelCarrito({{ $index }})" wire:loading.remove wire:target="eliminaDelCarrito" class="label-button">
+                        <i class="fa-solid fa-trash-can" style="color:black" onmouseover="this.style.color='blue'" onmouseout="this.style.color='red'"></i>
+                    </button>
+                    <span wire:loading wire:target="eliminaDelCarrito" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
         @if ($cantidadProductosCarrito)
         <div class="row justify-content-center align-items-center mx-auto" style="background-color: #e9ebf3; width: 100%;">
             @role('admin')
@@ -220,7 +220,7 @@
             </div>
             <div class="col-md-2">
                 {{-- wire:click="cobrar"  --}}
-                <x-button data-toggle="modal" data-target="#cobroCambioCajaModal" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
+                <x-button wire:click="cobrar" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
                     {{ __('Cobrar [ F4 ]') }}
                 </x-button>
             </div>
@@ -238,10 +238,13 @@
 </div>
 
 <script>
-    window.addEventListener('keydown', function(event) {
-        if (event.key === 'F4') {
-            // $('#cobrarModal').modal('show');
-            Livewire.dispatch('f4-pressed');
+    document.addEventListener('keydown', function (event) {
+        // Código 115 = F4
+        if (event.keyCode === 115 || event.code === 'F4') {
+            event.preventDefault(); // Opcional: evita que el navegador lo intercepte
+
+            // Abrir el modal
+            $('#cobroCambioCajaModal').modal('show');
         }
     });
 
@@ -402,36 +405,184 @@ document.addEventListener('livewire:initialized', function () {
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('livewire:initialized', () => {
+    let selectedRowIndex = -1;
+    const codigoInput = document.getElementById('codigoProductoCapturado');
+    
+    // Función highlightRow (sin cambios aquí)
+    function highlightRow(index) {
+        const tableBody = document.getElementById('carritoTableBody');
+        if (!tableBody) return;
 
-        Livewire.on('abreVentaCreditoModal', () => {
-            $('#ventaCreditoModal').modal('show');
+        const rows = tableBody.children;
+        Array.from(rows).forEach((row) => {
+            row.classList.remove('text-primary', 'fw-bold', 'fila-resaltada');
         });
 
-        $('#ventaCreditoModal').on('shown.bs.modal', function () {
-            $('#selectModoPago2').selectpicker();
+        if (index >= 0 && index < rows.length) {
+            rows[index].classList.add('text-primary', 'fw-bold', 'fila-resaltada');
+            selectedRowIndex = index;
+            rows[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            selectedRowIndex = -1;
+        }
+    }
 
-            Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-                $('.selectpicker').selectpicker();
+    // Listener para las teclas de navegación y cantidad cuando el input de código está enfocado
+    codigoInput.addEventListener('keydown', (event) => {
+        let ultimaActualizacion = 0;
 
-                succeed(({ snapshot, effect }) => {
-                    $('#selectModoPago2').selectpicker('destroy');
+        function intentarActualizarCantidad(cambio) {
+            const tableBody = document.getElementById('carritoTableBody');
+            if (!tableBody || selectedRowIndex === -1) return;
 
-                    queueMicrotask(() => {
-                        setTimeout(() => { 
-                            $('#selectModoPago2').selectpicker('refresh'); 
-                        }, 50);
+            const row = tableBody.children[selectedRowIndex];
+            const quantityInput = row.querySelector('input[type="number"]');
+            if (!quantityInput || quantityInput.disabled) return;
+
+            let cantidadActual = parseInt(quantityInput.value) || 0;
+            let nuevaCantidad = Math.max(0, cantidadActual + cambio);
+
+            // 🖊️ Actualización visual
+            quantityInput.value = nuevaCantidad;
+            quantityInput.dispatchEvent(new Event('input', { bubbles: true }));
+            quantityInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // 🌩️ Dispatch manual a Livewire con index + cantidad
+            const index = row.getAttribute('data-row-index');
+            Livewire.dispatch('actualizaCantidadManual', { index: parseInt(index), cantidad: nuevaCantidad });
+
+            // ✨ Efecto visual
+            quantityInput.classList.add('quantity-flash');
+            setTimeout(() => quantityInput.classList.remove('quantity-flash'), 10);
+
+            if (nuevaCantidad === 0) highlightRow(-1);
+            codigoInput.focus();
+        }
+
+        const tableBody = document.getElementById('carritoTableBody');
+        if (!tableBody) return;
+        const rows = tableBody.children;
+
+        // Solo actuamos si el foco está realmente en el codigoInput
+        if (document.activeElement === codigoInput) {
+            // **PUNTO CLAVE DE MODIFICACIÓN:** Maneja '+' y '-' al inicio
+            if (event.key === '+') {
+                event.preventDefault();
+                intentarActualizarCantidad(+1);
+            }
+            if (event.key === '-') {
+                event.preventDefault();
+                intentarActualizarCantidad(-1);
+            }
+
+            // El resto de tu lógica para otras teclas (ArrowDown, ArrowUp, Escape)
+            // se mantiene como estaba, ya que su preventDefault() ya es lo primero en su bloque.
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                highlightRow(selectedRowIndex === -1 ? 0 : Math.min(selectedRowIndex + 1, rows.length - 1));
+                codigoInput.focus();
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                highlightRow(Math.max(selectedRowIndex - 1, 0));
+                codigoInput.focus();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                highlightRow(-1);
+                codigoInput.focus();
+            }
+            // wire:keydown.enter="agregaProducto" ya maneja el Enter
+        }
+    });
+
+    Livewire.hook('commit', ({ component, succeed }) => {
+        succeed(() => {
+            if (component.name === @json($this->getName())) {
+                codigoInput.focus();
+
+                setTimeout(() => {
+                    const tableBody = document.getElementById('carritoTableBody');
+                    if (!tableBody) return;
+
+                    // 🔁 Highlight defensivo
+                    if (tableBody.children.length === 0) {
+                        highlightRow(-1);
+                    } else if (selectedRowIndex >= 0 && selectedRowIndex < tableBody.children.length) {
+                        highlightRow(selectedRowIndex);
+                    } else {
+                        selectedRowIndex = -1;
+                    }
+
+                    // 🔗 Re-bind con debounce y validación robusta
+                    const quantityInputs = tableBody.querySelectorAll('input[type="number"]');
+                    quantityInputs.forEach((input) => {
+                        if (!input.dataset.listenerBound) {
+                            let debounceTimer = null;
+
+                            input.addEventListener('input', () => {
+                                clearTimeout(debounceTimer);
+
+                                debounceTimer = setTimeout(() => {
+                                    const index = input.getAttribute('data-row-index');
+                                    const rawValue = input.value.trim();
+
+                                    // ⚠️ Validar que sea número válido > 0
+                                    if (/^\d+$/.test(rawValue)) {
+                                        const cantidad = parseInt(rawValue);
+                                        Livewire.dispatch('actualizaCantidadManual', {
+                                            index: parseInt(index),
+                                            cantidad
+                                        });
+
+                                        input.classList.add('quantity-flash');
+                                        setTimeout(() => input.classList.remove('quantity-flash'), 100);
+                                    }
+                                }, 120); // ⏱ tiempo entre pulsaciones
+                            });
+
+                            input.dataset.listenerBound = true;
+                        }
                     });
-                });
 
-                fail(() => {
-                    console.error('Livewire commit failed');
-                });
-            });
+                }, 0);
+            }
         });
     });
-      
+
+    Livewire.on('carrito-actualizado', () => {
+        selectedRowIndex = -1;
+        // highlightRow(-1);
+        codigoInput.focus();
+    });
+
+    const tableBody = document.getElementById('carritoTableBody');
+        if (tableBody) {
+            const quantityInputs = tableBody.querySelectorAll('input[type="number"]');
+            quantityInputs.forEach((input) => {
+                input.addEventListener('change', () => {
+                    const index = input.getAttribute('data-row-index');
+                    const cantidad = parseInt(input.value) || 0;
+
+                    Livewire.dispatch('actualizaCantidadManual', {
+                        index: parseInt(index),
+                        cantidad: cantidad
+                    });
+
+                    // ✨ flash visual opcional
+                    input.classList.add('quantity-flash');
+                    setTimeout(() => input.classList.remove('quantity-flash'), 100);
+                });
+            });
+        }
+});
 </script>
+
+<style>
+    .fila-resaltada {
+    background-color: rgb(194, 224, 253); 
+    font-weight: 600
+}
+</style>
 
 
 

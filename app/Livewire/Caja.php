@@ -24,7 +24,7 @@ use Carbon\Carbon;
 use App\Traits\MovimientoCajaTrait; 
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector; //Funciones globales de MOVIMIENTOS EN CAJA
-
+use Livewire\Attributes\On;
 
 class Caja extends Component
 {
@@ -57,7 +57,7 @@ class Caja extends Component
     ];
 
     protected $listeners = [
-        'f4-pressed' => 'cobrar',
+        // 'f4-pressed' => 'cobrar',
         'f9-pressed' => 'abrirCaja', 
         'f10-pressed' => 'abrirCorteCaja', 
         'lisLiquidarVentaCredito' => 'liquidarVentaCredito',
@@ -1222,12 +1222,25 @@ if ($cliente) {
         $this->cuentaCantidadProductosCarrito();
     }
 
+    #[On('actualizaCantidadManual')]
+    public function actualizaCantidadManual($index, $cantidad)
+    {
+        // 👉 Simular el modelo cambiado como si fuera wire:model
+        $this->updatedCarrito($cantidad, "carrito.{$index}.cantidad");
+
+        // ⚙️ Recalcular totales
+        $this->cuentaCantidadProductosCarrito();
+
+    }
+
+    
     public function updatedCarrito($value, $key)
     {
         if (substr($key, -8) === 'cantidad')
         {
             // Obtener el índice del carrito
-            $index = (int) strtok($key, '.');
+            // $index = (int) strtok($key, '.');
+            $index = (int) explode('.', $key)[1];
             $producto = $this->carrito[$index]['producto'];
 
             if ($value > 0)  //El valor de la CANTIDAD siempre debe ser mayor que 0
@@ -1376,13 +1389,15 @@ if ($cliente) {
         
         foreach ($this->carrito as $item)
         {
-            $cant_productos += $item['cantidad'];
+            $cant_productos += $item['cantidadVieja'];
             $subTotalFloat = floatval(str_replace(',', '', $item['subTotal']));
             $total_carrito += $subTotalFloat;
         }
         $this->cantidadProductosCarrito = $cant_productos;
         $this->totalCarrito = $total_carrito;
         $this->totalCarritoDescuento = $total_carrito; 
+
+        // dd($this->carrito);
     }
 
     public function restaInventario($codigoProducto, $cantidad)
@@ -1398,13 +1413,13 @@ if ($cliente) {
         $producto->save();
     }
 
-    public function cobrar()
+    public function cobrar($modoCobro = 1)
     {
         if ($this->cantidadProductosCarrito)
         {
             try 
             {
-                DB::transaction(function ()
+                DB::transaction(function () use ($modoCobro)
                 {
                     $this->dispatch('cerrarModalCobroCambioCaja');
 
@@ -1441,7 +1456,7 @@ if ($cliente) {
                     
                     foreach ($this->carrito as $item)
                     {
-                        $cantidad = $item['cantidad'];
+                        $cantidad = $item['cantidadVieja'];
                         $codigoProducto = $item['producto']->codigo;
 
                         if ($item['esProductoComun'])
@@ -1487,11 +1502,23 @@ if ($cliente) {
                     $this->cantidadProductosCarrito = 0;
                     $cliente = $this->regresacliente('0000000000');
 
-                    if ($this->idModoPagoA == 1)  //Solo si es EFECTIVO se imprime ticket
+                    if ($modoCobro  == 2)
                     {
-                        $this->showMainErrors = true;
+                        $printer_name = "Ticket";
+                        $connector = new WindowsPrintConnector($printer_name);
+                        $printer = new Printer($connector);
 
-                        return redirect()->route('ventas.print', $idVenta);
+                        $printer->pulse();
+                        $printer->close();
+                    }
+                    else 
+                    { 
+                        if ($this->idModoPagoA == 1)  //Solo si es EFECTIVO se imprime ticket
+                        {
+                            $this->showMainErrors = true;
+
+                            return redirect()->route('ventas.print', $idVenta);
+                        }
                     }
 
                     $this->dispatch('cierraModalCobrar');
