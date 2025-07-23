@@ -124,9 +124,9 @@
                         @endphp
                     @endif
                 @else
-                @if ($registro->cantidad > 0)
                 <tr>
                     @if ($corteCaja['chkAgrupar'])
+                        @if ($registro->cantidad > 0)
                         <td style="text-align: center;"> {{  $registro->cantidad }} </td>
                         <td> {{  $registro->prod_serv }} </td>
                         <td style="text-align: right; padding-right:0.25cm"> $ {{ number_format($registro->subtotal, 2, '.', ',') }}  </td>
@@ -155,6 +155,7 @@
                             }
                         }
                         @endphp
+                        @endif
                     @else
                     <td> {{ $i++ }}</td>
                     <td>
@@ -175,7 +176,6 @@
                     <td> {{ Carbon::parse($registro->created_at)->format('d/m/Y H:i:s') }}</td>
                     <td>{{ Str::limit($registro->nombre_cliente, 18, '...') }} </td>
                     <td>
-                     @if ($registro->cantidad > 0)
                      @if ($registro->tipo == "TALLER")
                         REPARACIÓN EN TALLER
                      @elseif ($registro->tipo == "ABONO_TALLER")
@@ -196,7 +196,6 @@
                                 @endif
                                 @if (!$loop->last) <br> @endif
                         @endforeach
-                    @endif
                     @endif
                     </td>
                     <td style="text-align:right"> 
@@ -237,7 +236,6 @@
                     @endphp
                     @endif
                 </tr>
-                @endif
                 @endif
                 @endforeach
             </tbody>

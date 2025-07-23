@@ -125,9 +125,9 @@
                         @endphp
                     @endif
                 @else
-                @if ($registro->cantidad > 0)
                     <tr>
                         @if ($corteCaja['chkAgrupar'])
+                            @if ($registro->cantidad > 0)
                             <td style="text-align: center;"> {{  $registro->cantidad }} </td>
                             <td> {{  $registro->prod_serv }} </td>
                             <td style="text-align: right; padding-right:0.25cm"> $ {{ number_format($registro->subtotal, 2, '.', ',') }}  </td>
@@ -153,6 +153,7 @@
                                 $numVentas++;
                             }
                             @endphp
+                            @endif
                         @else
                         <td> {{ $i++ }}</td>
                         <td>
@@ -233,7 +234,6 @@
                         @endphp
                         @endif
                     </tr>
-                @endif
                 @endif
                 @endforeach
             </tbody>

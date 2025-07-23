@@ -164,7 +164,18 @@ class Caja extends Component
         $movimientoCaja = MovimientoCaja::
         whereBetween('fecha', [$fechaInicial, $fechaFinal])
         ->where('id_tipo', 4)
+        ->orderByDesc('fecha')
         ->first();
+
+        // $esMismaFecha = Carbon::parse($fechaInicial)->toDateString() === Carbon::parse($fechaFinal)->toDateString();
+
+        // $consulta = MovimientoCaja::whereBetween('fecha', [$fechaInicial, $fechaFinal])
+        //     ->where('id_tipo', 4);
+
+        // $movimientoCaja = $esMismaFecha
+        //     ? $consulta->orderByDesc('fecha')->first() // más reciente
+        //     : $consulta->orderBy('fecha')->first();    // más antiguo
+
 
         $entradasManuales = MovimientoCaja::
         whereBetween('fecha', [$fechaInicial, $fechaFinal])
