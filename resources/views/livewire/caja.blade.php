@@ -220,7 +220,8 @@
             </div>
             <div class="col-md-2">
                 {{-- wire:click="cobrar"  --}}
-                <x-button wire:click="cobrar" class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;">
+                <x-button class="w-100 text-center" style="display: flex; justify-content: center; align-items: center;"
+                    data-toggle="modal" data-target="#cobroCambioCajaModal">
                     {{ __('Cobrar [ F4 ]') }}
                 </x-button>
             </div>
