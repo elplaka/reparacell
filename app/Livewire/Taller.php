@@ -597,15 +597,49 @@ class Taller extends Component
                 {
                     DB::transaction(function () use ($numOrden, $acumulado) 
                     {
-                        $ultimoIdAbono = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->max('id_abono');
+                       // Busca el registro de crédito del taller
+                        $cobroTallerCredito = CobroTallerCredito::where('num_orden', $numOrden)->first();
 
+                        if ($cobroTallerCredito) 
+                        {
+                            // Si ya existe un registro de crédito, busca el último ID de abono
+                            // En este caso, CobroTallerCD (Cobro Taller Credito Detalle) es el que contiene los abonos
+                            $ultimoIdAbono = CobroTallerCreditoDetalle::where('id_cobro_taller_credito', $cobroTallerCredito->id)->max('id_abono');
+                            // Si no hay abonos, el resultado de max() será null, podemos usar el operador de coalescencia
+                            $ultimoIdAbono = $ultimoIdAbono ?? 0;
+
+                        } 
+                        else 
+                        {
+                            // No existe un registro de crédito, se crea uno nuevo
+                            $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
+
+                            // Verificamos si existe el equipo y su relación con el cliente
+                            if ($equipoTaller && $equipoTaller->equipo && $equipoTaller->equipo->cliente) {
+                                $idCliente = $equipoTaller->equipo->cliente->id;
+
+                                $cobroTallerCredito = new CobroTallerCredito();
+                                $cobroTallerCredito->num_orden = $numOrden;
+                                $cobroTallerCredito->id_cliente = $idCliente;
+                                $cobroTallerCredito->id_estatus = 1; // Asumiendo que 1 es el estatus inicial
+                                $cobroTallerCredito->save();
+
+                                $ultimoIdAbono = 0;
+                            } else {
+                                // Manejar el caso donde no se encuentra el equipo o el cliente
+                                // Esto previene errores si los datos no están bien relacionados
+                                // Puedes lanzar una excepción, registrar un error o simplemente no hacer nada
+                                $ultimoIdAbono = 0;
+                            }
+                        }
+                        
                         $cobroTallerCreditoDetalles = new CobroTallerCreditoDetalle();
                         $cobroTallerCreditoDetalles->num_orden = $numOrden;
                         $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $cobroTallerCreditoDetalles->abono = $this->cobroACredito['abono'];
                         $cobroTallerCreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
                         $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
-                        $cobroTallerCreditoDetalles->save();
+                        $cobroTallerCreditoDetalles->save();                        
 
                         $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');

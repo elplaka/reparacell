@@ -167,6 +167,18 @@ input[type="date"]:hover {
     font-size: 1em !important;
 }
 
+.my-custom-cancel-button {
+  /* Force a visible background and text color */
+  background-color: #d33 !important;
+  color: #fff !important;
+  height: 2.3em;
+
+  /* Flexbox para centrar el contenido */
+  display: flex!important;
+  align-items: center!important; /* Centra verticalmente */
+  justify-content: center!important; /* Centra horizontalmente */
+}
+
 
 </style>
 
@@ -488,7 +500,7 @@ input[type="date"]:hover {
             });
         });
 
-        document.addEventListener('livewire:initialized', function () {
+       document.addEventListener('livewire:initialized', function () {
             Livewire.on('mostrarToastAceptarCancelar', (attr) => {
                 Swal.fire({
                     title: attr[0],
@@ -497,7 +509,11 @@ input[type="date"]:hover {
                     confirmButtonColor: "#3085d6",
                     cancelButtonColor: "#d33",
                     confirmButtonText: "Aceptar",
-                    cancelButtonText: "Cancelar"
+                    cancelButtonText: "Cancelar",
+                    // Agrega una clase personalizada
+                    customClass: {
+                        cancelButton: 'my-custom-cancel-button' 
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Livewire.dispatch(attr[1]);
