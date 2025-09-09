@@ -1217,14 +1217,18 @@ if ($cliente) {
             $precio = $producto->precio_mayoreo;
         }
 
+
         $cantidad = $this->carrito[$index]['cantidad'];
 
         $subTotal = $precio * $cantidad;
+
+        // dd($this->carrito);
 
         // Actualizar el subTotal utilizando transform
         $this->carrito->transform(function ($item, $key) use ($index, $subTotal, $cantidad) {
             if ($key === $index) {
                 $item['subTotal'] = number_format($subTotal, 2, '.', ',');
+                $item['cantidad'] = $cantidad;
                 $item['cantidadVieja'] = $cantidad;
             }
             return $item;
@@ -1270,21 +1274,21 @@ if ($cliente) {
 
                 if ($inventarioDisponible >= 0)
                 {
-                    // dd($this->tipoPrecio);
-
-                    if ($this->tipoPrecio[0] == 1)  //Menudeo
+                    if ($this->tipoPrecio[$index] == 1)  //Menudeo
                     {
                         $subTotal = $producto->precio_venta * $value;
                     }
                     else
                     {
                         $subTotal = $producto->precio_mayoreo * $value;
+                        // dd($subTotal);
                     }
 
                     // Actualizar el subTotal utilizando transform
                     $this->carrito->transform(function ($item, $key) use ($index, $subTotal, $value) {
                         if ($key === $index) {
                             $item['subTotal'] = number_format($subTotal, 2, '.', ',');
+                            $item['cantidad'] = $value;
                             $item['cantidadVieja'] = $value;
                         }
                         return $item;
@@ -1464,6 +1468,10 @@ if ($cliente) {
                         $movimiento->id_usuario = Auth::id();
                         $movimiento->save();
                     }
+
+
+                    // dd($this->carrito);
+                    $index = 0;
                     
                     foreach ($this->carrito as $item)
                     {
@@ -1476,7 +1484,7 @@ if ($cliente) {
                         }
                         else
                         {
-                            if ($this->tipoPrecio[0] == 1)  //Menudeo
+                            if ($this->tipoPrecio[$index] == 1)  //Menudeo
                             { 
                                 $subTotal = $item['producto']->precio_venta * $cantidad;
                             }
@@ -1507,6 +1515,7 @@ if ($cliente) {
                         {
                             $this->restaInventario($codigoProducto, $cantidad);
                         }
+                        $index++;
                     }
 
                     $this->carrito = collect(); // Inicializa $carrito como una colección vacía
