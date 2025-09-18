@@ -107,7 +107,7 @@ class EquipoTallerController extends Controller
 				
 
             // Título centrado
-            $titulo =        "   CIBER SOCIAL - REPARACELL    SERVICIO/REPARACIÓN DE CELULARESTABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
+            $titulo =        "   CIBER SOCIAL - REPARACELL    SERVICIO/REPARACIÓN DE CELULARES, TABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
 
 		    $printer->text($titulo . "\n");
 
@@ -118,6 +118,113 @@ class EquipoTallerController extends Controller
             $texto3 = "Marca del Equipo: " . $this->cobro['marcaEquipo'];
             $texto4 = "Modelo del Equipo: " . $this->cobro['modeloEquipo'];
             //$texto5 = "Total Estimado: $" . $this->cobro['totalEstimado'];
+
+            // Imprimir los campos
+            $printer->text($texto0 . "\n");
+            $printer->text($texto1 . "\n");
+            $printer->text($texto2 . "\n");
+            $printer->text($texto3 . "\n");
+            $printer->text($texto4 . "\n");
+            // $printer->text($texto5 . "\n");
+
+            // Imprimir fallas de equipo si existen
+            if (!empty($this->cobro['fallasEquipo'])) {
+                $printer->text("Fallas del Equipo:\n");
+                foreach ($this->cobro['fallasEquipo'] as $falla) {
+                    $printer->text("- " . $falla->descripcion . "\n");
+                }
+            }
+
+            $printer->text("\n");
+            $printer->text("\n");
+            $printer->text("\n");
+            $printer->text("\n");
+
+            $printer->text("Para más información sobre tu equipo comunicarse al 6941150179\n");
+
+            $printer->text("\n");
+            $printer->text("\n");
+            $printer->text("\n");
+            $printer->text("\n");
+
+            // Cortar el papel (si es una impresora térmica)
+            $printer->cut();
+            
+            if ($abrirCaja)
+            { 
+                //$printer->pulse();
+            }
+
+            // Finalizar la conexión con la impresora
+            $printer->close();
+
+            //echo "Impresión exitosa.";
+
+            // return redirect()->back();
+            return redirect()->back()->with('success', '¡Operación exitosa!');
+        }
+        catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+            return redirect()->back();
+        }
+    }
+
+    public function print_final($numOrden, $abrirCaja = null)
+    {
+         try
+        {
+            $printer_name = "Ticket";
+            $connector = new WindowsPrintConnector($printer_name);
+            $printer = new Printer($connector);
+
+            $equipo_taller = EquipoTaller::where('num_orden', $numOrden)->first();
+            $fallas_equipo_taller = FallaEquipoTaller::where('num_orden', $numOrden)->get();
+            $cobro = CobroTaller::where('num_orden', $numOrden)->first();
+            $this->cobro['cliente'] = $equipo_taller->equipo->cliente->nombre;
+            $this->cobro['fechaEntrada'] = Carbon::parse($equipo_taller->fecha_entrada)->format('d/m/Y');
+            $this->cobro['tipoEquipo'] = $equipo_taller->equipo->tipo_equipo->nombre;
+            $this->cobro['marcaEquipo'] = $equipo_taller->equipo->marca->nombre;
+            $this->cobro['modeloEquipo'] = $equipo_taller->equipo->modelo->nombre;
+            $this->cobro['totalEstimado'] = $cobro->cobro_realizado;
+            $this->cobro['fallasEquipo'] = null;
+            $i = 0;
+            foreach($fallas_equipo_taller as $falla)
+            {
+                $this->cobro['fallasEquipo'][$i++] = $falla->falla;
+            }
+
+                       $imagePath = public_path('images/android.png');
+
+            try {
+                $logo = EscposImage::load($imagePath, false); // This is the line that errors
+
+            } catch (\Exception $e) {
+                dd('Error al cargar la imagen: ' . $e->getMessage() . '. Ruta intentada: ' . $imagePath);
+            }
+                
+
+            try {
+                //$printer->bitImage($logo); 
+            $printer->text("\n\n"); // Espacio antes de la imagen
+            $printer->bitImage($logo);
+            $printer->text("\n\n"); // Espacio después de la imagen
+            } catch (\Exception $e) {
+            dd('Error al enviar la imagen a la impresora (graphics()): ' . $e->getMessage() . '. Verifique la imagen y las capacidades de la impresora.');
+            }
+				
+
+            // Título centrado
+            $titulo =        "   CIBER SOCIAL - REPARACELL    SERVICIO/REPARACIÓN DE CELULARES, TABLETS Y EQUIPOS DE CÓMPUTO    \nÁLVARO OBREGÓN #9 COL. CENTRO   CONCORDIA, SINALOA              CEL: (694) 115-01-79\n";
+
+		    $printer->text($titulo . "\n");
+
+            // Resto del contenido
+            $texto0 = "Cliente: " . $this->cobro['cliente'];
+            $texto1 = "Fecha de Entrada: " . $this->cobro['fechaEntrada'];
+            $texto2 = "Tipo de Equipo: " . $this->cobro['tipoEquipo'];
+            $texto3 = "Marca del Equipo: " . $this->cobro['marcaEquipo'];
+            $texto4 = "Modelo del Equipo: " . $this->cobro['modeloEquipo'];
+            $texto5 = "Total : $" . $this->cobro['totalEstimado'];
 
             // Imprimir los campos
             $printer->text($texto0 . "\n");
@@ -162,99 +269,6 @@ class EquipoTallerController extends Controller
 
             // return redirect()->back();
             return redirect()->back()->with('success', '¡Operación exitosa!');
-        }
-        catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
-            return redirect()->back();
-        }
-    }
-
-    public function print_final($numOrden)
-    {
-        //**********************HASTA ACÁ SÍ ME IMPRIMIÓ**************************************** */
-        try
-        {
-            $printer_name = "Ticket";
-            $connector = new WindowsPrintConnector($printer_name);
-            $printer = new Printer($connector);
-
-            $equipo_taller = EquipoTaller::where('num_orden', $numOrden)->first();
-            $fallas_equipo_taller = FallaEquipoTaller::where('num_orden', $numOrden)->get();
-            $cobro = CobroTaller::where('num_orden', $numOrden)->first();
-
-            $this->cobroFinal['numOrden'] = $numOrden;
-            $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre;
-            $this->cobroFinal['fecha'] = now();
-            $this->cobroFinal['tipoEquipo'] = $cobro->equipoTaller->equipo->tipo_equipo->nombre;
-            $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre;
-            $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre;
-            $this->cobroFinal['cobroEstimado'] = $cobro->cobro_estimado;
-            $this->cobroFinal['cobroRealizado'] = $cobro->cobro_estimado;
-            $this->cobroFinal['idEstatusEquipo'] = $cobro->equipoTaller->id_estatus;
-            $this->cobroFinal['fallasEquipo'][] = null;
-            $this->cobroFinal['fallasEquipo'] = $cobro->equipoTaller->fallas;
-
-            $this->cobroFinal['fallasEquipo'] = $cobro->equipoTaller->fallas->map(function ($falla) {
-                return [
-                    'descripcion' => $falla->falla->descripcion,
-                ];
-            })->toArray();
-
-
-            // Título centrado
-            $titulo = "           REPARACELL\n";
-
-            $printer->text($titulo . "\n");
-
-            // Resto del contenido
-            $texto0 = "Cliente: " . $this->cobroFinal['cliente'];
-            $texto1 = "Fecha: " . $this->cobroFinal['fecha'];
-            $texto2 = "Tipo de Equipo: " . $this->cobroFinal['tipoEquipo'];
-            $texto3 = "Marca del Equipo: " . $this->cobroFinal['marcaEquipo'];
-            $texto4 = "Modelo del Equipo: " . $this->cobroFinal['modeloEquipo'];
-            $texto5 = "Total: $" . $this->cobroFinal['cobroRealizado'];
-
-            // Imprimir los campos
-            $printer->text($texto0 . "\n");
-            $printer->text($texto1 . "\n");
-            $printer->text($texto2 . "\n");
-            $printer->text($texto3 . "\n");
-            $printer->text($texto4 . "\n");
-            $printer->text($texto5 . "\n");
-
-            // dd($this->cobroFinal['fallasEquipo']);
-
-            // Imprimir fallas de equipo si existen
-            if (!empty($this->cobroFinal['fallasEquipo'])) {
-                $printer->text("Fallas del Equipo:\n");
-                foreach ($this->cobroFinal['fallasEquipo'] as $falla) {
-                    $printer->text("- " . $falla['descripcion'] . "\n");
-                }
-            }
-
-            $printer->text("\n");
-            $printer->text("\n");
-            $printer->text("\n");
-            $printer->text("\n");
-
-            // $printer->text("Para más información sobre tu equipo comunicarse al 6941150179\n");
-
-            $printer->text("\n");
-            $printer->text("\n");
-            $printer->text("\n");
-            $printer->text("\n");
-
-            // Cortar el papel (si es una impresora térmica)
-            $printer->cut();
-            $printer->pulse();
-
-            // Finalizar la conexión con la impresora
-            $printer->close();
-
-            //echo "Impresión exitosa.";
-
-            // return redirect()->back();
-            return redirect()->back()->with('success', 'Operación exitosa...');
         }
         catch (\Exception $e) {
             session()->flash('error', $e->getMessage());

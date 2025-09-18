@@ -958,7 +958,7 @@ class Taller extends Component
         return redirect()->route('caja.movimientos');
     }
 
-    public function cobrar($numOrden)
+    public function cobrar($numOrden, $conTicket)
     {
         if ($this->modalCobroFinalAbierta && !$this->cobroFinal['anticipo'])
         {
@@ -968,7 +968,7 @@ class Taller extends Component
             {
                 try 
                 {
-                    DB::transaction(function () use ($numOrden) 
+                    DB::transaction(function () use ($numOrden, $conTicket) 
                     {
                         $cobroTaller = CobroTaller::create([
                             'num_orden' => $numOrden,
@@ -1026,18 +1026,18 @@ class Taller extends Component
 
                         $this->modalCobroFinalAbierta = false;
 
-                        if ($this->cobroFinal['idModoPago'] == 1)  //Solo si es EFECTIVO se imprime ticket
+                        if ($conTicket && $this->cobroFinal['idModoPago'] == 1)  //Solo si es EFECTIVO se imprime ticket
                         {
                             $this->showMainErrors = true;
 
-      				$printer_name = "Ticket";
-         			$connector = new WindowsPrintConnector($printer_name);
-         			$printer = new Printer($connector);
+                            // $printer_name = "Ticket";
+                            // $connector = new WindowsPrintConnector($printer_name);
+                            // $printer = new Printer($connector);
 
-         			$printer->pulse();
-         			$printer->close();
+                            // $printer->pulse();
+                            // $printer->close();
 
-                            //return redirect()->route('taller.print', $numOrden, true); 
+                            return redirect()->route('taller.print-final', $numOrden, true); 
                         }
 
                         $this->dispatch('cierraCobroModal');
@@ -1959,6 +1959,11 @@ public function obtenerIconoSegunEstatus($id_estatus)
     public function cobroEquipoTaller($numOrden)
     {
         return redirect()->route('taller.print', $numOrden, false);
+    }
+
+    public function cobroEquipoTallerFinal($numOrden)
+    {
+        return redirect()->route('taller.print-final', $numOrden, false);
     }
 
     public function anteriorEstatus($numOrden, $idEstatus)

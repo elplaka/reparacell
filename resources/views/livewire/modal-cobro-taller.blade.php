@@ -206,29 +206,34 @@
                                     </select>
                                 </div>                              
                             </div>                            
-                            <div class="row">
-                                <div class="col-md-6">                                    
-                                </div>
+                            <div class="d-flex justify-content-end align-items-center">
                                 @if ($cobroFinal['anticipo'] || $cobroFinal['montoAbonado'])
-                                <div class="col-md-3 text-right">
-                                    <button wire:click="cobroLiquidar({{ $cobroFinal['numOrden'] }})" class="btn btn-success text-xs leading-4 font-medium text-white uppercase tracking-wider ml-8 p-2 px-4" style="letter-spacing: 1px;">
-                                        {{ __('LIQUIDAR [ F2 ]') }}
-                                    </button>
-                                </div>
+                                    <div class="p-1">
+                                        <button wire:click="cobroLiquidar({{ $cobroFinal['numOrden'] }})" class="btn btn-success text-xs leading-4 font-medium text-white uppercase tracking-wider p-2 px-4" style="letter-spacing: 1px;">
+                                            {{ __('LIQUIDAR [ F2 ]') }}
+                                        </button>
+                                    </div>
                                 @endif
-                                <div class="col-md-3 text-right">
-                                    @if (!$cobroFinal['publicoGeneral'])
-                                    <button wire:click="cobroCredito({{ $cobroFinal['numOrden'] }})" class="btn btn-primary text-xs leading-4 font-medium text-white uppercase tracking-wider ml-8 p-2 px-4" style="letter-spacing: 1px;">
-                                        {{ __('CRÉDITO [ F3 ]') }}
-                                    </button>
-                                    @endif
-                                </div>
+
+                                @if (!$cobroFinal['publicoGeneral'])
+                                    <div class="p-1">
+                                        <button wire:click="cobroCredito({{ $cobroFinal['numOrden'] }})" class="btn btn-primary text-xs leading-4 font-medium text-white uppercase tracking-wider p-2 px-4" style="letter-spacing: 1px;">
+                                            {{ __('CRÉDITO [ F3 ]') }}
+                                        </button>
+                                    </div>
+                                @endif
+                                
                                 @if(!$cobroFinal['anticipo'] && !$cobroFinal['montoAbonado'])
-                                <div class="col-md-3 text-right">
-                                    <x-button wire:click="cobrar({{ $cobroFinal['numOrden'] }})" class="ml-6">
-                                        {{ __('Cobrar [ F4 ]') }}
-                                    </x-button>
-                                </div>
+                                    <div class="p-1">
+                                        <x-button wire:click="cobrar({{ $cobroFinal['numOrden'] }}, false)" class="ml-6">
+                                            {{ __('Cobrar s/recibo [ F4 ]') }}
+                                        </x-button>
+                                    </div>
+                                    <div class="p-1">
+                                        <button wire:click="cobrar({{ $cobroFinal['numOrden'] }}, true)" class="btn btn-danger text-xs leading-4 font-medium text-white uppercase tracking-wider p-2 px-4" style="letter-spacing: 1px;">
+                                            {{ __('Cobrar c/recibo [ F6 ]') }}
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
                         </div>
