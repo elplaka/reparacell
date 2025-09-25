@@ -262,6 +262,12 @@
         Livewire.dispatch('f4-pressed', @this.cobroFinal);
     }
     });
+
+    window.addEventListener('keydown', function(event) {
+    if (event.key === 'F6') {
+        Livewire.dispatch('f6-pressed', @this.cobroFinal);
+    }
+    });
 </script>
 
 

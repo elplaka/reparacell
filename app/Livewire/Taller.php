@@ -37,7 +37,8 @@ class Taller extends Component
     protected $listeners = [
         'f2-pressed' => 'cobroLiquidar',
         'f3-pressed' => 'cobroCredito',
-        'f4-pressed' => 'cobrar',
+        'f4-pressed' => 'cobrarSinTicket',
+        'f6-pressed' => 'cobrarConTicket',
         'f10-pressed' => 'abrirCorteCaja', 
         'lisLiquidarCobroCredito' => 'liquidarCobroCredito',
         'lisBorraAbono' => 'borraAbono',
@@ -957,6 +958,17 @@ class Taller extends Component
 
         return redirect()->route('caja.movimientos');
     }
+
+    public function cobrarSinTicket($numOrden)
+    {
+        $this->cobrar($numOrden, false);
+    }
+
+    public function cobrarConTicket($numOrden)
+    {
+        $this->cobrar($numOrden, true);
+    }
+
 
     public function cobrar($numOrden, $conTicket)
     {
