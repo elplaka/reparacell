@@ -113,7 +113,7 @@
                         >
                             <i class="fa-solid fa-file-pen" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a> &nbsp;
-                        <a wire:click.prevent="modificaInventario('{{ $producto->codigo }}')" title="Modificar inventario" wire:loading.attr="disabled" wire:target="modificaInventario" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#modificarInventarioModal"
+                        <a wire:click.prevent="modificaInventario('{{ e($producto->codigo) }}')" title="Modificar inventario" wire:loading.attr="disabled" wire:target="modificaInventario" style="color: dimgrey; cursor:pointer;" data-toggle="modal" data-target="#modificarInventarioModal"
                             >
                             <i class="fa-solid fa-boxes-stacked" style="color: dimgrey;" onmouseover="this.style.color='blue'" onmouseout="this.style.color='dimgrey'"></i>
                         </a>  &nbsp;

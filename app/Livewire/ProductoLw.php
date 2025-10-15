@@ -496,7 +496,9 @@ class ProductoLw extends Component
 
     public function modificaInventario($codigoProducto)
     {
-        $producto = Producto::findOrFail($codigoProducto);
+        $codigoLimpio = html_entity_decode($codigoProducto);
+
+        $producto = Producto::findOrFail($codigoLimpio);
 
         $this->inventarioMod = [
             'codigo' => $producto->codigo,
