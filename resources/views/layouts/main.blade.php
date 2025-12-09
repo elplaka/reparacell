@@ -522,6 +522,28 @@ input[type="date"]:hover {
             });
         });
 
+         document.addEventListener('livewire:initialized', function () {
+            Livewire.on('mostrarToastAceptarCancelarIdVenta', (attr) => {
+                Swal.fire({
+                    title: attr[0],
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Aceptar",
+                    cancelButtonText: "Cancelar",
+                    // Agrega una clase personalizada
+                    customClass: {
+                        cancelButton: 'my-custom-cancel-button' 
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch(attr[1], { idVenta: attr[2] });
+                    }
+                });
+            });
+        });
+
         document.addEventListener('livewire:initialized', function () {
             Livewire.on('mostrarToastAceptarCancelarParam', attr => {
                 Swal.fire({

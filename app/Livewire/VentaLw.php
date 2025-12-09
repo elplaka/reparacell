@@ -4,9 +4,11 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Venta;
+use App\Models\VentaDetalle;
 use App\Models\User;
 use App\Models\ModoPago;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 class VentaLw extends Component
 {
@@ -24,6 +26,10 @@ class VentaLw extends Component
         'idUsuario',
         'cancelada'
     ];
+
+    protected $listeners = [
+        'lisCancelaVenta' => 'cancelaVenta'
+    ];  
 
     public function abrirEditarModoPagoModal($idVenta)
     {
@@ -43,14 +49,77 @@ class VentaLw extends Component
         $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
     }
 
+    public function actualizaInventario($detalles, $ventaCancelada)
+    {
+        if ($ventaCancelada)
+        {
+            foreach ($detalles as $detalle)
+            {
+                $detalle->producto->inventario += $detalle->cantidad;
+                $detalle->producto->save();
+            }
+        }
+        else
+        {
+            foreach ($detalles as $detalle)
+            {
+                $detalle->producto->inventario -= $detalle->cantidad;
+                $detalle->producto->save();
+            }
+        }
+    }
+
+    public function cancelaVenta($idVenta)
+    {
+        try {
+        // 1. Iniciar la Transacción
+        DB::transaction(function () use ($idVenta) {
+            
+            // 1. Obtener la venta
+            $venta = Venta::findOrFail($idVenta);
+            
+            // 2. Invertir el estado 'cancelada'
+            $venta->cancelada = !$venta->cancelada;
+            $venta->save(); 
+            
+            // 3. Obtener el estado final y los detalles
+            $ventaCancelada = $venta->cancelada;
+            $ventaDetalles = VentaDetalle::where('id_venta', $idVenta)->get();
+            
+            // 4. Actualizar el inventario
+            // Si $this->actualizaInventario() falla (ej. stock negativo), 
+            // DEBE lanzar una excepción para forzar el ROLLBACK.
+            $this->actualizaInventario($ventaDetalles, $ventaCancelada);
+            $this->dispatch('mostrarToast', 'Venta cancelada con éxito!!!');
+        }); // COMMIT automático si no hay excepciones.
+
+        // 5. Éxito
+        // $mensaje = $venta->cancelada ? 'Venta cancelada y inventario actualizado.' : 'Venta reactivada y inventario ajustado.';
+        // return response()->json(['message' => $mensaje], 200);
+
+        } catch (ModelNotFoundException $e) {
+            // Manejar el caso específico si la Venta no se encuentra
+            Log::warning("Intento de actualizar venta no encontrada: ID $idVenta");
+            return response()->json(['error' => 'Venta no encontrada.'], 404);
+
+        } catch (Exception $e) {
+            // 6. Manejo de Error General (incluye fallos en save() o actualizaInventario())
+            
+            // Registrar el error en los logs de Laravel (storage/logs/laravel.log)
+            Log::error("Error en transacción de cancelación de venta #$idVenta: " . $e->getMessage());
+
+            // Retornar una respuesta de error al frontend
+            return response()->json([
+                'error' => 'No se pudo completar la operación (Venta/Inventario).',
+                'details' => $e->getMessage() // Útil para depuración en desarrollo
+            ], 500);
+        }
+    }
+
     public function invertirEstatusVenta($idVenta)
     {
-        $venta = Venta::findOrFail($idVenta);
-
-        $venta->cancelada = !$venta->cancelada;
-        $venta->save();     
+        $this->dispatch('mostrarToastAceptarCancelarIdVenta', '¿Deseas CANCELAR la venta seleccionada?', 'lisCancelaVenta', $idVenta);        
     } 
-
 
     public function render()
     {
