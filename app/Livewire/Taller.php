@@ -18,7 +18,7 @@ use App\Models\VentaDetalle;
 use App\Models\VentaCreditoDetalle;
 use App\Models\User;
 use Carbon\Carbon;
-use Livewire\Attributes\On; 
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
@@ -39,11 +39,11 @@ class Taller extends Component
         'f3-pressed' => 'cobroCredito',
         'f4-pressed' => 'cobrarSinTicket',
         'f6-pressed' => 'cobrarConTicket',
-        'f10-pressed' => 'abrirCorteCaja', 
+        'f10-pressed' => 'abrirCorteCaja',
         'lisLiquidarCobroCredito' => 'liquidarCobroCredito',
         'lisBorraAbono' => 'borraAbono',
         'guardaCambioEstatusEquipo'
-    ]; 
+    ];
 
     public $muestraDivAgregaEquipo;
     public $numberOfPaginatorsRendered = [];
@@ -77,7 +77,7 @@ class Taller extends Component
         'nombreCliente' => null
     ];
 
-    public $cobro = 
+    public $cobro =
     [
         'fechaEntrada' => null,
         'tipoEquipo' => null,
@@ -91,7 +91,7 @@ class Taller extends Component
         'fallasEquipo' => null,
     ];
 
-    public $cobroFinal = 
+    public $cobroFinal =
     [
         'numOrden' => null,
         'cliente' => null,
@@ -110,7 +110,7 @@ class Taller extends Component
         'idModoPago' => 1
     ];
 
-    public $cobroACredito = 
+    public $cobroACredito =
     [
         'nombreCliente' => null,
         'numOrden' => null,
@@ -158,20 +158,13 @@ class Taller extends Component
 
     public function updated($propertyName, $value)
     {
-        if ($this->modalCambiarEstatusEquipoAbierta)
-        {
+        if ($this->modalCambiarEstatusEquipoAbierta) {
             $this->resetErrorBag('estatusModalCambiaEstatus');
-        }
-        else if ($this->modalCobroFinalAbierta || $this->modalCobroCreditoTallerAbierta)
-        {
-
-        }
-        else
-        {
+        } else if ($this->modalCobroFinalAbierta || $this->modalCobroCreditoTallerAbierta) {
+        } else {
             list($property, $index) = explode('.', $propertyName);
 
-            if ($property === 'busquedaEquipos' && $index === 'entregados') 
-            {
+            if ($property === 'busquedaEquipos' && $index === 'entregados') {
                 $this->busquedaEquipos['idEstatus'] = [];
 
                 if (in_array('entregados', $this->busquedaEquipos['entregados'])) {
@@ -189,40 +182,27 @@ class Taller extends Component
                 }
 
                 $this->busquedaEquipos['idEstatus'] = array_unique($this->busquedaEquipos['idEstatus']);
-            } 
-        }  
+            }
+        }
     }
 
 
     public function updatedCobroFinalCobroRealizado()
     {
-        if (strlen(trim($this->cobroFinal['cobroRealizado'])) == 0) 
-        {
-            if (isset($this->cobroFinal['anticipo']))
-            {
+        if (strlen(trim($this->cobroFinal['cobroRealizado'])) == 0) {
+            if (isset($this->cobroFinal['anticipo'])) {
                 $this->cobroFinal['restante'] = 0 - $this->cobroFinal['anticipo'];
-            }
-            else if (isset($this->cobroFinal['montoAbonado']))
-            {
+            } else if (isset($this->cobroFinal['montoAbonado'])) {
                 $this->cobroFinal['restante'] = 0 - $this->cobroFinal['montoAbonado'];
-            }
-            else
-            {
+            } else {
                 $this->cobroFinal['restante'] = $this->cobroFinal['cobroEstimado'];
             }
-        }
-        else
-        {
-            if (isset($this->cobroFinal['anticipo']))
-            { 
+        } else {
+            if (isset($this->cobroFinal['anticipo'])) {
                 $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
-            }
-            else if (isset($this->cobroFinal['montoAbonado']))
-            {
+            } else if (isset($this->cobroFinal['montoAbonado'])) {
                 $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['montoAbonado'];
-            }
-            else
-            {
+            } else {
                 $this->cobroFinal['restante'] = $this->cobroFinal['cobroEstimado'];
             }
         }
@@ -239,61 +219,45 @@ class Taller extends Component
         //          $this->modalCorteCajaAbierta,
         //          $this->modalCobroCreditoTallerAbierta);
     }
-    
+
     public function cobroFinalEquipoTaller($numOrden)
     {
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
-        if ($equipoTaller->id_estatus < 5)
-        {
+        if ($equipoTaller->id_estatus < 5) {
             $cobro = CobroEstimadoTaller::where('num_orden', $numOrden)
-            ->orderBy('id', 'desc')
-            ->first();
+                ->orderBy('id', 'desc')
+                ->first();
 
             $this->estatusEquipos = EstatusEquipo::whereIn('id', [5, 6])->get();
 
             $this->cobroFinal['numOrden'] = $numOrden;
 
-            if ($cobro->equipoTaller->equipo->cliente->disponible)
-            {
+            if ($cobro->equipoTaller->equipo->cliente->disponible) {
                 $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre;
-            }
-            else
-            {
+            } else {
                 $this->cobroFinal['cliente'] = $cobro->equipoTaller->equipo->cliente->nombre . "*";
             }
             $this->cobroFinal['fecha'] = now();
 
-            $this->cobroFinal['tipoEquipo'] =  $cobro->equipoTaller->equipo->tipo_equipo->disponible? $cobro->equipoTaller->equipo->tipo_equipo->nombre : $cobro->equipoTaller->equipo->tipo_equipo->nombre . "*";
-            if ($cobro->equipoTaller->equipo->marca->disponible)
-            {
-                if($cobro->equipoTaller->equipo->marca->id_tipo_equipo === $cobro->equipoTaller->equipo->id_tipo)
-                {
+            $this->cobroFinal['tipoEquipo'] =  $cobro->equipoTaller->equipo->tipo_equipo->disponible ? $cobro->equipoTaller->equipo->tipo_equipo->nombre : $cobro->equipoTaller->equipo->tipo_equipo->nombre . "*";
+            if ($cobro->equipoTaller->equipo->marca->disponible) {
+                if ($cobro->equipoTaller->equipo->marca->id_tipo_equipo === $cobro->equipoTaller->equipo->id_tipo) {
                     $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre;
-                }
-                else
-                {
+                } else {
                     $this->cobroFinal['marcaEquipo'] = "*****";
                 }
-            }
-            else
-            {
+            } else {
                 $this->cobroFinal['marcaEquipo'] = $cobro->equipoTaller->equipo->marca->nombre . "*";
             }
 
-            if ($cobro->equipoTaller->equipo->modelo->disponible)
-            {
-                if ($cobro->equipoTaller->equipo->modelo->id_marca === $cobro->equipoTaller->equipo->marca->id)
-                {
+            if ($cobro->equipoTaller->equipo->modelo->disponible) {
+                if ($cobro->equipoTaller->equipo->modelo->id_marca === $cobro->equipoTaller->equipo->marca->id) {
                     $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre;
-                }
-                else
-                {
+                } else {
                     $this->cobroFinal['modeloEquipo'] = "*****";
                 }
-            }
-            else
-            {
+            } else {
                 $this->cobroFinal['modeloEquipo'] = $cobro->equipoTaller->equipo->modelo->nombre . "*";
             }
 
@@ -306,9 +270,8 @@ class Taller extends Component
             $this->cobroFinal['anticipo'] = null;
             $this->cobroFinal['idModoPago'] = 1;
 
-            $telefonoContacto = $cobro->equipoTaller->equipo->cliente->telefono_contacto;        
-            if ($telefonoContacto == "0000000000")
-            {
+            $telefonoContacto = $cobro->equipoTaller->equipo->cliente->telefono_contacto;
+            if ($telefonoContacto == "0000000000") {
                 $this->cobroFinal['publicoGeneral'] = true;
             }
 
@@ -323,25 +286,20 @@ class Taller extends Component
                 $detallesConIdAbono = $detalles->where('id_abono', '>=', 0);
                 $detalleSinIdAbono = $detalles->where('id_abono', 0)->first();
 
-                if ($detallesConIdAbono->count() >= 1) 
-                {
+                if ($detallesConIdAbono->count() >= 1) {
                     $this->cobroFinal['montoAbonado'] = $detallesConIdAbono->sum('abono');
                     $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['montoAbonado'];
-                } 
-                elseif ($detalleSinIdAbono) 
-                {
+                } elseif ($detalleSinIdAbono) {
                     $this->cobroFinal['anticipo'] = $detalleSinIdAbono->abono;
                     $this->cobroFinal['restante'] = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
                 }
-            }  
-            
+            }
+
             $this->dispatch('lanzaCobroModal');  //Abre la ventana modal con Javascript en el layout.main
 
             $this->datosCobroCargados = true;
             $this->modalCobroFinalAbierta = true;
-        }
-        else
-        {
+        } else {
             session()->flash('error', 'El equipo NO SE PUEDE COBRAR porque ya ha sido cobrado anteriormente. Intenta con otro.');
         }
     }
@@ -349,7 +307,7 @@ class Taller extends Component
     public function invierteCobroEquipoTaller($numOrden)
     {
         $cobro = CobroTaller::where('num_orden', $numOrden)
-        ->first();
+            ->first();
 
         $cobro->cancelado = !$cobro->cancelado;
         $cobro->save();
@@ -357,26 +315,21 @@ class Taller extends Component
 
     public function cobroCredito($numOrden)
     {
-         if ((isset($this->cobroFinal['anticipo']) 
-            || isset($this->cobroFinal['montoAbonado'])))
-        {
-            if ($this->cobroFinal['restante'] <= 0)
-            {
+        if ((isset($this->cobroFinal['anticipo'])
+            || isset($this->cobroFinal['montoAbonado']))) {
+            if ($this->cobroFinal['restante'] <= 0) {
                 $this->dispatch('mostrarToastError', 'No es posible generar el CRÉDITO debido a que ya está cubierto el TOTAL COBRADO. Aumenta el TOTAL COBRADO si quieres generarlo.');
                 return false;
             }
         }
-        
-        if ($this->modalCobroFinalAbierta)
-        {         
+
+        if ($this->modalCobroFinalAbierta) {
             $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
             if ($equipoTaller->id_estatus < 5)  //Si todavía no ha sido cobrado lo cobra
             {
-                try 
-                {
-                    DB::transaction(function () use ($numOrden) 
-                    {
+                try {
+                    DB::transaction(function () use ($numOrden) {
                         $cobroTaller = CobroTaller::create([
                             'num_orden' => $numOrden,
                             'fecha' => now(),
@@ -396,19 +349,15 @@ class Taller extends Component
                         $conCobroEstimado = false;
                         $this->cobroACredito['conCobroEstimado'] = false;
 
-                        if (is_null($this->cobroFinal['anticipo']))
-                        {
-                            if ($equipoTaller->cobroTallerCredito)
-                            {
+                        if (is_null($this->cobroFinal['anticipo'])) {
+                            if ($equipoTaller->cobroTallerCredito) {
                                 $cobroTallerCredito = CobroTallerCredito::where('num_orden', $numOrden)->first();
                                 $cobroTallerCredito->id_estatus = 1;
                                 $cobroTallerCredito->save();
 
                                 $conCobroEstimado = true;
                                 // $this->cobroACredito['conCobroEstimado'] = true;
-                            }
-                            else
-                            {
+                            } else {
                                 $cobroTallerCredito = new CobroTallerCredito();
                                 $cobroTallerCredito->num_orden = $numOrden;
                                 $cobroTallerCredito->id_cliente = $idCliente;
@@ -428,84 +377,58 @@ class Taller extends Component
                         $this->cobroACredito['numOrden'] = $numOrden;
 
                         $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
-                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
-                        if ($equipoTaller->equipo->marca->disponible)
-                        {
-                            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
-                            {
+                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible ? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
+                        if ($equipoTaller->equipo->marca->disponible) {
+                            if ($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo) {
                                 $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-                            }
-                            else
-                            {
+                            } else {
                                 $this->cobroACredito['marcaEquipo'] = "*****";
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
                         }
 
-                        if ($equipoTaller->equipo->modelo->disponible)
-                        {
-                            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
-                            {
+                        if ($equipoTaller->equipo->modelo->disponible) {
+                            if ($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id) {
                                 $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
-                            }
-                            else
-                            {
+                            } else {
                                 $this->cobroACredito['modeloEquipo'] = "*****";
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
                         }
 
                         $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
-                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
-                        if ($equipoTaller->equipo->marca->disponible)
-                        {
-                            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
-                            {
+                        $this->cobroACredito['tipoEquipo'] =  $equipoTaller->equipo->tipo_equipo->disponible ? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
+                        if ($equipoTaller->equipo->marca->disponible) {
+                            if ($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo) {
                                 $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-                            }
-                            else
-                            {
+                            } else {
                                 $this->cobroACredito['marcaEquipo'] = "*****";
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
                         }
 
-                        if ($equipoTaller->equipo->modelo->disponible)
-                        {
-                            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
-                            {
+                        if ($equipoTaller->equipo->modelo->disponible) {
+                            if ($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id) {
                                 $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
-                            }
-                            else
-                            {
+                            } else {
                                 $this->cobroACredito['modeloEquipo'] = "*****";
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
                         }
 
                         $this->cobroACredito['idEstatus'] = 1;
                         $this->cobroACredito['estatus'] = "SIN LIQUIDAR";
 
-                        if ($equipoTaller->cobroTallerCredito && !$conCobroEstimado)
-                        {
+                        if ($equipoTaller->cobroTallerCredito && !$conCobroEstimado) {
                             $this->cobroACredito['idEstatus'] = $equipoTaller->cobroTallerCredito->estatus->id;
                             $this->cobroACredito['estatus'] = $equipoTaller->cobroTallerCredito->estatus->descripcion;
                         }
 
-                        if ($equipoTaller->cobroTaller)
-                        {
+                        if ($equipoTaller->cobroTaller) {
                             $this->cobroACredito['monto'] = $equipoTaller->cobroTaller->cobro_realizado;
                         }
 
@@ -513,29 +436,26 @@ class Taller extends Component
 
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
-                
+
                         $this->modalCobroCreditoTallerAbierta = true;
                         $this->modalCobroFinalAbierta = false;
-                
+
                         $this->muestraDivAbono = false;
-                
+
                         $this->cobroACredito['abono'] = null;
-                
+
                         $this->showModalErrors = true;
                         $this->showMainErrors = false;
 
                         $this->dispatch('cierraCobroModal');
                         $this->dispatch('abreCobroCreditoTallerModal');
                     });
-                } catch (\Exception $e)
-                {
-                        // Manejo de errores si ocurre una excepción
-                        // Puedes agregar logs o notificaciones aquí
-                        dd($e);
+                } catch (\Exception $e) {
+                    // Manejo de errores si ocurre una excepción
+                    // Puedes agregar logs o notificaciones aquí
+                    dd($e);
                 }
-            }
-            else
-            {
+            } else {
                 $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
                 $idCliente = $equipoTaller->equipo->cliente->id;
@@ -549,8 +469,7 @@ class Taller extends Component
 
                 $this->cobroACredito['idEstatus'] = $equipoTaller->cobroTallerCredito->estatus->id;
                 $this->cobroACredito['estatus'] = $equipoTaller->cobroTallerCredito->estatus->descripcion;
-                if ($equipoTaller->cobroTaller)
-                {
+                if ($equipoTaller->cobroTaller) {
                     $this->cobroACredito['monto'] = $equipoTaller->cobroTaller->cobro_realizado;
                 }
 
@@ -558,9 +477,7 @@ class Taller extends Component
 
                 $this->dispatch('abreCobroCreditoTallerModal');
             }
-        }
-        else
-        {
+        } else {
             dd('OPERACIÓN INVÁLIDA');
         }
     }
@@ -582,36 +499,28 @@ class Taller extends Component
         if (floatval($this->cobroACredito['abono']) > 0)  //Si el abono es mayor que cero
         {
             //Para saber si se sobrepasa el monto a pagar
-            $acumulado =$this->sumaAbonos + $this->cobroACredito['abono'];  
+            $acumulado = $this->sumaAbonos + $this->cobroACredito['abono'];
             $numOrden = $this->cobroACredito['numOrden'];
 
-            if ($acumulado > $this->cobroACredito['monto'])
-            {
+            if ($acumulado > $this->cobroACredito['monto']) {
                 $this->muestraDivAbono = false;
                 $this->cobroACredito['abono'] = null;
                 $this->addError('abono', 'Debes capturar un monto menor en el abono.');
                 $this->dispatch('muestraBotonAgregarPago');
-            }
-            else
-            {
-                try 
-                {
-                    DB::transaction(function () use ($numOrden, $acumulado) 
-                    {
-                       // Busca el registro de crédito del taller
+            } else {
+                try {
+                    DB::transaction(function () use ($numOrden, $acumulado) {
+                        // Busca el registro de crédito del taller
                         $cobroTallerCredito = CobroTallerCredito::where('num_orden', $numOrden)->first();
 
-                        if ($cobroTallerCredito) 
-                        {
+                        if ($cobroTallerCredito) {
                             // Si ya existe un registro de crédito, busca el último ID de abono
                             // En este caso, CobroTallerCD (Cobro Taller Credito Detalle) es el que contiene los abonos
-                            $ultimoIdAbono = CobroTallerCreditoDetalle::where('id_cobro_taller_credito', $cobroTallerCredito->id)->max('id_abono');
+                            //$ultimoIdAbono = CobroTallerCreditoDetalle::where('id_cobro_taller_credito', $cobroTallerCredito->id)->max('id_abono');
+                            $ultimoIdAbono = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->max('id_abono');
                             // Si no hay abonos, el resultado de max() será null, podemos usar el operador de coalescencia
                             $ultimoIdAbono = $ultimoIdAbono ?? 0;
-
-                        } 
-                        else 
-                        {
+                        } else {
                             // No existe un registro de crédito, se crea uno nuevo
                             $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
@@ -633,31 +542,29 @@ class Taller extends Component
                                 $ultimoIdAbono = 0;
                             }
                         }
-                        
+
                         $cobroTallerCreditoDetalles = new CobroTallerCreditoDetalle();
                         $cobroTallerCreditoDetalles->num_orden = $numOrden;
                         $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
                         $cobroTallerCreditoDetalles->abono = $this->cobroACredito['abono'];
                         $cobroTallerCreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
                         $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
-                        $cobroTallerCreditoDetalles->save();                        
+                        $cobroTallerCreditoDetalles->save();
 
                         $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
 
-                        if ($acumulado == $this->cobroACredito['monto'])
-                        {
+                        if ($acumulado == $this->cobroACredito['monto']) {
                             CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
                             $this->cobroACredito['estatus'] = $cobroTallerCreditoDetalles->first()->cobroCredito->estatus->descripcion;
                             $this->cobroACredito['idEstatus'] = 2;
                         }
 
-                        if ($this->cobroACredito['idModoPago'] == 1)
-                        {
+                        if ($this->cobroACredito['idModoPago'] == 1) {
                             $idRef = $numOrden % 1000;
                             $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
-            
+
                             $movimiento = new MovimientoCaja();
                             $movimiento->referencia = $this->regresaReferencia(3, $idRef);
                             $movimiento->id_tipo = 3;
@@ -667,25 +574,19 @@ class Taller extends Component
                             $movimiento->save();
                         }
                     });
-                } catch (\Exception $e)
-                {
-                        // Manejo de errores si ocurre una excepción
-                        dd($e);
+                } catch (\Exception $e) {
+                    // Manejo de errores si ocurre una excepción
+                    dd($e);
                 }
                 $this->muestraDivAbono = false;
                 $this->cobroACredito['abono'] = null;
 
                 session()->flash('success', 'El ABONO ha sido agregado exitosamente.');
             }
-        }
-        else
-        {
-            if (strlen(trim($this->cobroACredito['abono'])) == 0)
-            {
+        } else {
+            if (strlen(trim($this->cobroACredito['abono'])) == 0) {
                 $this->addError('abono', 'Debes capturar el abono.');
-            }
-            else
-            {
+            } else {
                 $this->addError('abono', 'El abono debe ser mayor que cero.');
             }
         }
@@ -696,7 +597,7 @@ class Taller extends Component
         $this->muestraDivAbono = true;
     }
 
- 
+
 
     public function abreCobroCredito($numOrden, $esEstimado = false)
     {
@@ -704,38 +605,26 @@ class Taller extends Component
 
         $this->cobroACredito['nombreCliente'] = $equipoTaller->equipo->cliente->disponible ? $equipoTaller->equipo->cliente->nombre : $equipoTaller->equipo->cliente->nombre . "*";
         $this->cobroACredito['numOrden'] = $numOrden;
-        
+
         $this->cobroACredito['tipoEquipo'] = $equipoTaller->equipo->tipo_equipo->disponible ? $equipoTaller->equipo->tipo_equipo->nombre : $equipoTaller->equipo->tipo_equipo->nombre . "*";
 
-        if ($equipoTaller->equipo->marca->disponible)
-        {
-            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
-            {
+        if ($equipoTaller->equipo->marca->disponible) {
+            if ($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo) {
                 $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-            }
-            else
-            {
+            } else {
                 $this->cobroACredito['marcaEquipo'] = "*****";
             }
-        }
-        else
-        {
+        } else {
             $this->cobroACredito['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
         }
 
-        if ($equipoTaller->equipo->modelo->disponible)
-        {
-            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
-            {
+        if ($equipoTaller->equipo->modelo->disponible) {
+            if ($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id) {
                 $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
-            }
-            else
-            {
+            } else {
                 $this->cobroACredito['modeloEquipo'] = "*****";
             }
-        }
-        else
-        {
+        } else {
             $this->cobroACredito['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
         }
 
@@ -783,16 +672,13 @@ class Taller extends Component
 
     public function cobroLiquidar($numOrden)
     {
-        if ($this->modalCobroFinalAbierta && ($this->cobroFinal['anticipo'] || $this->cobroFinal['montoAbonado']))
-        {
+        if ($this->modalCobroFinalAbierta && ($this->cobroFinal['anticipo'] || $this->cobroFinal['montoAbonado'])) {
             $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
             if ($equipoTaller->id_estatus < 5)  //Si todavía no ha sido cobrado lo cobra
             {
-                try 
-                {
-                    DB::transaction(function () use ($numOrden) 
-                    {
+                try {
+                    DB::transaction(function () use ($numOrden) {
                         $cobroTaller = CobroTaller::create([
                             'num_orden' => $numOrden,
                             'fecha' => now(),
@@ -806,18 +692,15 @@ class Taller extends Component
                         $equipoTaller->fecha_salida = now();
                         $equipoTaller->id_estatus = $this->cobroFinal['idEstatusEquipo'];
                         $equipoTaller->save();
-                            
+
                         $ultimoIdAbono = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->max('id_abono');
 
                         $cobroTallerCreditoDetalles = new CobroTallerCreditoDetalle();
                         $cobroTallerCreditoDetalles->num_orden = $numOrden;
                         $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
-                        if ($this->cobroFinal['anticipo'])
-                        {
+                        if ($this->cobroFinal['anticipo']) {
                             $abono = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['anticipo'];
-                        }
-                        else 
-                        {
+                        } else {
                             $abono = $this->cobroFinal['cobroRealizado'] - $this->cobroFinal['montoAbonado'];
                         }
                         $cobroTallerCreditoDetalles->abono = $abono;
@@ -828,9 +711,9 @@ class Taller extends Component
                         $cobroTallerCredito = CobroTallerCredito::where('num_orden', $numOrden)->first();
                         $cobroTallerCredito->id_estatus = 2;
                         $cobroTallerCredito->save();
-                  
+
                         if ($this->cobroFinal['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
-                        { 
+                        {
                             $idRef = $numOrden % 1000;
                             $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
 
@@ -849,15 +732,12 @@ class Taller extends Component
 
                         // return redirect()->route('taller.print-final', $numOrden);
                     });
-                } catch (\Exception $e)
-                {
-                        // Manejo de errores si ocurre una excepción
-                        // Puedes agregar logs o notificaciones aquí
-                        dd($e);
+                } catch (\Exception $e) {
+                    // Manejo de errores si ocurre una excepción
+                    // Puedes agregar logs o notificaciones aquí
+                    dd($e);
                 }
-            }
-            else
-            {
+            } else {
                 $this->dispatch('cierraCobroModal');
             }
         }
@@ -870,44 +750,33 @@ class Taller extends Component
 
     public function liquidarCobroCredito()
     {
-       $numOrden = $this->cobroACredito['numOrden'];
+        $numOrden = $this->cobroACredito['numOrden'];
 
-       try 
-       {
-           DB::transaction(function () use ($numOrden) 
-           {
-               $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
-               $ultimoIdAbono = $this->detallesCredito->max('id_abono');
-                if ($this->cobroACredito['conCobroEstimado'])
-                { 
-                    if ($this->detallesCredito->isEmpty())
-                    {
-                            $this->cobroACredito['monto'] = CobroEstimadoTaller::where('num_orden', $numOrden)->first()->cobro_estimado;
+        try {
+            DB::transaction(function () use ($numOrden) {
+                $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
+                $ultimoIdAbono = $this->detallesCredito->max('id_abono');
+                if ($this->cobroACredito['conCobroEstimado']) {
+                    if ($this->detallesCredito->isEmpty()) {
+                        $this->cobroACredito['monto'] = CobroEstimadoTaller::where('num_orden', $numOrden)->first()->cobro_estimado;
+                    } else {
+                        $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroEstimado->cobro_estimado;
                     }
-                    else
-                    {
-                            $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroEstimado->cobro_estimado;
-                    }
-                }
-                else
-                {
-                    if ($this->detallesCredito->isEmpty())
-                    {
-                            $this->cobroACredito['monto'] = CobroTaller::where('num_orden', $numOrden)->first()->cobro_realizado;
-                    }
-                    else
-                    {
-                            $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroTaller->cobro_realizado;
+                } else {
+                    if ($this->detallesCredito->isEmpty()) {
+                        $this->cobroACredito['monto'] = CobroTaller::where('num_orden', $numOrden)->first()->cobro_realizado;
+                    } else {
+                        $this->cobroACredito['monto'] = $this->detallesCredito->first()->cobroCredito->cobroTaller->cobro_realizado;
                     }
                 }
 
-               $cobroTallerCreditoDetalles = new CobroTallerCreditoDetalle();
-               $cobroTallerCreditoDetalles->num_orden = $numOrden;
-               $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
-               $cobroTallerCreditoDetalles->abono = $this->montoLiquidar;
-               $cobroTallerCreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
-               $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
-               $cobroTallerCreditoDetalles->save();
+                $cobroTallerCreditoDetalles = new CobroTallerCreditoDetalle();
+                $cobroTallerCreditoDetalles->num_orden = $numOrden;
+                $cobroTallerCreditoDetalles->id_abono = $ultimoIdAbono + 1;
+                $cobroTallerCreditoDetalles->abono = $this->montoLiquidar;
+                $cobroTallerCreditoDetalles->id_modo_pago = $this->cobroACredito['idModoPago'];
+                $cobroTallerCreditoDetalles->id_usuario_cobro = Auth::id();
+                $cobroTallerCreditoDetalles->save();
 
                 CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 2]);
                 $this->cobroACredito['estatus'] = $cobroTallerCreditoDetalles->first()->cobroCredito->estatus->descripcion;
@@ -916,11 +785,10 @@ class Taller extends Component
                 $this->muestraDivAbono = false;
                 $this->cobroACredito['abono'] = null;
 
-                if ($this->cobroACredito['idModoPago'] == 1)
-                {
+                if ($this->cobroACredito['idModoPago'] == 1) {
                     $idRef = $numOrden % 1000;
                     $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
-    
+
                     $movimiento = new MovimientoCaja();
                     $movimiento->referencia = $this->regresaReferencia(3, $idRef);
                     $movimiento->id_tipo = 3;
@@ -939,12 +807,11 @@ class Taller extends Component
                 $this->montoLiquidar = 0;
 
                 session()->flash('success', 'El crédito ha sido LIQUIDADO exitosamente.');
-           });
-       } catch (\Exception $e)
-       {
-               // Manejo de errores si ocurre una excepción
-               dd($e);
-       }
+            });
+        } catch (\Exception $e) {
+            // Manejo de errores si ocurre una excepción
+            dd($e);
+        }
     }
 
     public function abrirCaja()
@@ -972,16 +839,13 @@ class Taller extends Component
 
     public function cobrar($numOrden, $conTicket)
     {
-        if ($this->modalCobroFinalAbierta && !$this->cobroFinal['anticipo'])
-        {
+        if ($this->modalCobroFinalAbierta && !$this->cobroFinal['anticipo']) {
             $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
             if ($equipoTaller->id_estatus < 5)  //Si todavía no ha sido cobrado lo cobra
             {
-                try 
-                {
-                    DB::transaction(function () use ($numOrden, $conTicket) 
-                    {
+                try {
+                    DB::transaction(function () use ($numOrden, $conTicket) {
                         $cobroTaller = CobroTaller::create([
                             'num_orden' => $numOrden,
                             'fecha' => now(),
@@ -1016,14 +880,13 @@ class Taller extends Component
                                 $cobroTallerCredito->id_estatus = 2;
                                 $cobroTallerCredito->save();
                             }
-                        }
-                        else   //SI NO hay ANTICIPO
+                        } else   //SI NO hay ANTICIPO
                         {
                             $monto = $this->cobroFinal['cobroRealizado'];
                         }
 
                         if ($this->cobroFinal['idModoPago'] == 1) //Si es EFECTIVO se guarda el MOVIMIENTO
-                        { 
+                        {
                             $idRef = $numOrden % 10000;
                             $idRef = str_pad($idRef, 4, '0', STR_PAD_LEFT);
 
@@ -1038,18 +901,18 @@ class Taller extends Component
 
                         $this->modalCobroFinalAbierta = false;
 
+   			$printer_name = "Ticket";
+                        $connector = new WindowsPrintConnector($printer_name);
+                        $printer = new Printer($connector);
+
+                        $printer->pulse();
+                        $printer->close();
+
                         if ($conTicket && $this->cobroFinal['idModoPago'] == 1)  //Solo si es EFECTIVO se imprime ticket
                         {
-                            $this->showMainErrors = true;
+                            $this->showMainErrors = true;                         
 
-                            // $printer_name = "Ticket";
-                            // $connector = new WindowsPrintConnector($printer_name);
-                            // $printer = new Printer($connector);
-
-                            // $printer->pulse();
-                            // $printer->close();
-
-                            return redirect()->route('taller.print-final', $numOrden, true); 
+                            return redirect()->route('taller.print-final', $numOrden, true);
                         }
 
                         $this->dispatch('cierraCobroModal');
@@ -1057,14 +920,12 @@ class Taller extends Component
 
                         // return redirect()->route('taller.print-final', $numOrden);
                     });
-                } catch (\Exception $e)
-                {
-                        // Manejo de errores si ocurre una excepción
-                        // Puedes agregar logs o notificaciones aquí
-                        dd($e);
+                } catch (\Exception $e) {
+                    // Manejo de errores si ocurre una excepción
+                    // Puedes agregar logs o notificaciones aquí
+                    dd($e);
                 }
-            }
-            else  //Si no ha sido cobrado
+            } else  //Si no ha sido cobrado
             {
                 $this->dispatch('cierraCobroModal');
             }
@@ -1075,44 +936,36 @@ class Taller extends Component
     {
         $equipos_taller = EquipoTaller::query();
 
-        if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin']))
-        {
+        if (isset($this->busquedaEquipos['fechaEntradaInicio']) && isset($this->busquedaEquipos['fechaEntradaFin'])) {
             $fechaInicio = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaInicio']));
             $fechaFin = date('Y-m-d', strtotime($this->busquedaEquipos['fechaEntradaFin']));
 
-            if ($fechaInicio == $fechaFin)
-            {
+            if ($fechaInicio == $fechaFin) {
                 $equipos_taller->whereDate('fecha_entrada', '=', $fechaInicio);
-            }
-            else
-            {
+            } else {
                 $equipos_taller->whereDate('fecha_entrada', '>=', $fechaInicio)
-                            ->whereDate('fecha_entrada', '<=', $fechaFin);
+                    ->whereDate('fecha_entrada', '<=', $fechaFin);
             }
         }
 
-        if (isset($this->busquedaEquipos['idEstatus']) && $this->busquedaEquipos['idEstatus'] != [])
-        {
+        if (isset($this->busquedaEquipos['idEstatus']) && $this->busquedaEquipos['idEstatus'] != []) {
             $equipos_taller->whereIn('id_estatus', $this->busquedaEquipos['idEstatus']);
 
             // dd($this->busquedaEquipos['idEstatus']);
-         }
+        }
 
-        if (isset($this->busquedaEquipos['idTipo']) && $this->busquedaEquipos['idTipo'] != [])
-        {
+        if (isset($this->busquedaEquipos['idTipo']) && $this->busquedaEquipos['idTipo'] != []) {
             $equipos_taller->whereHas('equipo', function ($query) {
                 $query->whereIn('id_tipo', $this->busquedaEquipos['idTipo']);
             });
         }
 
-        if (isset($this->busquedaEquipos['nombreCliente']))
-        {
+        if (isset($this->busquedaEquipos['nombreCliente'])) {
             $nombreCliente = $this->busquedaEquipos['nombreCliente'];
             $equipos_taller->whereHas('equipo.cliente', function ($query) use ($nombreCliente) {
                 $query->where('nombre', 'like', "%$nombreCliente%");
             })
-            ->get();
-        
+                ->get();
         }
 
         $equipos_taller = $equipos_taller->orderBy('fecha_entrada', 'asc')->paginate(10);
@@ -1129,10 +982,7 @@ class Taller extends Component
         $this->dispatch('mostrarToastAceptarCancelar', '¿Deseas eliminar el abono seleccionado?', 'lisBorraAbono');
     }
 
-    public function cierraModalActualizarModoPago()
-    {
-
-    }
+    public function cierraModalActualizarModoPago() {}
 
     public function borraAbono()
     {
@@ -1141,11 +991,10 @@ class Taller extends Component
 
         // Obtener el registro
         $detalleCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)
-        ->where('id_abono', $idAbono)
-        ->first();
+            ->where('id_abono', $idAbono)
+            ->first();
 
-        if ($detalleCredito)
-        {
+        if ($detalleCredito) {
             DB::transaction(function () use ($numOrden, $idAbono, $detalleCredito) {
                 if ($detalleCredito) {
                     $idModoPago = $detalleCredito->id_modo_pago;
@@ -1153,26 +1002,23 @@ class Taller extends Component
 
                     // Borrar el registro
                     CobroTallerCreditoDetalle::where('num_orden', $numOrden)
-                    ->where('id_abono', $idAbono)
-                    ->delete();
+                        ->where('id_abono', $idAbono)
+                        ->delete();
 
                     // Actualizar detalles de crédito
                     $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $numOrden)->get();
 
                     // Verifica si no hay registros en $detallesCredito
-                    if ($this->detallesCredito->isEmpty()) 
-                    {
+                    if ($this->detallesCredito->isEmpty()) {
                         // Elimina el CobroTallerCredito relacionado
                         CobroTallerCredito::where('num_orden', $numOrden)->delete();
-                    }
-                    else 
-                    {
+                    } else {
                         $this->sumaAbonos = $this->detallesCredito->sum('abono');
                         $this->montoLiquidar = $this->cobroACredito['monto'] - $this->sumaAbonos;
-    
+
                         // Actualizar el estatus del crédito
                         CobroTallerCredito::where('num_orden', $numOrden)->update(['id_estatus' => 1]);
-    
+
                         $this->cobroACredito['idEstatus'] = 1;
                         $this->cobroACredito['estatus'] = "SIN LIQUIDAR";
                     }
@@ -1190,12 +1036,10 @@ class Taller extends Component
                         $movimiento->id_usuario = Auth::id();
                         $movimiento->save();
                     }
-                } 
+                }
             });
             session()->flash('success', 'El ABONO se ha ELIMINADO con éxito.');
-        }
-        else
-        {
+        } else {
             $this->addError('abono', 'El abono seleccionado no existe o hubo problemas con la base de datos.');
         }
     }
@@ -1215,16 +1059,16 @@ class Taller extends Component
     public function actualizarModoPago()
     {
         $cobroTallerCreditoDetalle = CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
-        ->where('id_abono', $this->idAbonoModal)
-        ->first();
+            ->where('id_abono', $this->idAbonoModal)
+            ->first();
 
         $idModoPago = $cobroTallerCreditoDetalle->id_modo_pago;
         $abono = $cobroTallerCreditoDetalle->abono;
 
         if ($cobroTallerCreditoDetalle) {
             CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
-            ->where('id_abono', $this->idAbonoModal)->update(['id_modo_pago' => $this->idModoPago]);
-        } 
+                ->where('id_abono', $this->idAbonoModal)->update(['id_modo_pago' => $this->idModoPago]);
+        }
 
         if ($idModoPago == 1 && $this->idModoPago == 2)  //Si el MODO DE PAGO era EFECTIVO y se cambia a TRANSF.
         {
@@ -1238,8 +1082,7 @@ class Taller extends Component
             $movimiento->saldo_caja = $this->calculaSaldoCaja(8, $abono); // Asegura que el saldo_caja sea un número decimal
             $movimiento->id_usuario = Auth::id();
             $movimiento->save();
-        }
-        elseif ($idModoPago == 2 && $this->idModoPago == 1) //Si el MODO DE PAGO era TRANSF. y se cambia a EFECTIVO
+        } elseif ($idModoPago == 2 && $this->idModoPago == 1) //Si el MODO DE PAGO era TRANSF. y se cambia a EFECTIVO
         {
             $idRef = $this->numOrdenModal % 1000;
             $idRef = "R" . str_pad($idRef, 3, '0', STR_PAD_LEFT);
@@ -1254,7 +1097,7 @@ class Taller extends Component
         }
 
         $this->detallesCredito = CobroTallerCreditoDetalle::where('num_orden', $this->numOrdenModal)
-        ->where('abono', '>', 0)->get();
+            ->where('abono', '>', 0)->get();
 
         $this->dispatch('cierraModalEditaModoPagoTallerCredito');
         $this->dispatch('mostrarToast', 'Modo de pago actualizado con éxito!!!');
@@ -1269,22 +1112,18 @@ class Taller extends Component
         $fechaFinal = Carbon::parse($this->corteCaja['fechaFinal'])->endOfDay();
         $idModoPago = $this->corteCaja['idModoPago'];
 
-        if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal'])
-        {
+        if ($this->corteCaja['fechaInicial'] == $this->corteCaja['fechaFinal']) {
             $tituloCorteCaja = 'CORTE DE CAJA DEL DÍA :: ' .  $this->formatearFecha($this->corteCaja['fechaInicial']);
-        }
-        else
-        {
+        } else {
             $tituloCorteCaja = 'CORTE DE CAJA DEL ' .  $this->formatearFecha($this->corteCaja['fechaInicial']) . ' AL ' . $this->formatearFecha($this->corteCaja['fechaFinal']);
         }
 
         $cajeroSeleccionado = $this->corteCaja['idUsuario'] != 0 ? true : false;
 
-        $movimientoCaja = MovimientoCaja::
-        whereBetween('fecha', [$fechaInicial, $fechaFinal])
-        ->where('id_tipo', 4)
-        ->orderByDesc('fecha')
-        ->first();
+        $movimientoCaja = MovimientoCaja::whereBetween('fecha', [$fechaInicial, $fechaFinal])
+            ->where('id_tipo', 4)
+            ->orderByDesc('fecha')
+            ->first();
 
         // $esMismaFecha = Carbon::parse($fechaInicial)->toDateString() === Carbon::parse($fechaFinal)->toDateString();
 
@@ -1295,102 +1134,96 @@ class Taller extends Component
         //     ? $consulta->orderByDesc('fecha')->first() // más reciente
         //     : $consulta->orderBy('fecha')->first();    // más antiguo
 
-        $entradasManuales = MovimientoCaja::
-        whereBetween('fecha', [$fechaInicial, $fechaFinal])
-        ->where('id_tipo', 5)
-        ->get();
+        $entradasManuales = MovimientoCaja::whereBetween('fecha', [$fechaInicial, $fechaFinal])
+            ->where('id_tipo', 5)
+            ->get();
 
-        $salidasManuales = MovimientoCaja::
-        whereBetween('fecha', [$fechaInicial, $fechaFinal])
-        ->where('id_tipo', 6)
-        ->get();
+        $salidasManuales = MovimientoCaja::whereBetween('fecha', [$fechaInicial, $fechaFinal])
+            ->where('id_tipo', 6)
+            ->get();
 
         $ventas = collect();
-        if ($this->corteCaja['incluyeVentas'])
-        {              
-            if ($this->corteCaja['incluyeCredito'])
-            {
+        if ($this->corteCaja['incluyeVentas']) {
+            if ($this->corteCaja['incluyeCredito']) {
                 $ventas = Venta::with([
                     'cliente',
                     'usuario',
                     'ventaCredito.ventaCreditoDetalles' => function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
                         $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                              ->where('abono', '>', 0)
-                              ->where('id_modo_pago', $idModoPago);
+                            ->where('abono', '>', 0)
+                            ->where('id_modo_pago', $idModoPago);
                     },
                 ])
-                ->when($cajeroSeleccionado, function ($query) {
-                    return $query->where('id_usuario', $this->corteCaja['idUsuario']);
-                })
-                ->where('cancelada', 0)
-                ->where(function($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
-                    // Condición para ventas sin VentaCredito
-                    $query->where(function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
-                        $query->whereDoesntHave('ventaCredito')
-                              ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                              ->where('id_modo_pago', $idModoPago);            
+                    ->when($cajeroSeleccionado, function ($query) {
+                        return $query->where('id_usuario', $this->corteCaja['idUsuario']);
                     })
-                    // Condición para ventas con VentaCredito que tienen detalles válidos
-                    ->orWhereHas('ventaCredito.ventaCreditoDetalles', function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
-                        $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                              ->where('abono', '>', 0)
-                              ->where('id_modo_pago', $idModoPago);
-                    });
-                })
-                ->orderBy('created_at')
-                ->get()
-                ->flatMap(function ($venta) use($movimientoCaja) {
-                    $resultado = collect();
-                
-                    // Si no hay VentaCredito, incluir la venta
-                    if (!$venta->ventaCredito) {
-                        $resultado->push([
-                            'id' => $venta->id,
-                            'created_at' => $venta->created_at,
-                            'nombre_cliente' => $venta->cliente->nombre,
-                            'monto' => $venta->total,
-                            'cajero' => $venta->usuario->name,
-                            'tipo' => 'VENTA',
-                            'id_modo_pago' => $venta->id_modo_pago,
-                            'detalles' => $venta->detalles
-                        ]);
-                    }
-                
-                    // Si hay VentaCredito, incluir únicamente los detalles válidos
-                    if ($venta->ventaCredito) {
-                        $venta->ventaCredito->ventaCreditoDetalles
-                            ->each(function ($detalle) use ($resultado, $venta, $movimientoCaja) {
-                                $resultado->push([
-                                    'id' => $detalle->id,
-                                    'created_at' => $detalle->created_at,
-                                    'nombre_cliente' => $venta->cliente->nombre,
-                                    'monto' => $detalle->abono,
-                                    'cajero' => $detalle->usuario->name ?? 'N/A',
-                                    'tipo' => 'ABONO_VENTA',
-                                    'id_modo_pago' => $detalle->id_modo_pago,
-                                    'detalles' => $venta->ventaCredito->ventaCreditoDetalles
-                                ]);
+                    ->where('cancelada', 0)
+                    ->where(function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
+                        // Condición para ventas sin VentaCredito
+                        $query->where(function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
+                            $query->whereDoesntHave('ventaCredito')
+                                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                                ->where('id_modo_pago', $idModoPago);
+                        })
+                            // Condición para ventas con VentaCredito que tienen detalles válidos
+                            ->orWhereHas('ventaCredito.ventaCreditoDetalles', function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
+                                $query->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                                    ->where('abono', '>', 0)
+                                    ->where('id_modo_pago', $idModoPago);
                             });
-                    }
-                    return $resultado;
-                });
-            }
-            else
-            {
+                    })
+                    ->orderBy('created_at')
+                    ->get()
+                    ->flatMap(function ($venta) use ($movimientoCaja) {
+                        $resultado = collect();
+
+                        // Si no hay VentaCredito, incluir la venta
+                        if (!$venta->ventaCredito) {
+                            $resultado->push([
+                                'id' => $venta->id,
+                                'created_at' => $venta->created_at,
+                                'nombre_cliente' => $venta->cliente->nombre,
+                                'monto' => $venta->total,
+                                'cajero' => $venta->usuario->name,
+                                'tipo' => 'VENTA',
+                                'id_modo_pago' => $venta->id_modo_pago,
+                                'detalles' => $venta->detalles
+                            ]);
+                        }
+
+                        // Si hay VentaCredito, incluir únicamente los detalles válidos
+                        if ($venta->ventaCredito) {
+                            $venta->ventaCredito->ventaCreditoDetalles
+                                ->each(function ($detalle) use ($resultado, $venta, $movimientoCaja) {
+                                    $resultado->push([
+                                        'id' => $detalle->id,
+                                        'created_at' => $detalle->created_at,
+                                        'nombre_cliente' => $venta->cliente->nombre,
+                                        'monto' => $detalle->abono,
+                                        'cajero' => $detalle->usuario->name ?? 'N/A',
+                                        'tipo' => 'ABONO_VENTA',
+                                        'id_modo_pago' => $detalle->id_modo_pago,
+                                        'detalles' => $venta->ventaCredito->ventaCreditoDetalles
+                                    ]);
+                                });
+                        }
+                        return $resultado;
+                    });
+            } else {
                 $ventas = Venta::with('cliente')
                     ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
                     ->when($cajeroSeleccionado, function ($query) {
                         return $query->where('id_usuario', $this->corteCaja['idUsuario']);
                     })
                     ->where('cancelada', 0)
-                    ->where(function($query) {
+                    ->where(function ($query) {
                         $query->whereDoesntHave('ventaCredito')
                             ->orWhereHas('ventaCredito', function ($query) {
                                 $query->where('id_estatus', 2);
                             });
                     })
                     ->get()
-                    ->map(function($venta) use($movimientoCaja) {
+                    ->map(function ($venta) use ($movimientoCaja) {
                         return [
                             'id' => $venta->id,
                             'created_at' => $venta->created_at,
@@ -1402,12 +1235,11 @@ class Taller extends Component
                             'detalles' => $venta->detalles
                         ];
                     });
-            } 
-            
-            if ($this->corteCaja['chkAgrupar'])
-            {
+            }
+
+            if ($this->corteCaja['chkAgrupar']) {
                 $idsVentas = collect($ventas)->pluck('id');
-                $ventasCredito = Venta::with('ventaCredito') 
+                $ventasCredito = Venta::with('ventaCredito')
                     ->whereIn('id', $idsVentas)
                     ->get();
 
@@ -1420,7 +1252,7 @@ class Taller extends Component
                 // Obtén los detalles desde la base de datos
                 $detalles = VentaDetalle::with('producto')
                     ->whereIn('id_venta', $idsVentasSinCredito)
-                    ->get();            
+                    ->get();
 
                 $productosAgrupados = $detalles
                     ->groupBy(function ($item) {
@@ -1447,23 +1279,21 @@ class Taller extends Component
                     })
                     ->values();
 
-                if ($this->corteCaja['incluyeCredito'])
-                {
+                if ($this->corteCaja['incluyeCredito']) {
                     $idsVentasConCredito = collect($ventasConCredito)->pluck('id');
 
                     // Obtén los detalles desde la base de datos
-                    $detallesCredito = VentaCreditoDetalle::
-                    whereIn('id', $idsVentasConCredito)->where('abono', '>', 0)
-                    ->get();
-                        
+                    $detallesCredito = VentaCreditoDetalle::whereIn('id', $idsVentasConCredito)->where('abono', '>', 0)
+                        ->get();
+
                     if ($detallesCredito->count() > 0) {
-                            $productosAgrupados->push([
-                                'cantidad' => $detallesCredito->count(),
-                                'prod_serv' => 'ABONO A VENTA',
-                                'subtotal' => $detallesCredito->sum('abono'),
-                                'tipo' => 'ABONOS_AGRUPADOS',
-                            ]);
-                        }
+                        $productosAgrupados->push([
+                            'cantidad' => $detallesCredito->count(),
+                            'prod_serv' => 'ABONO A VENTA',
+                            'subtotal' => $detallesCredito->sum('abono'),
+                            'tipo' => 'ABONOS_AGRUPADOS',
+                        ]);
+                    }
                 }
                 $ventas = $productosAgrupados;
             }
@@ -1471,182 +1301,168 @@ class Taller extends Component
         // Inicializar $cobrosTaller como una colección vacía 
         $cobrosTaller = collect();
 
-        if ($this->corteCaja['incluyeCredito'])
-        {   
+        if ($this->corteCaja['incluyeCredito']) {
             // 1. Obtener los detalles de CobroTallerCredito
             $cobrosTallerCredito = CobroTallerCredito::with([
                 'detalles' => function ($query) use ($fechaInicial, $fechaFinal, $idModoPago) {
                     $query->where('abono', '>', 0)
-                    ->where('id_modo_pago', $idModoPago)
-                    ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                        ->where('id_modo_pago', $idModoPago)
+                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
                 }
             ])
-            ->whereHas('detalles', function ($query) use ($fechaInicial, $fechaFinal, $cajeroSeleccionado, $idModoPago) {
-                $query->where('abono', '>', 0)
-                ->where('id_modo_pago', $idModoPago)
-                ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
-                if ($cajeroSeleccionado) 
-                { 
-                    $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']); 
-                }
-            })
-            ->get()
-            ->flatMap(function ($credito) use ($movimientoCaja) {
-                // Transformar los detalles válidos
-                return $credito->detalles->map(function ($detalle) use ($credito, $movimientoCaja) {
-                    return [
-                        'id' => $detalle->num_orden,
-                        'created_at' => $detalle->created_at,
-                        'monto' => $detalle->abono,
-                        'nombre_cliente' => $detalle->cobroCredito->cliente->nombre ?? "N/A",
-                        'cajero' => $detalle->usuario->name ?? "N/A",
-                        'credito_id' => $credito->num_orden,
-                        'tipo' => 'ABONO_TALLER',
-                        'id_modo_pago' => $detalle->id_modo_pago,
-                    ];
+                ->whereHas('detalles', function ($query) use ($fechaInicial, $fechaFinal, $cajeroSeleccionado, $idModoPago) {
+                    $query->where('abono', '>', 0)
+                        ->where('id_modo_pago', $idModoPago)
+                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal]);
+                    if ($cajeroSeleccionado) {
+                        $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
+                    }
+                })
+                ->get()
+                ->flatMap(function ($credito) use ($movimientoCaja) {
+                    // Transformar los detalles válidos
+                    return $credito->detalles->map(function ($detalle) use ($credito, $movimientoCaja) {
+                        return [
+                            'id' => $detalle->num_orden,
+                            'created_at' => $detalle->created_at,
+                            'monto' => $detalle->abono,
+                            'nombre_cliente' => $detalle->cobroCredito->cliente->nombre ?? "N/A",
+                            'cajero' => $detalle->usuario->name ?? "N/A",
+                            'credito_id' => $credito->num_orden,
+                            'tipo' => 'ABONO_TALLER',
+                            'id_modo_pago' => $detalle->id_modo_pago,
+                        ];
+                    });
                 });
-            });
 
             // 2. Obtener los registros de CobroTaller que no tienen CobroTallerCredito
             $cobrosTallerAux = CobroTaller::with([
                 'equipoTaller.equipo.cliente',
                 'equipoTaller.usuario',
             ])
-            ->whereDoesntHave('credito') // Filtra los que no tienen CobroTallerCredito
-            ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-            ->where('id_modo_pago', $idModoPago)
-            ->where('cobro_realizado', '>', 0)
-            ->when($cajeroSeleccionado, function ($query) {
-                $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
-            })
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($cobro) use($movimientoCaja) {
-                // Transformar los registros de CobroTaller
-                return [
-                    'id' => $cobro->num_orden,
-                    'created_at' => $cobro->created_at,
-                    'monto' => $cobro->cobro_realizado,
-                    'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre ?? "N/A",
-                    'cajero' => $cobro->usuario->name ?? "N/A",
-                    'credito_id' => $cobro->num_orden,
-                    'tipo' => 'TALLER',
-                    'id_modo_pago' => $cobro->id_modo_pago,
-                ];
-            });
+                ->whereDoesntHave('credito') // Filtra los que no tienen CobroTallerCredito
+                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->where('id_modo_pago', $idModoPago)
+                ->where('cobro_realizado', '>', 0)
+                ->when($cajeroSeleccionado, function ($query) {
+                    $query->where('id_usuario_cobro', $this->corteCaja['idUsuario']);
+                })
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($cobro) use ($movimientoCaja) {
+                    // Transformar los registros de CobroTaller
+                    return [
+                        'id' => $cobro->num_orden,
+                        'created_at' => $cobro->created_at,
+                        'monto' => $cobro->cobro_realizado,
+                        'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre ?? "N/A",
+                        'cajero' => $cobro->usuario->name ?? "N/A",
+                        'credito_id' => $cobro->num_orden,
+                        'tipo' => 'TALLER',
+                        'id_modo_pago' => $cobro->id_modo_pago,
+                    ];
+                });
 
             // 3. Combinar los resultados
             $cobrosTaller = collect($cobrosTallerAux)->merge($cobrosTallerCredito);
 
-             if ($this->corteCaja['chkAgrupar'])
-                {
-                    $numerosOrden = collect($cobrosTaller)->pluck('id');
+            if ($this->corteCaja['chkAgrupar']) {
+                $numerosOrden = collect($cobrosTaller)->pluck('id');
 
-                    $cobrosCredito = CobroTaller::with('credito') 
+                $cobrosCredito = CobroTaller::with('credito')
                     ->whereIn('num_orden', $numerosOrden)
                     ->get();
 
-                    list($cobrosConCredito, $cobrosSinCredito) = collect($cobrosCredito)->partition(function ($cobro) {
+                list($cobrosConCredito, $cobrosSinCredito) = collect($cobrosCredito)->partition(function ($cobro) {
                     return $cobro->credito !== null;
-                    });
-
-                    $numerosOrdenSinCredito = collect($cobrosSinCredito)->pluck('num_orden');
-
-                    $detalles = CobroTaller::
-                        whereIn('num_orden', $numerosOrdenSinCredito)
-                        ->get();
-
-                    
-                    $cobrosAgrupados = collect();
-                    if ($detalles->count() > 0)
-                    {
-                        $cobrosAgrupados = collect([[
-                            'cantidad' => $detalles->count(),
-                            'prod_serv' => 'REPARACIÓN EN TALLER',
-                            'subtotal' => $detalles->sum('cobro_realizado'),
-                            'tipo' => 'TALLER_AGRUPADO',
-                        ]]);
-                    }
-
-                    if ($this->corteCaja['incluyeCredito'])
-                    {
-                        $numerosOrdenConCredito = collect($cobrosConCredito)->pluck('num_orden');
-
-                        $detalles = CobroTallerCreditoDetalle::
-                            whereIn('num_orden', $numerosOrdenConCredito)
-                             ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-                            ->where('abono', '>', 0)
-                            ->get();
-
-                        if ($detalles->count() > 0) 
-                        {
-                            $cobrosAgrupados->push([
-                                'cantidad' => $detalles->count(),
-                                'prod_serv' => 'ABONO TALLER',
-                                'subtotal' => $detalles->sum('abono'),
-                                'tipo' => 'ABONO_TALLER_AGRUPADO',
-                            ]);
-                        }
-                    }
-
-                    $cobrosTaller = $cobrosAgrupados;
-                }
-        }
-        else
-        {
-            $cobrosTaller = CobroTaller::with(['equipoTaller.equipo.cliente', 'equipoTaller.usuario'])
-            ->whereDoesntHave('credito')
-            ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
-            ->where('cobro_realizado', '>', 0)
-            ->where('id_modo_pago', $idModoPago)
-            ->when($cajeroSeleccionado, function ($query) {
-                return $query->whereHas('equipoTaller', function ($query) {
-                    $query->where('id_usuario_recibio', $this->corteCaja['idUsuario']);
                 });
-            })
-            ->orderBy('created_at')
-            ->get()
-            ->map(function($cobro) use($movimientoCaja) {
-                return [
-                    'id' => $cobro->num_orden,
-                    'created_at' => $cobro->created_at,
-                    'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre,
-                    'monto' => $cobro->cobro_realizado,
-                    'cajero' => $cobro->equipoTaller->usuario->name,
-                    'tipo' => 'TALLER',
-                    'id_modo_pago' => $cobro->id_modo_pago,
-                ];
-            });
 
-             if ($this->corteCaja['chkAgrupar'])
-                {
-                    $numerosOrden = collect($cobrosTaller)->pluck('id');
+                $numerosOrdenSinCredito = collect($cobrosSinCredito)->pluck('num_orden');
 
-                    $detalles = CobroTaller::
-                        whereIn('num_orden', $numerosOrden)
-                        ->get();
+                $detalles = CobroTaller::whereIn('num_orden', $numerosOrdenSinCredito)
+                    ->get();
 
+
+                $cobrosAgrupados = collect();
+                if ($detalles->count() > 0) {
                     $cobrosAgrupados = collect([[
                         'cantidad' => $detalles->count(),
                         'prod_serv' => 'REPARACIÓN EN TALLER',
                         'subtotal' => $detalles->sum('cobro_realizado'),
                         'tipo' => 'TALLER_AGRUPADO',
                     ]]);
-
-                    $cobrosTaller = $cobrosAgrupados;
                 }
+
+                if ($this->corteCaja['incluyeCredito']) {
+                    $numerosOrdenConCredito = collect($cobrosConCredito)->pluck('num_orden');
+
+                    $detalles = CobroTallerCreditoDetalle::whereIn('num_orden', $numerosOrdenConCredito)
+                        ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                        ->where('abono', '>', 0)
+                        ->get();
+
+                    if ($detalles->count() > 0) {
+                        $cobrosAgrupados->push([
+                            'cantidad' => $detalles->count(),
+                            'prod_serv' => 'ABONO TALLER',
+                            'subtotal' => $detalles->sum('abono'),
+                            'tipo' => 'ABONO_TALLER_AGRUPADO',
+                        ]);
+                    }
+                }
+
+                $cobrosTaller = $cobrosAgrupados;
+            }
+        } else {
+            $cobrosTaller = CobroTaller::with(['equipoTaller.equipo.cliente', 'equipoTaller.usuario'])
+                ->whereDoesntHave('credito')
+                ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
+                ->where('cobro_realizado', '>', 0)
+                ->where('id_modo_pago', $idModoPago)
+                ->when($cajeroSeleccionado, function ($query) {
+                    return $query->whereHas('equipoTaller', function ($query) {
+                        $query->where('id_usuario_recibio', $this->corteCaja['idUsuario']);
+                    });
+                })
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($cobro) use ($movimientoCaja) {
+                    return [
+                        'id' => $cobro->num_orden,
+                        'created_at' => $cobro->created_at,
+                        'nombre_cliente' => $cobro->equipoTaller->equipo->cliente->nombre,
+                        'monto' => $cobro->cobro_realizado,
+                        'cajero' => $cobro->equipoTaller->usuario->name,
+                        'tipo' => 'TALLER',
+                        'id_modo_pago' => $cobro->id_modo_pago,
+                    ];
+                });
+
+            if ($this->corteCaja['chkAgrupar']) {
+                $numerosOrden = collect($cobrosTaller)->pluck('id');
+
+                $detalles = CobroTaller::whereIn('num_orden', $numerosOrden)
+                    ->get();
+
+                $cobrosAgrupados = collect([[
+                    'cantidad' => $detalles->count(),
+                    'prod_serv' => 'REPARACIÓN EN TALLER',
+                    'subtotal' => $detalles->sum('cobro_realizado'),
+                    'tipo' => 'TALLER_AGRUPADO',
+                ]]);
+
+                $cobrosTaller = $cobrosAgrupados;
+            }
         }
 
-        $ventas = collect($ventas); 
-        $cobrosTaller = collect($cobrosTaller); 
+        $ventas = collect($ventas);
+        $cobrosTaller = collect($cobrosTaller);
 
         // Unión de ambas colecciones
         $registros = $cobrosTaller->merge($ventas);
 
-        if ($this->corteCaja['idModoPago'] == 1)
-        {
-            if ($this->corteCaja['chkAgrupar'])
-            {
+        if ($this->corteCaja['idModoPago'] == 1) {
+            if ($this->corteCaja['chkAgrupar']) {
                 $registros->push([
                     'cantidad' => 1,
                     'prod_serv' => 'INICIALIZACION',
@@ -1665,9 +1481,7 @@ class Taller extends Component
                     'subtotal' => $salidasManuales->sum('monto'),
                     'tipo' => 'SALIDA_MANUAL_AGRUPADO',
                 ]);
-            }
-            else
-            {
+            } else {
                 $registros->push([
                     'id' => $movimientoCaja->referencia,
                     'created_at' => $movimientoCaja->fecha,
@@ -1678,10 +1492,8 @@ class Taller extends Component
                     'id_modo_pago' => 1,
                     'detalles' => null
                 ]);
-                if ($entradasManuales)
-                { 
-                    foreach($entradasManuales as $entrada)
-                    { 
+                if ($entradasManuales) {
+                    foreach ($entradasManuales as $entrada) {
                         $registros->push([
                             'id' => $entrada->referencia,
                             'created_at' => $entrada->fecha,
@@ -1694,10 +1506,8 @@ class Taller extends Component
                         ]);
                     }
                 }
-                if ($salidasManuales)
-                { 
-                    foreach($salidasManuales as $salida)
-                    { 
+                if ($salidasManuales) {
+                    foreach ($salidasManuales as $salida) {
                         $registros->push([
                             'id' => $salida->referencia,
                             'created_at' => $salida->fecha,
@@ -1714,37 +1524,48 @@ class Taller extends Component
         }
 
         // Conversión de resultado a colección de objetos
-        $registros = $registros->map(function($item) { return (object) $item; });
+        $registros = $registros->map(function ($item) {
+            return (object) $item;
+        });
 
         $pdf = SnappyPdf::loadView('taller.corte-caja', ['corteCaja' => $this->corteCaja, 'registros' => $registros])
-        ->setOption('page-size', 'Letter')
-        ->setOption('margin-top', 30)
-        ->setOption('header-html', view('livewire.pdf.encabezado', compact('tituloCorteCaja'))->render())
-        ->setOption('header-spacing', 5)
-        ->setOption('footer-center', 'Página [page] de [topage]')
-        // ->setOption('footer-right', $this->corteCaja['cajero'])
-        ->setOption('footer-font-size', '8')
-        ->setOption('footer-font-name', 'Montserrat');
+            ->setOption('page-size', 'Letter')
+            ->setOption('margin-top', 30)
+            ->setOption('header-html', view('livewire.pdf.encabezado', compact('tituloCorteCaja'))->render())
+            ->setOption('header-spacing', 5)
+            ->setOption('footer-center', 'Página [page] de [topage]')
+            // ->setOption('footer-right', $this->corteCaja['cajero'])
+            ->setOption('footer-font-size', '8')
+            ->setOption('footer-font-name', 'Montserrat');
 
 
         return $pdf->stream('corteCaja.pdf');
     }
 
-    function formatearFecha($fecha) {
+    function formatearFecha($fecha)
+    {
         $meses = [
-            1 => 'ENERO', 2 => 'FEBRERO', 3 => 'MARZO',
-            4 => 'ABRIL', 5 => 'MAYO', 6 => 'JUNIO',
-            7 => 'JULIO', 8 => 'AGOSTO', 9 => 'SEPTIEMBRE',
-            10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE'
+            1 => 'ENERO',
+            2 => 'FEBRERO',
+            3 => 'MARZO',
+            4 => 'ABRIL',
+            5 => 'MAYO',
+            6 => 'JUNIO',
+            7 => 'JULIO',
+            8 => 'AGOSTO',
+            9 => 'SEPTIEMBRE',
+            10 => 'OCTUBRE',
+            11 => 'NOVIEMBRE',
+            12 => 'DICIEMBRE'
         ];
-    
+
         $fechaFormateada = \DateTime::createFromFormat('Y-m-d', $fecha)->format('d - ');
-    
+
         $numeroMes = \DateTime::createFromFormat('Y-m-d', $fecha)->format('n');
         $nombreMes = $meses[$numeroMes];
-    
+
         $fechaFormateada .= strtoupper($nombreMes) . ' - ' . \DateTime::createFromFormat('Y-m-d', $fecha)->format('Y');
-    
+
         return $fechaFormateada;
     }
 
@@ -1779,7 +1600,7 @@ class Taller extends Component
         $this->busquedaEquipos = [
             'fechaEntradaInicio' => now()->subDays(30)->toDateString(),
             'fechaEntradaFin' => now()->toDateString(),
-            'idEstatus' => [1,2,3,4],
+            'idEstatus' => [1, 2, 3, 4],
             'idTipo' => null,
             'entregados' => 'no_entregados',
             'nombreCliente' => null
@@ -1797,41 +1618,41 @@ class Taller extends Component
             'fallasEquipo' => null
         ];
 
-        $this->cobroFinal = 
-        [
-            'numOrden' => null,
-            'cliente' => null,
-            'fecha' => null,
-            'tipoEquipo' => null,
-            'marcaEquipo' => null,
-            'modeloEquipo' => null,
-            'cobroEstimado' => null,
-            'cobroRealizado' => null,
-            'fallasEquipo' => [],
-            'idEstatusEquipo' => null,
-            'anticipo' => null,
-            'montoAbonado' => null,
-            'restante' => null,
-            'publicoGeneral' => null,
-            'idModoPago' => 1
-        ];
+        $this->cobroFinal =
+            [
+                'numOrden' => null,
+                'cliente' => null,
+                'fecha' => null,
+                'tipoEquipo' => null,
+                'marcaEquipo' => null,
+                'modeloEquipo' => null,
+                'cobroEstimado' => null,
+                'cobroRealizado' => null,
+                'fallasEquipo' => [],
+                'idEstatusEquipo' => null,
+                'anticipo' => null,
+                'montoAbonado' => null,
+                'restante' => null,
+                'publicoGeneral' => null,
+                'idModoPago' => 1
+            ];
 
-        $this->cobroACredito = 
-        [
-            'nombreCliente' => null,
-            'numOrden' => null,
-            'tipoEquipo' => null,
-            'marcaEquipo' => null,
-            'modeloEquipo' => null,
-            'idEstatus' => null,
-            'estatus' => null,
-            'monto' => null,
-            'abono' => null,
-            'idAbonoSeleccionado' => null,
-            'conCobroEstimado' => false,
-            'idModoPago' => 1
-        ];
-    
+        $this->cobroACredito =
+            [
+                'nombreCliente' => null,
+                'numOrden' => null,
+                'tipoEquipo' => null,
+                'marcaEquipo' => null,
+                'modeloEquipo' => null,
+                'idEstatus' => null,
+                'estatus' => null,
+                'monto' => null,
+                'abono' => null,
+                'idAbonoSeleccionado' => null,
+                'conCobroEstimado' => false,
+                'idModoPago' => 1
+            ];
+
         $this->anotacionesMod = [
             'numOrden' => null,
             'marcaEquipo' => null,
@@ -1853,106 +1674,99 @@ class Taller extends Component
         $this->modosPagoModal = ModoPago::where('id', '>', 0)->get();
     }
 
-    #[On('agregaEquipoAlTaller')] 
-    public function refrescaTabla()
-    {
-    }
+    #[On('agregaEquipoAlTaller')]
+    public function refrescaTabla() {}
 
-public function cambiarEstatusEquipo()
-{
-    if ($this->estatusModalCambiaEstatus == 0) {
-        $this->addError('estatusModalCambiaEstatus', 'Debes seleccionar un estatus.');
-        return;
-    }
-    else
+    public function cambiarEstatusEquipo()
     {
-        if ($this->equipoTallerModal->cobroTaller)
-        {
-            if ($this->equipoTallerModal->cobroTaller->credito)
-            {            
-                $this->dispatch('mostrarToastSiNo', 
-                'El equipo seleccionado ya ha sido COBRADO previamente con CRÉDITO. Si cambias el estatus se BORRARÁ este cobro y el crédito. ¿Deseas continuar de todas formas?',
-                'warning'
-                );
+        if ($this->estatusModalCambiaEstatus == 0) {
+            $this->addError('estatusModalCambiaEstatus', 'Debes seleccionar un estatus.');
+            return;
+        } else {
+            if ($this->equipoTallerModal->cobroTaller) {
+                if ($this->equipoTallerModal->cobroTaller->credito) {
+                    $this->dispatch(
+                        'mostrarToastSiNo',
+                        'El equipo seleccionado ya ha sido COBRADO previamente con CRÉDITO. Si cambias el estatus se BORRARÁ este cobro y el crédito. ¿Deseas continuar de todas formas?',
+                        'warning'
+                    );
+                } else {
+                    $this->dispatch(
+                        'mostrarToastSiNo',
+                        'El equipo seleccionado ya ha sido COBRADO previamente. Si cambias el estatus se BORRARÁ este cobro. ¿Deseas continuar de todas formas?',
+                        'warning'
+                    );
+                }
             }
-            else
-            {
-                $this->dispatch('mostrarToastSiNo', 
-                'El equipo seleccionado ya ha sido COBRADO previamente. Si cambias el estatus se BORRARÁ este cobro. ¿Deseas continuar de todas formas?',
-                'warning'
-                );
-            }          
         }
     }
-}
 
-public function guardaCambioEstatusEquipo()
-{
-    DB::beginTransaction();
+    public function guardaCambioEstatusEquipo()
+    {
+        DB::beginTransaction();
 
-    try {
-        $this->equipoTallerModal->id_estatus = $this->estatusModalCambiaEstatus;
-        $this->equipoTallerModal->update();
+        try {
+            $this->equipoTallerModal->id_estatus = $this->estatusModalCambiaEstatus;
+            $this->equipoTallerModal->update();
 
-        // Verificar y eliminar los detalles del crédito si existen
-        if ($this->equipoTallerModal->cobroTaller && $this->equipoTallerModal->cobroTaller->credito) {
-            $this->equipoTallerModal->cobroTaller->credito->detalles()->delete();
+            // Verificar y eliminar los detalles del crédito si existen
+            if ($this->equipoTallerModal->cobroTaller && $this->equipoTallerModal->cobroTaller->credito) {
+                $this->equipoTallerModal->cobroTaller->credito->detalles()->delete();
 
-            // Eliminar el crédito
-            $this->equipoTallerModal->cobroTaller->credito()->delete();
+                // Eliminar el crédito
+                $this->equipoTallerModal->cobroTaller->credito()->delete();
+            }
+
+            // Eliminar el cobroTaller si existe
+            if ($this->equipoTallerModal->cobroTaller) {
+                $this->equipoTallerModal->cobroTaller()->delete();
+            }
+
+            DB::commit();
+
+            $this->dispatch('cierraModalCambiaEstatusEquipoTaller');
+            $this->modalCambiarEstatusEquipoAbierta = false;
+            $this->dispatch('mostrarToast', 'Equipo actualizado con éxito!!!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            dd($e);
         }
+    }
 
-        // Eliminar el cobroTaller si existe
-        if ($this->equipoTallerModal->cobroTaller) {
-            $this->equipoTallerModal->cobroTaller()->delete();
-        }
 
-        DB::commit();
 
-        $this->dispatch('cierraModalCambiaEstatusEquipoTaller');
+    public function cierraCambiaEstatusEquipoModal()
+    {
         $this->modalCambiarEstatusEquipoAbierta = false;
-        $this->dispatch('mostrarToast', 'Equipo actualizado con éxito!!!');
-    } catch (\Exception $e) {
-        DB::rollBack();  
-        
-        dd($e);
     }
-}
+
+    public function abreModalCambiaEstatusEquipo($numOrden)
+    {
+        $this->dispatch('abreModalCambiaEstatusEquipoTaller');
+
+        $this->modalCambiarEstatusEquipoAbierta = true;
+        $this->estatusModalCambiaEstatus = 0;
+
+        $this->resetErrorBag('estatusModalCambiaEstatus');
+
+        $this->equipoTallerModal = EquipoTaller::find($numOrden);
+    }
 
 
+    public function obtenerIconoSegunEstatus($id_estatus)
+    {
+        $iconos = [
+            1 => '<i class="fa-solid fa-handshake-simple custom-status-icon-color-1"></i>',
+            2 => '<i class="fa-solid fa-screwdriver-wrench custom-status-icon-color-2"></i>',
+            3 => '<i class="fa-solid fa-clipboard-check custom-status-icon-color-3"></i>',
+            4 => '<i class="fa-solid fa-rectangle-xmark custom-status-icon-color-4"></i>',
+            5 => '<i class="fa-solid fa-thumbs-up custom-status-icon-color-5"></i>',
+            6 => '<i class="fa-solid fa-thumbs-down custom-status-icon-color-6"></i>',
+        ];
 
-public function cierraCambiaEstatusEquipoModal()
-{
-    $this->modalCambiarEstatusEquipoAbierta = false;
-}
-
-public function abreModalCambiaEstatusEquipo($numOrden)
-{
-    $this->dispatch('abreModalCambiaEstatusEquipoTaller');
-
-    $this->modalCambiarEstatusEquipoAbierta = true;
-    $this->estatusModalCambiaEstatus = 0;
-
-    $this->resetErrorBag('estatusModalCambiaEstatus');
-
-    $this->equipoTallerModal = EquipoTaller::find($numOrden);
-
-}
-
-
-public function obtenerIconoSegunEstatus($id_estatus)
-{
-    $iconos = [
-        1 => '<i class="fa-solid fa-handshake-simple custom-status-icon-color-1"></i>',
-        2 => '<i class="fa-solid fa-screwdriver-wrench custom-status-icon-color-2"></i>',
-        3 => '<i class="fa-solid fa-clipboard-check custom-status-icon-color-3"></i>',
-        4 => '<i class="fa-solid fa-rectangle-xmark custom-status-icon-color-4"></i>',
-        5 => '<i class="fa-solid fa-thumbs-up custom-status-icon-color-5"></i>',
-        6 => '<i class="fa-solid fa-thumbs-down custom-status-icon-color-6"></i>',
-    ];
-
-    return isset($iconos[$id_estatus]) ? $iconos[$id_estatus] : '';
-}
+        return isset($iconos[$id_estatus]) ? $iconos[$id_estatus] : '';
+    }
 
     public function obtenerIconoEstatus($id_estatus)
     {
@@ -1970,7 +1784,10 @@ public function obtenerIconoSegunEstatus($id_estatus)
 
     public function cobroEquipoTaller($numOrden)
     {
-        return redirect()->route('taller.print', $numOrden, false);
+        return redirect()->route('taller.print', [
+            'num_orden' => $numOrden,
+            'abrirCaja' => true
+        ]);
     }
 
     public function cobroEquipoTallerFinal($numOrden)
@@ -1982,8 +1799,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
     {
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
-        if ($idEstatus >= 2) 
-        {
+        if ($idEstatus >= 2) {
             $idEstatus--;
             $equipoTaller->id_estatus = $idEstatus;
             $equipoTaller->save();
@@ -2002,8 +1818,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
     {
         $equipoTaller = EquipoTaller::where('num_orden', $numOrden)->first();
 
-        if ($idEstatus <= 5)
-        {
+        if ($idEstatus <= 5) {
             $idEstatus++;
             $equipoTaller->id_estatus = $idEstatus;
             $equipoTaller->save();
@@ -2041,35 +1856,23 @@ public function obtenerIconoSegunEstatus($id_estatus)
         $equipoTaller = EquipoTaller::find($numOrden);
 
         $this->anotacionesMod['numOrden'] = $equipoTaller->num_orden;
-        if ($equipoTaller->equipo->marca->disponible)
-        {
-            if($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo)
-            {
+        if ($equipoTaller->equipo->marca->disponible) {
+            if ($equipoTaller->equipo->marca->id_tipo_equipo === $equipoTaller->equipo->id_tipo) {
                 $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre;
-            }
-            else
-            {
+            } else {
                 $this->anotacionesMod['marcaEquipo'] = "*****";
             }
-        }
-        else
-        {
+        } else {
             $this->anotacionesMod['marcaEquipo'] = $equipoTaller->equipo->marca->nombre . "*";
         }
 
-        if ($equipoTaller->equipo->modelo->disponible)
-        {
-            if($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id)
-            {
+        if ($equipoTaller->equipo->modelo->disponible) {
+            if ($equipoTaller->equipo->modelo->id_marca === $equipoTaller->equipo->marca->id) {
                 $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre;
-            }
-            else
-            {
+            } else {
                 $this->anotacionesMod['modeloEquipo'] = "*****";
             }
-        }
-        else
-        {
+        } else {
             $this->anotacionesMod['modeloEquipo'] = $equipoTaller->equipo->modelo->nombre . "*";
         }
 
@@ -2079,8 +1882,7 @@ public function obtenerIconoSegunEstatus($id_estatus)
         $this->anotacionesMod['contenido'] = "";
 
         $anotaciones = AnotacionEquipoTaller::find($numOrden);
-        if ($anotaciones)
-        {
+        if ($anotaciones) {
             $this->anotacionesMod['contenido'] = $anotaciones->contenido;
         }
 
@@ -2089,30 +1891,25 @@ public function obtenerIconoSegunEstatus($id_estatus)
 
     public function guardaAnotaciones()
     {
-        if (strlen(trim($this->anotacionesMod['contenido'])) == 0)
-        {
+        if (strlen(trim($this->anotacionesMod['contenido'])) == 0) {
             $anotaciones = $this->regresaAnotaciones($this->anotacionesMod['numOrden']);
 
-            if ($anotaciones)
-            {
+            if ($anotaciones) {
                 $anotaciones->delete();
                 session()->flash('success', 'Las ANOTACIONES se han *actualizado* correctamente.');
             }
-        }
-        else
-        {
+        } else {
             $anotaciones = $this->regresaAnotaciones($this->anotacionesMod['numOrden']);
-            if ($anotaciones)
-            {
+            if ($anotaciones) {
                 $anotaciones->contenido = trim(mb_strtoupper($this->anotacionesMod['contenido']));
                 $anotaciones->save();
 
                 session()->flash('success', 'Las ANOTACIONES se han actualizado correctamente.');
-            }
-            else
-            {
+            } else {
                 $anotaciones = new AnotacionEquipoTaller();
-                $anotaciones->num_orden = trim(mb_strtoupper($this->anotacionesMod['numOrden']));
+                // Si es null, usa '' y así evita el error
+                $numOrden = $this->anotacionesMod['numOrden'] ?? '';
+                $anotaciones->num_orden = trim(mb_strtoupper($numOrden));
                 $anotaciones->contenido = trim(mb_strtoupper($this->anotacionesMod['contenido']));
                 $anotaciones->save();
 
@@ -2135,18 +1932,16 @@ public function obtenerIconoSegunEstatus($id_estatus)
         return $anotaciones;
     }
 
-    #[On('ocultaDivAgregaEquipo')] 
+    #[On('ocultaDivAgregaEquipo')]
     public function cierraDivAgregaEquipo()
     {
         $this->muestraDivAgregaEquipo = false;
     }
 
-    #[On('descartaEquipo')] 
+    #[On('descartaEquipo')]
     public function ocultaDivArriba()
     {
         // $this->dispatch('mostrarBoton');
         $this->muestraDivAgregaEquipo = false;
     }
-
-
 }
