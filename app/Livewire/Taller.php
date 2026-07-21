@@ -1472,12 +1472,14 @@ class Taller extends Component
 
         if ($this->corteCaja['idModoPago'] == 1) {
             if ($this->corteCaja['chkAgrupar']) {
-                $registros->push([
-                    'cantidad' => 1,
-                    'prod_serv' => 'INICIALIZACION',
-                    'subtotal' => $movimientoCaja->saldo_caja,
-                    'tipo' => 'INICIALIZACION',
-                ]);
+                if ($movimientoCaja) {
+                    $registros->push([
+                        'cantidad' => 1,
+                        'prod_serv' => 'INICIALIZACION',
+                        'subtotal' => $movimientoCaja->saldo_caja,
+                        'tipo' => 'INICIALIZACION',
+                    ]);
+                }
                 $registros->push([
                     'cantidad' => $entradasManuales->count(),
                     'prod_serv' => 'ENTRADA MANUAL',
@@ -1491,16 +1493,18 @@ class Taller extends Component
                     'tipo' => 'SALIDA_MANUAL_AGRUPADO',
                 ]);
             } else {
-                $registros->push([
-                    'id' => $movimientoCaja->referencia,
-                    'created_at' => $movimientoCaja->fecha,
-                    'nombre_cliente' => '-',
-                    'monto' => $movimientoCaja->saldo_caja,
-                    'cajero' => $movimientoCaja->usuario->name,
-                    'tipo' => 'INICIALIZACION',
-                    'id_modo_pago' => 1,
-                    'detalles' => null
-                ]);
+                if ($movimientoCaja) {
+                    $registros->push([
+                        'id' => $movimientoCaja->referencia,
+                        'created_at' => $movimientoCaja->fecha,
+                        'nombre_cliente' => '-',
+                        'monto' => $movimientoCaja->saldo_caja,
+                        'cajero' => $movimientoCaja->usuario?->name ?? 'Desconocido',
+                        'tipo' => 'INICIALIZACION',
+                        'id_modo_pago' => 1,
+                        'detalles' => null
+                    ]);
+                }
                 if ($entradasManuales) {
                     foreach ($entradasManuales as $entrada) {
                         $registros->push([
