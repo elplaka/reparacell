@@ -58,7 +58,7 @@ class EquipoTallerController extends Controller
             $equipo_taller = EquipoTaller::where('num_orden', $numOrden)->first();
             $fallas_equipo_taller = FallaEquipoTaller::where('num_orden', $numOrden)->get();
             $cobro = CobroEstimadoTaller::with('credito.detalles')->where('num_orden', $numOrden)->latest('id')->first();
-            $totalAbonos = $cobro->credito->detalles->sum('abono');
+            $totalAbonos = $cobro->credito?->detalles?->sum('abono') ?? 0;
             $this->cobro['cliente'] = $equipo_taller->equipo->cliente->nombre;
             $this->cobro['fechaEntrada'] = Carbon::parse($equipo_taller->fecha_entrada)->format('d/m/Y');
             $this->cobro['tipoEquipo'] = $equipo_taller->equipo->tipo_equipo->nombre;
@@ -102,7 +102,9 @@ class EquipoTallerController extends Controller
             $texto2 = "Tipo de Equipo: " . $this->cobro['tipoEquipo'];
             $texto3 = "Marca del Equipo: " . $this->cobro['marcaEquipo'];
             $texto4 = "Modelo del Equipo: " . $this->cobro['modeloEquipo'];
-            $texto5 = "Total Abonado: $" . $totalAbonos;
+            if ($totalAbonos > 0) {
+                $texto5 = "Total Abonado: $" . $totalAbonos;
+            }
 
             // Imprimir los campos
             $printer->text($texto0 . "\n");
@@ -110,7 +112,9 @@ class EquipoTallerController extends Controller
             $printer->text($texto2 . "\n");
             $printer->text($texto3 . "\n");
             $printer->text($texto4 . "\n");
-            $printer->text($texto5 . "\n");
+            if ($totalAbonos > 0) {
+                $printer->text($texto5 . "\n");
+            }
 
             // Imprimir fallas de equipo si existen
             if (!empty($this->cobro['fallasEquipo'])) {

@@ -408,9 +408,18 @@ $itemDisponible = true;
         }
     });
 
+    // document.addEventListener('livewire:initialized', function() {
+    //     Livewire.on('abrirPestanaCorteCajaTaller', () => {
+    //         window.open('{{ url(' / taller / corte ') }}', '_blank');
+    //     });
+    // });
+
     document.addEventListener('livewire:initialized', function() {
+        // Definimos la URL de forma segura usando Blade
+        const urlCorte = @js(url('/taller/corte'));
+
         Livewire.on('abrirPestanaCorteCajaTaller', () => {
-            window.open('{{ url(' / taller / corte ') }}', '_blank');
+            window.open(urlCorte, '_blank');
         });
     });
 

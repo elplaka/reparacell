@@ -901,7 +901,7 @@ class Taller extends Component
 
                         $this->modalCobroFinalAbierta = false;
 
-   			$printer_name = "Ticket";
+                        $printer_name = "Ticket";
                         $connector = new WindowsPrintConnector($printer_name);
                         $printer = new Printer($connector);
 
@@ -910,7 +910,7 @@ class Taller extends Component
 
                         if ($conTicket && $this->cobroFinal['idModoPago'] == 1)  //Solo si es EFECTIVO se imprime ticket
                         {
-                            $this->showMainErrors = true;                         
+                            $this->showMainErrors = true;
 
                             return redirect()->route('taller.print-final', $numOrden, true);
                         }
@@ -1373,6 +1373,7 @@ class Taller extends Component
                     ->whereIn('num_orden', $numerosOrden)
                     ->get();
 
+
                 list($cobrosConCredito, $cobrosSinCredito) = collect($cobrosCredito)->partition(function ($cobro) {
                     return $cobro->credito !== null;
                 });
@@ -1394,7 +1395,15 @@ class Taller extends Component
                 }
 
                 if ($this->corteCaja['incluyeCredito']) {
-                    $numerosOrdenConCredito = collect($cobrosConCredito)->pluck('num_orden');
+                    $cobrosEstimadosCredito = CobroEstimadoTaller::with('credito')
+                        ->whereIn('num_orden', $numerosOrden)
+                        ->get();
+
+                    $numerosOrdenConCredito = collect($cobrosConCredito)
+                        ->pluck('num_orden')
+                        ->concat(collect($cobrosEstimadosCredito)->pluck('num_orden'))
+                        ->unique()
+                        ->values();
 
                     $detalles = CobroTallerCreditoDetalle::whereIn('num_orden', $numerosOrdenConCredito)
                         ->whereBetween('created_at', [$fechaInicial, $fechaFinal])
